@@ -40,9 +40,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
 shape = SubResource("BoxShape3D_ground")
 
 [node name="Destructible" type="PhysXDestructible3D" parent="." groups=["destructible"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 2, -10)
 asset_path = "res://demo/common/blast/blast_cube.asset"
 chunks_path = "res://demo/common/blast/blast_cube.chunks"
+material_override = SubResource("Mat_destructible")
+
+[node name="DestructibleWall" type="PhysXDestructible3D" parent="." groups=["destructible"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 2, -14)
+asset_path = "res://demo/common/blast/blast_wall.asset"
+chunks_path = "res://demo/common/blast/blast_wall.chunks"
 material_override = SubResource("Mat_destructible")
 
 [node name="Camera3D" type="Camera3D" parent="."]
@@ -59,4 +65,4 @@ offset_left = 16.0
 offset_top = 16.0
 offset_right = 600.0
 offset_bottom = 46.0
-text = "WASD + hold RMB to fly. Left-click to shoot the destructible cube."
+text = "WASD + hold RMB to fly. Left-click to shoot the destructible cube/wall."
