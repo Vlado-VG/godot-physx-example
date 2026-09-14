@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://c4k8w3n2q7fvj"]
 
 [ext_resource type="Script" uid="uid://bnodfgawxc4u4" path="res://demo/common/destructible_demo_rig.gd" id="1"]
-[ext_resource type="PhysXBlastAsset" uid="uid://dbcbul8hvc36t" path="res://demo/editor/cpu/MeshInstance3D5_blast.tres" id="1_sg5i3"]
 [ext_resource type="PhysXBlastAsset" uid="uid://bigfy1xrpyaxh" path="res://demo/common/blast/test_box_mesh_blast.tres" id="2_r567i"]
 [ext_resource type="Material" uid="uid://d3n64ggcklfp4" path="res://demo/common/materials/glowing_blue.tres" id="3_sg5i3"]
 [ext_resource type="PhysXBlastAsset" uid="uid://cb4rwvkqikmlf" path="res://demo/common/blast/StaticSphere_blast.tres" id="3_uspjk"]
@@ -79,7 +78,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -8.642605)
 [node name="PhysXDestructible3D" type="PhysXDestructible3D" parent="Node3D2" unique_id=716057778]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.6122341, 0.7778673, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -89,7 +87,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D2" type="PhysXDestructible3D" parent="Node3D2" unique_id=1279778917]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.64404106, 3.778901, 0.0071582794)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -99,7 +96,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D3" type="PhysXDestructible3D" parent="Node3D2" unique_id=117431212]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.6122341, 2.2806587, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -109,7 +105,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D4" type="PhysXDestructible3D" parent="Node3D2" unique_id=1982139692]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.6122341, 5.274762, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -119,7 +114,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D5" type="PhysXDestructible3D" parent="Node3D2" unique_id=1456239517]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.64404106, 8.275796, 0.0071582794)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -129,7 +123,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D6" type="PhysXDestructible3D" parent="Node3D2" unique_id=467603602]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.6122341, 6.7775536, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -139,7 +132,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D7" type="PhysXDestructible3D" parent="Node3D2" unique_id=1577568243]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.6122341, 9.730393, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -149,7 +141,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D8" type="PhysXDestructible3D" parent="Node3D2" unique_id=1543066209]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.64404106, 12.731427, 0.0071582794)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -159,7 +150,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D9" type="PhysXDestructible3D" parent="Node3D2" unique_id=424177247]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.6122341, 11.233185, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -169,7 +159,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D10" type="PhysXDestructible3D" parent="Node3D2" unique_id=480855717]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.6122341, 14.227288, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -179,7 +168,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D11" type="PhysXDestructible3D" parent="Node3D2" unique_id=248807951]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.64404106, 17.228321, 0.0071582794)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -189,7 +177,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D12" type="PhysXDestructible3D" parent="Node3D2" unique_id=1760856037]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.6122341, 15.73008, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -202,7 +189,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.075963, 0, -8.642605)
 [node name="PhysXDestructible3D" type="PhysXDestructible3D" parent="Node3D" unique_id=1176070744]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 0.7778673, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -212,7 +198,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D2" type="PhysXDestructible3D" parent="Node3D" unique_id=1970586777]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.031807184, 3.778901, 0.00715822)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -222,7 +207,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D3" type="PhysXDestructible3D" parent="Node3D" unique_id=358375948]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 2.2806587, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -232,7 +216,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D4" type="PhysXDestructible3D" parent="Node3D" unique_id=1086331783]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0, 5.274762, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -242,7 +225,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D5" type="PhysXDestructible3D" parent="Node3D" unique_id=375824478]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.03180718, 8.275796, 0.0071582207)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -252,7 +234,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D6" type="PhysXDestructible3D" parent="Node3D" unique_id=34501758]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0, 6.7775536, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -262,7 +243,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D7" type="PhysXDestructible3D" parent="Node3D" unique_id=616655567]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 9.780017, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -272,7 +252,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D8" type="PhysXDestructible3D" parent="Node3D" unique_id=1536159136]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.031807184, 12.781051, 0.0071582794)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -282,7 +261,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D9" type="PhysXDestructible3D" parent="Node3D" unique_id=359087951]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 11.282808, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -292,7 +270,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D10" type="PhysXDestructible3D" parent="Node3D" unique_id=1078884864]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0, 14.276912, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -302,7 +279,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D11" type="PhysXDestructible3D" parent="Node3D" unique_id=749306282]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.031807184, 17.277946, 0.0071582794)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -312,7 +288,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D12" type="PhysXDestructible3D" parent="Node3D" unique_id=500768234]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0, 15.779703, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -325,7 +300,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.861942, 0, -8.642605)
 [node name="PhysXDestructible3D" type="PhysXDestructible3D" parent="Node3D3" unique_id=725119308]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 0.7778673, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -335,7 +309,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D2" type="PhysXDestructible3D" parent="Node3D3" unique_id=641948934]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.031807184, 3.778901, 0.00715822)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -345,7 +318,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D3" type="PhysXDestructible3D" parent="Node3D3" unique_id=1728556404]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 2.2806587, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -355,7 +327,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D4" type="PhysXDestructible3D" parent="Node3D3" unique_id=670803242]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0, 5.274762, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -365,7 +336,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D5" type="PhysXDestructible3D" parent="Node3D3" unique_id=608940291]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.03180718, 8.275796, 0.0071582207)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -375,7 +345,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D6" type="PhysXDestructible3D" parent="Node3D3" unique_id=452414508]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0, 6.7775536, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -385,7 +354,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D7" type="PhysXDestructible3D" parent="Node3D3" unique_id=1020200484]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 9.770721, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -393,9 +361,8 @@ health = 0.58
 impact_strength = 2.2
 
 [node name="PhysXDestructible3D8" type="PhysXDestructible3D" parent="Node3D3" unique_id=269096463]
-transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.031807184, 12.771755, 0.0071582794)
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.031807423, 12.771755, 0.0071582794)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -405,7 +372,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D9" type="PhysXDestructible3D" parent="Node3D3" unique_id=1431447179]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 11.273513, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -415,7 +381,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D10" type="PhysXDestructible3D" parent="Node3D3" unique_id=60487118]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0, 14.267616, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -425,7 +390,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D11" type="PhysXDestructible3D" parent="Node3D3" unique_id=18621128]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.031807184, 17.26865, 0.0071582794)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -435,7 +399,6 @@ impact_strength = 2.2
 [node name="PhysXDestructible3D12" type="PhysXDestructible3D" parent="Node3D3" unique_id=845867094]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0, 15.770408, 0)
 blast_asset = ExtResource("2_r567i")
-gi_mode = 2
 shatter_speed = 3.5
 auto_mass = false
 dynamic = true
@@ -481,14 +444,3 @@ mesh = SubResource("CylinderMesh_wh2v7")
 transform = Transform3D(2.625, 0, 0, 0, 2.625, 0, 0, 0, 2.625, -18.28561, 2.5954487, -18.621)
 material_override = ExtResource("3_sg5i3")
 mesh = SubResource("CylinderMesh_wh2v7")
-
-[node name="MeshInstance3D5" type="PhysXDestructible3D" parent="." unique_id=39017034]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 1, -0.821228, 7.099911, -2.0404186)
-blast_asset = ExtResource("1_sg5i3")
-shatter_speed = 1.0
-auto_mass = false
-mass = 0.9
-dynamic = true
-impact_strength = 3.2
-impact_damage_scale = 3.18
-impact_radius = 2.3
