@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://bnodfgawxc4u4" path="res://demo/common/destructible_demo_rig.gd" id="1"]
 [ext_resource type="PhysXBlastAsset" uid="uid://bigfy1xrpyaxh" path="res://demo/common/blast/test_box_mesh_blast.tres" id="2_r567i"]
 [ext_resource type="Material" uid="uid://d3n64ggcklfp4" path="res://demo/common/materials/glowing_blue.tres" id="3_sg5i3"]
-[ext_resource type="PhysXBlastAsset" uid="uid://cb4rwvkqikmlf" path="res://demo/editor/cpu/StaticSphere_blast.tres" id="3_uspjk"]
+[ext_resource type="PhysXBlastAsset" uid="uid://cb4rwvkqikmlf" path="res://demo/common/blast/StaticSphere_blast.tres" id="3_uspjk"]
 [ext_resource type="Material" uid="uid://c7r7eg7r0iwyw" path="res://demo/common/materials/glowing_red.tres" id="5_sg5i3"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_ground"]
