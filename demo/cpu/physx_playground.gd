@@ -27,6 +27,18 @@ const PILE_COUNT := 2000
 var _pile_mm: MultiMesh
 var _pile_bodies: Array[RigidBody3D] = []
 
+# Three stacked towers of dynamic PhysXDestructible3D boxes -- same asset/
+# tuning as the destructible_demo.tscn showcase's own stacks, just built
+# here in GDScript (this scene has no .tscn to hand-place nodes in) so the
+# ball/ragdoll/box-pile playground has something destructible to hit too.
+# Blue so they read as a clearly different thing from the orange pile.
+const DESTRUCTIBLE_ASSET_PATH := "res://demo/common/blast/test_box_mesh_blast.tres"
+const DESTRUCTIBLE_TOWER_COUNT := 3
+const DESTRUCTIBLE_TOWER_HEIGHT := 10
+const DESTRUCTIBLE_TOWER_SPACING := 3.5 # between towers, along X
+const DESTRUCTIBLE_LEVEL_HEIGHT := 1.6 # between boxes in a tower, along Y
+var _destructible_material: StandardMaterial3D
+
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_build_world()
@@ -224,7 +236,34 @@ func _reset_scene() -> void:
 		_pile_bodies.append(b)
 		_pile_mm.set_instance_color(i, Color.from_hsv(fmod(0.05 + i * 0.0007, 1.0), 0.5, 0.95))
 
+	_build_destructible_towers()
 	call_deferred("_ragdoll", Vector3(0, 0, 2))
+
+func _build_destructible_towers() -> void:
+	if not ClassDB.class_exists("PhysXDestructible3D"):
+		return # non-blast build (no blast_sdk=) -- nothing to spawn
+
+	if not _destructible_material:
+		_destructible_material = StandardMaterial3D.new()
+		_destructible_material.albedo_color = Color(0.25, 0.45, 0.95)
+
+	var asset: Resource = load(DESTRUCTIBLE_ASSET_PATH)
+	if not asset:
+		return
+
+	for t in DESTRUCTIBLE_TOWER_COUNT:
+		var tower_x := 10.0 + t * DESTRUCTIBLE_TOWER_SPACING
+		for level in DESTRUCTIBLE_TOWER_HEIGHT:
+			var d = ClassDB.instantiate("PhysXDestructible3D")
+			d.blast_asset = asset
+			d.dynamic = true
+			d.material_override = _destructible_material
+			d.shatter_speed = 3.5
+			d.health = 0.5
+			d.impact_strength = 2.2
+			d.kill_y = -20.0
+			d.position = Vector3(tower_x, 0.8 + level * DESTRUCTIBLE_LEVEL_HEIGHT, -6.0)
+			_spawn_root.add_child(d)
 
 func _rd_box(pos: Vector3, size: Vector3, mass: float) -> RigidBody3D:
 	var rb := RigidBody3D.new()
