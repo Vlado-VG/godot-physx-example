@@ -262,6 +262,14 @@ func _build_destructible_towers() -> void:
 			d.health = 0.5
 			d.impact_strength = 2.2
 			d.kill_y = -20.0
+			# Explicit override, same fix as the destructible_demo.tscn
+			# stacks -- auto_mass's real density-derived mass for this box
+			# (~13,200kg at the default 2200 density) trivially clears
+			# impact_strength=2.2 on the very first settling jolt, so the
+			# whole tower self-fractured the instant Play started, before
+			# anyone touched it.
+			d.auto_mass = false
+			d.mass = 0.9
 			d.position = Vector3(tower_x, 0.8 + level * DESTRUCTIBLE_LEVEL_HEIGHT, -6.0)
 			_spawn_root.add_child(d)
 
