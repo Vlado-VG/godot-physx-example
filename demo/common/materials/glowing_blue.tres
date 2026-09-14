@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://d3n64ggcklfp4"]
+
+[resource]
+resource_name = "Fluid Fire"
+albedo_color = Color(0.20666671, 0.6181703, 0.9629963, 1)
+emission_enabled = true
+emission = Color(0.26516038, 0.6359197, 0.9830769, 1)
+emission_energy_multiplier = 3.0
