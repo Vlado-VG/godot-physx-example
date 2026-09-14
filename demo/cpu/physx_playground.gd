@@ -269,7 +269,7 @@ func _build_destructible_towers() -> void:
 			# whole tower self-fractured the instant Play started, before
 			# anyone touched it.
 			d.auto_mass = false
-			d.mass = 0.9
+			d.mass = 1.0
 			d.position = Vector3(tower_x, 0.8 + level * DESTRUCTIBLE_LEVEL_HEIGHT, -6.0)
 			_spawn_root.add_child(d)
 
