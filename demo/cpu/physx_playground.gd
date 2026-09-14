@@ -494,13 +494,22 @@ func _physics_process(delta: float) -> void:
 	_char.move_and_slide()
 
 	# CharacterBody3D doesn't push RigidBodies on its own -- do it manually.
+	# RID-based (PhysicsServer3D.body_apply_impulse), not `col is RigidBody3D`
+	# -- a PhysXDestructible3D's pieces are raw PhysicsServer3D bodies with no
+	# owning RigidBody3D node, so that check silently skipped every one of
+	# them: the player could shove a plain box around but debris just sat
+	# there taking only the raw depenetration response, which read as
+	# "harder to push". get_collider_rid() resolves to the actual piece body
+	# regardless of what node (if any real Node at all) owns it.
 	for i in _char.get_slide_collision_count():
 		var c := _char.get_slide_collision(i)
-		var col := c.get_collider()
-		if col is RigidBody3D:
+		var rid := c.get_collider_rid()
+		if rid.is_valid() and PhysicsServer3D.body_get_mode(rid) == PhysicsServer3D.BODY_MODE_RIGID:
+			var body_mass: float = PhysicsServer3D.body_get_param(rid, PhysicsServer3D.BODY_PARAM_MASS)
+			var body_origin: Vector3 = PhysicsServer3D.body_get_state(rid, PhysicsServer3D.BODY_STATE_TRANSFORM).origin
 			var push := -c.get_normal() * 4.0
 			push.y = maxf(push.y, 0.0)
-			col.apply_impulse(push * col.mass * 0.15, c.get_position() - col.global_position)
+			PhysicsServer3D.body_apply_impulse(rid, push * body_mass * 0.15, c.get_position() - body_origin)
 
 	for i in _pile_bodies.size():
 		_pile_mm.set_instance_transform(i, _pile_bodies[i].global_transform)
