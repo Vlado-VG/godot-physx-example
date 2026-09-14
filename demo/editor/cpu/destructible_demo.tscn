@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://c4k8w3n2q7fvj"]
 
 [ext_resource type="Script" uid="uid://bnodfgawxc4u4" path="res://demo/common/destructible_demo_rig.gd" id="1"]
+[ext_resource type="PhysXBlastAsset" uid="uid://dbcbul8hvc36t" path="res://demo/editor/cpu/MeshInstance3D5_blast.tres" id="1_sg5i3"]
 [ext_resource type="PhysXBlastAsset" uid="uid://bigfy1xrpyaxh" path="res://demo/common/blast/test_box_mesh_blast.tres" id="2_r567i"]
 [ext_resource type="Material" uid="uid://d3n64ggcklfp4" path="res://demo/common/materials/glowing_blue.tres" id="3_sg5i3"]
 [ext_resource type="PhysXBlastAsset" uid="uid://cb4rwvkqikmlf" path="res://demo/common/blast/StaticSphere_blast.tres" id="3_uspjk"]
@@ -480,3 +481,14 @@ mesh = SubResource("CylinderMesh_wh2v7")
 transform = Transform3D(2.625, 0, 0, 0, 2.625, 0, 0, 0, 2.625, -18.28561, 2.5954487, -18.621)
 material_override = ExtResource("3_sg5i3")
 mesh = SubResource("CylinderMesh_wh2v7")
+
+[node name="MeshInstance3D5" type="PhysXDestructible3D" parent="." unique_id=39017034]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 1, -0.821228, 7.099911, -2.0404186)
+blast_asset = ExtResource("1_sg5i3")
+shatter_speed = 1.0
+auto_mass = false
+mass = 0.9
+dynamic = true
+impact_strength = 3.2
+impact_damage_scale = 3.18
+impact_radius = 2.3
