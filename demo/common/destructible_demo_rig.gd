@@ -1,14 +1,18 @@
-extends Camera3D
-# Fly-cam rig for the PhysXDestructible3D showcase: hold RMB to look, WASD to
-# fly, left-click fires the physx_playground.gd bomb -- a real thrown
-# RigidBody3D ball that explodes on contact -- for testing destructibles'
-# impact/force response (knockback, getting knocked into each other), not
-# just precision damage. Used to also have a separate raycast-and-shoot
-# precision-damage mode; dropped in favor of the bomb alone being the one
-# showcase, and its own explosion covers the same "apply real damage to a
-# static destructible" case a precise shot did (see apply_radial_damage()'s
-# min/max radius -- a static prop within the blast radius takes damage same
-# as one hit dead-on).
+extends CharacterBody3D
+# First-person rig for the PhysXDestructible3D showcase -- shares
+# FirstPersonCharacter (see demo/common/first_person_character.gd) with
+# physx_playground.gd, so walking into a destructible's pieces exercises the
+# same push-on-collision path, and firing a ragdoll into debris gives a real
+# CharacterBody3D-driven RigidBody3D to test collision layers/masks against
+# instead of only the bomb.
+#
+#   WASD / arrows   move        SPACE  jump        mouse  look
+#   left click      launch a ragdoll
+#   right click     fire the bomb -- a real thrown RigidBody3D ball that
+#                   explodes on contact -- for testing destructibles' impact/
+#                   force response (knockback, getting knocked into each
+#                   other), not just precision damage
+#   ESC             release mouse / quit
 #
 # The bomb can't reuse physx_playground.gd's own _blast() (RigidBody3D-only:
 # `if col is RigidBody3D`) since a PhysXDestructible3D's pieces are raw
@@ -21,7 +25,7 @@ extends Camera3D
 # that, redundant at best (see destructible_demo.tscn's own staticsphere for
 # the intended pattern: only it carries groups=["destructible"]).
 
-const FlyCamera = preload("res://demo/common/fly_camera.gd")
+const FirstPersonCharacter = preload("res://demo/common/first_person_character.gd")
 
 @export var bomb_damage := 8.0
 @export var bomb_min_radius := 0.5
@@ -29,24 +33,30 @@ const FlyCamera = preload("res://demo/common/fly_camera.gd")
 @export var bomb_speed := 45.0
 @export var fly_speed := 8.0
 
-var _fly: FlyCamera
+var _fp: FirstPersonCharacter
+@onready var _cam: Camera3D = $Camera3D
 
 func _ready() -> void:
-	_fly = FlyCamera.new(self, fly_speed)
+	_fp = FirstPersonCharacter.new(self, _cam, get_parent(), fly_speed)
 
-func _process(delta: float) -> void:
-	_fly.process(delta)
+func _physics_process(delta: float) -> void:
+	_fp.physics_process(delta)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _fly.handle_input(event):
+	if _fp.handle_input(event):
 		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		_fire_bomb()
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	elif event is InputEventMouseButton and event.pressed:
+		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		elif event.button_index == MOUSE_BUTTON_LEFT:
+			_fp.fire_ragdoll()
+		elif event.button_index == MOUSE_BUTTON_RIGHT:
+			_fire_bomb()
 
 func _fire_bomb() -> void:
-	var fwd := (-global_transform.basis.z).normalized()
+	var fwd := (-_cam.global_transform.basis.z).normalized()
 	var ball := RigidBody3D.new()
 	ball.mass = 6.0
 	var mi := MeshInstance3D.new()
@@ -68,7 +78,7 @@ func _fire_bomb() -> void:
 	ball.contact_monitor = true
 	ball.max_contacts_reported = 4
 	get_parent().add_child(ball)
-	ball.global_position = global_position + fwd * 1.5
+	ball.global_position = _cam.global_position + fwd * 1.5
 	ball.linear_velocity = fwd * bomb_speed
 	ball.body_entered.connect(_on_bomb_hit.bind(ball), CONNECT_ONE_SHOT)
 
