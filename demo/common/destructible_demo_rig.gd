@@ -35,9 +35,13 @@ const FirstPersonCharacter = preload("res://demo/common/first_person_character.g
 
 var _fp: FirstPersonCharacter
 @onready var _cam: Camera3D = $Camera3D
+@onready var _fps_label: Label = get_node("../HUD/FPS")
 
 func _ready() -> void:
 	_fp = FirstPersonCharacter.new(self, _cam, get_parent(), fly_speed)
+
+func _process(_delta: float) -> void:
+	_fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
 
 func _physics_process(delta: float) -> void:
 	_fp.physics_process(delta)
