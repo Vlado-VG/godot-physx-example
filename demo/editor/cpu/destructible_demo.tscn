@@ -1,0 +1,490 @@
+[gd_scene format=3 uid="uid://c4k8w3n2q7fvj"]
+
+[ext_resource type="Script" uid="uid://bnodfgawxc4u4" path="res://demo/common/destructible_demo_rig.gd" id="1"]
+[ext_resource type="PhysXBlastAsset" uid="uid://bigfy1xrpyaxh" path="res://demo/common/blast/test_box_mesh_blast.tres" id="2_r567i"]
+[ext_resource type="Material" uid="uid://d3n64ggcklfp4" path="res://demo/common/materials/glowing_blue.tres" id="3_sg5i3"]
+[ext_resource type="PhysXBlastAsset" uid="uid://cb4rwvkqikmlf" path="res://demo/common/blast/StaticSphere_blast.tres" id="3_uspjk"]
+[ext_resource type="Material" uid="uid://c7r7eg7r0iwyw" path="res://demo/common/materials/glowing_red.tres" id="5_sg5i3"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(40, 0.1, 40)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ground"]
+albedo_color = Color(0.2, 0.2, 0.22, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(40, 0.1, 40)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+ambient_light_source = 2
+ambient_light_color = Color(0.2592937, 0.2592937, 0.2592937, 1)
+ambient_light_energy = 2.72
+tonemap_mode = 3
+ssr_enabled = true
+ssil_enabled = true
+sdfgi_enabled = true
+sdfgi_read_sky_light = false
+sdfgi_min_cell_size = 0.5
+glow_enabled = true
+glow_bloom = 0.14
+fog_sun_scatter = 0.78
+fog_sky_affect = 0.173
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.008
+volumetric_fog_gi_inject = 1.91
+volumetric_fog_length = 245.83
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_wh2v7"]
+
+[node name="DestructibleDemo" type="Node3D" unique_id=372068557]
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=398196664]
+transform = Transform3D(1, 0, 0, 0, 0.500011, 0.86601907, 0, -0.86601907, 0.500011, 0, 0, 0)
+light_color = Color(0.5218013, 0.6289468, 0.84770954, 1)
+light_energy = 0.2
+shadow_enabled = true
+
+[node name="Ground" type="StaticBody3D" parent="." unique_id=8242502]
+collision_layer = 3
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground" unique_id=160894741]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+mesh = SubResource("BoxMesh_ground")
+surface_material_override/0 = SubResource("Mat_ground")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground" unique_id=4458883]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+shape = SubResource("BoxShape3D_ground")
+
+[node name="Player" type="CharacterBody3D" parent="." unique_id=1948301367]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 4)
+collision_layer = 2
+script = ExtResource("1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player" unique_id=1671308238]
+shape = SubResource("CapsuleShape3D_player")
+
+[node name="Camera3D" type="Camera3D" parent="Player" unique_id=509434374]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+current = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1698618157]
+environment = SubResource("Environment_1")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=824771741]
+
+[node name="Hint" type="Label" parent="HUD" unique_id=2080360000]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 600.0
+offset_bottom = 46.0
+text = "WASD move, SPACE jump. Left-click: ragdoll. Right-click: bomb."
+
+[node name="FPS" type="Label" parent="HUD" unique_id=819324461]
+offset_left = 16.0
+offset_top = 46.0
+offset_right = 200.0
+offset_bottom = 70.0
+text = "FPS: --"
+
+[node name="Node3D2" type="Node3D" parent="." unique_id=265402173]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -8.642605)
+
+[node name="PhysXDestructible3D" type="PhysXDestructible3D" parent="Node3D2" unique_id=716057778]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.6122341, 0.7778673, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D2" type="PhysXDestructible3D" parent="Node3D2" unique_id=1279778917]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.64404106, 3.778901, 0.0071582794)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D3" type="PhysXDestructible3D" parent="Node3D2" unique_id=117431212]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.6122341, 2.2806587, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D4" type="PhysXDestructible3D" parent="Node3D2" unique_id=1982139692]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.6122341, 5.274762, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D5" type="PhysXDestructible3D" parent="Node3D2" unique_id=1456239517]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.64404106, 8.275796, 0.0071582794)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D6" type="PhysXDestructible3D" parent="Node3D2" unique_id=467603602]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.6122341, 6.7775536, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D7" type="PhysXDestructible3D" parent="Node3D2" unique_id=1577568243]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.6122341, 9.730393, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D8" type="PhysXDestructible3D" parent="Node3D2" unique_id=1543066209]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.64404106, 12.731427, 0.0071582794)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D9" type="PhysXDestructible3D" parent="Node3D2" unique_id=424177247]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.6122341, 11.233185, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D10" type="PhysXDestructible3D" parent="Node3D2" unique_id=480855717]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.6122341, 14.227288, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D11" type="PhysXDestructible3D" parent="Node3D2" unique_id=248807951]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.64404106, 17.228321, 0.0071582794)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D12" type="PhysXDestructible3D" parent="Node3D2" unique_id=1760856037]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.6122341, 15.73008, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="Node3D_ignore" type="Node3D" parent="." unique_id=748078446]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.075963, 0, -8.642605)
+
+[node name="PhysXDestructible3D" type="PhysXDestructible3D" parent="Node3D_ignore" unique_id=1176070744]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 0.7778673, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+collision_layer = 4
+collision_mask = 5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D2" type="PhysXDestructible3D" parent="Node3D_ignore" unique_id=1970586777]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.031807184, 3.778901, 0.00715822)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+collision_layer = 4
+collision_mask = 5
+auto_mass = false
+dynamic = true
+health = 0.44
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D3" type="PhysXDestructible3D" parent="Node3D_ignore" unique_id=358375948]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 2.2806587, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+collision_layer = 4
+collision_mask = 5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D4" type="PhysXDestructible3D" parent="Node3D_ignore" unique_id=1086331783]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0, 5.274762, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+collision_layer = 4
+collision_mask = 5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D5" type="PhysXDestructible3D" parent="Node3D_ignore" unique_id=375824478]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.03180718, 8.275796, 0.0071582207)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+collision_layer = 4
+collision_mask = 5
+auto_mass = false
+dynamic = true
+health = 0.44
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D6" type="PhysXDestructible3D" parent="Node3D_ignore" unique_id=34501758]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0, 6.7775536, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+collision_layer = 4
+collision_mask = 5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D7" type="PhysXDestructible3D" parent="Node3D_ignore" unique_id=616655567]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 9.780017, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+collision_layer = 4
+collision_mask = 5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D8" type="PhysXDestructible3D" parent="Node3D_ignore" unique_id=1536159136]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.031807184, 12.781051, 0.0071582794)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+collision_layer = 4
+collision_mask = 5
+auto_mass = false
+dynamic = true
+health = 0.44
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D9" type="PhysXDestructible3D" parent="Node3D_ignore" unique_id=359087951]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 11.282808, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+collision_layer = 4
+collision_mask = 5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D10" type="PhysXDestructible3D" parent="Node3D_ignore" unique_id=1078884864]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0, 14.276912, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+collision_layer = 4
+collision_mask = 5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D11" type="PhysXDestructible3D" parent="Node3D_ignore" unique_id=749306282]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.031807184, 17.277946, 0.0071582794)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+collision_layer = 4
+collision_mask = 5
+auto_mass = false
+dynamic = true
+health = 0.44
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D12" type="PhysXDestructible3D" parent="Node3D_ignore" unique_id=500768234]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0, 15.779703, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+collision_layer = 4
+collision_mask = 5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="Node3D3" type="Node3D" parent="." unique_id=1626401207]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.861942, 0, -8.642605)
+
+[node name="PhysXDestructible3D" type="PhysXDestructible3D" parent="Node3D3" unique_id=725119308]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 0.7778673, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D2" type="PhysXDestructible3D" parent="Node3D3" unique_id=641948934]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.031807184, 3.778901, 0.00715822)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.44
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D3" type="PhysXDestructible3D" parent="Node3D3" unique_id=1728556404]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 2.2806587, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D4" type="PhysXDestructible3D" parent="Node3D3" unique_id=670803242]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0, 5.274762, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D5" type="PhysXDestructible3D" parent="Node3D3" unique_id=608940291]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.03180718, 8.275796, 0.0071582207)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.44
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D6" type="PhysXDestructible3D" parent="Node3D3" unique_id=452414508]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0, 6.7775536, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D7" type="PhysXDestructible3D" parent="Node3D3" unique_id=1020200484]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 9.770721, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D8" type="PhysXDestructible3D" parent="Node3D3" unique_id=269096463]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0.031807423, 12.771755, 0.0071582794)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.44
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D9" type="PhysXDestructible3D" parent="Node3D3" unique_id=1431447179]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 11.273513, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D10" type="PhysXDestructible3D" parent="Node3D3" unique_id=60487118]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0, 14.267616, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D11" type="PhysXDestructible3D" parent="Node3D3" unique_id=18621128]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.031807184, 17.26865, 0.0071582794)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.44
+impact_strength = 2.2
+
+[node name="PhysXDestructible3D12" type="PhysXDestructible3D" parent="Node3D3" unique_id=845867094]
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0, 15.770408, 0)
+blast_asset = ExtResource("2_r567i")
+shatter_speed = 3.5
+auto_mass = false
+dynamic = true
+health = 0.58
+impact_strength = 2.2
+
+[node name="Label3D" type="Label3D" parent="." unique_id=1288668664]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.559662, 4.9684186, -1.8917532)
+text = "Static Objects can be broken by using groups and listening via gdscript for the event.
+Both spheres are a part of \"destructible\" group"
+
+[node name="StaticSphere" type="PhysXDestructible3D" parent="." unique_id=2129192161 groups=["destructible"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.81911, 3.4984741, 0)
+blast_asset = ExtResource("3_uspjk")
+shatter_speed = 3.9
+auto_mass = false
+mass = 1147.4635
+impact_radius = 2.8
+
+[node name="StaticSphere2" type="PhysXDestructible3D" parent="." unique_id=21762866 groups=["destructible"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.176833, 3.4984741, 0)
+blast_asset = ExtResource("3_uspjk")
+auto_mass = false
+mass = 1147.4635
+impact_radius = 2.5
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=981424132]
+transform = Transform3D(2.625, 0, 0, 0, 2.625, 0, 0, 0, 2.625, -17.881096, 2.5954487, 0)
+material_override = ExtResource("5_sg5i3")
+mesh = SubResource("CylinderMesh_wh2v7")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="." unique_id=848397187]
+transform = Transform3D(2.625, 0, 0, 0, 2.625, 0, 0, 0, 2.625, 18.1605, 2.5954487, 0)
+material_override = ExtResource("5_sg5i3")
+mesh = SubResource("CylinderMesh_wh2v7")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="." unique_id=1629037482]
+transform = Transform3D(2.625, 0, 0, 0, 2.625, 0, 0, 0, 2.625, 18.1605, 2.5954487, -18.621)
+material_override = ExtResource("3_sg5i3")
+mesh = SubResource("CylinderMesh_wh2v7")
+
+[node name="MeshInstance3D4" type="MeshInstance3D" parent="." unique_id=673951825]
+transform = Transform3D(2.625, 0, 0, 0, 2.625, 0, 0, 0, 2.625, -18.28561, 2.5954487, -18.621)
+material_override = ExtResource("3_sg5i3")
+mesh = SubResource("CylinderMesh_wh2v7")
