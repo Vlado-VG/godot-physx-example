@@ -212,7 +212,9 @@ func _reset_scene() -> void:
 	_pile_mm.instance_count = PILE_COUNT
 	for i in PILE_COUNT:
 		var x := i % w
+		@warning_ignore("integer_division")
 		var z := (i / w) % d
+		@warning_ignore("integer_division")
 		var y := i / (w * d)
 		var b := RigidBody3D.new()
 		_col_box(b, Vector3.ONE)

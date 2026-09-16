@@ -12,8 +12,12 @@ config_version=5
 
 config/name="godotphysx"
 run/main_scene="res://demo/cpu/physx_playground.tscn"
-config/features=PackedStringArray("4.7", "Forward Plus")
+config/features=PackedStringArray("26.3", "Forward Plus", "Redot")
 config/icon="res://icon.svg"
+
+[blazium]
+
+justamcp/tools/project_tools=true
 
 [display]
 
@@ -22,6 +26,10 @@ window/size/viewport_height=1080
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[dotnet]
+
+project/assembly_name="godotphysx"
+
 [physics]
 
 3d/physics_engine="PhysX"
@@ -29,7 +37,3 @@ jolt_physics_3d/limits/temporary_memory_buffer_size=1024
 jolt_physics_3d/limits/max_bodies=120000
 jolt_physics_3d/limits/max_body_pairs=2000000
 jolt_physics_3d/limits/max_contact_constraints=1000000
-
-[rendering]
-
-rendering_device/driver.windows="d3d12"

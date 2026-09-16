@@ -3,18 +3,18 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://cv54radpi6j2f"
-path="res://.godot/imported/mannequiny.glb-a0095576eb69001c22e3a7bdaf4596a7.scn"
+uid="uid://benmjny2guowm"
+path="res://.godot/imported/Wheel.glb-de2d95458a0853a1a6cfb6a45d45386e.scn"
 
 [deps]
 
-source_file="res://demo/common/mannequiny/mannequiny.glb"
-dest_files=["res://.godot/imported/mannequiny.glb-a0095576eb69001c22e3a7bdaf4596a7.scn"]
+source_file="res://demo/common/models/doge/Wheel.glb"
+dest_files=["res://.godot/imported/Wheel.glb-de2d95458a0853a1a6cfb6a45d45386e.scn"]
 
 [params]
 
-nodes/root_type=""
-nodes/root_name=""
+nodes/root_type="Node3D"
+nodes/root_name="Scene Root"
 nodes/root_script=null
 nodes/apply_root_scale=true
 nodes/root_scale=1.0
@@ -38,5 +38,5 @@ materials/extract=0
 materials/extract_format=0
 materials/extract_path=""
 _subresources={}
-gltf/naming_version=2
+gltf/naming_version=0
 gltf/embedded_image_handling=1

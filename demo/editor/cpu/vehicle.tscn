@@ -1,0 +1,253 @@
+[gd_scene load_steps=26 format=3]
+
+[ext_resource type="Script" path="res://demo/editor/cpu/vehicle.gd" id="1"]
+[ext_resource type="PackedScene" path="res://demo/editor/cpu/vehicle_car.tscn" id="2"]
+[ext_resource type="Script" path="res://demo/editor/cpu/vehicle_hud.gd" id="3"]
+[ext_resource type="Texture2D" path="res://demo/common/models/doge/texture_10.png" id="4"]
+
+[sub_resource type="ProceduralSkyMaterial" id="Sky_1"]
+
+[sub_resource type="Sky" id="Sky_2"]
+sky_material = SubResource("Sky_1")
+
+[sub_resource type="Environment" id="Env_1"]
+background_mode = 2
+sky = SubResource("Sky_2")
+ambient_light_source = 3
+ambient_light_energy = 0.5
+tonemap_mode = 3
+
+[sub_resource type="StandardMaterial3D" id="GroundMat"]
+albedo_texture = ExtResource("4")
+uv1_triplanar = true
+uv1_scale = Vector3(0.2, 0.2, 0.2)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="RoadMat"]
+albedo_color = Color(0.35, 0.35, 0.37, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="PlateauMat"]
+albedo_color = Color(0.5, 0.5, 0.52, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="KickerMat"]
+albedo_color = Color(0.85, 0.45, 0.15, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="PadMat"]
+albedo_color = Color(0.2, 0.55, 0.9, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="PostMat"]
+albedo_color = Color(0.85, 0.2, 0.2, 1)
+roughness = 0.8
+
+[sub_resource type="BoxShape3D" id="GroundShape"]
+size = Vector3(600, 2, 600)
+
+[sub_resource type="BoxMesh" id="GroundMesh"]
+size = Vector3(600, 2, 600)
+
+[sub_resource type="BoxShape3D" id="PlateauShape"]
+size = Vector3(12, 2, 20)
+
+[sub_resource type="BoxMesh" id="PlateauMesh"]
+size = Vector3(12, 2, 20)
+
+[sub_resource type="BoxShape3D" id="RampShape"]
+size = Vector3(10, 0.5, 11)
+
+[sub_resource type="BoxMesh" id="RampMesh"]
+size = Vector3(10, 0.5, 11)
+
+[sub_resource type="BoxShape3D" id="KickerShape"]
+size = Vector3(8, 0.5, 11.4)
+
+[sub_resource type="BoxMesh" id="KickerMesh"]
+size = Vector3(8, 0.5, 11.4)
+
+[sub_resource type="BoxShape3D" id="PostShape"]
+size = Vector3(0.3, 1.2, 0.3)
+
+[sub_resource type="BoxMesh" id="PostMesh"]
+size = Vector3(0.3, 1.2, 0.3)
+
+[sub_resource type="BoxMesh" id="PadMesh"]
+size = Vector3(10, 0.04, 6)
+
+[sub_resource type="SystemFont" id="Font_mono"]
+font_names = PackedStringArray("Consolas", "Courier New", "monospace")
+
+[node name="VehicleDemo" type="Node3D"]
+script = ExtResource("1")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_1")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.7, -0.49, 0.52, 0, 0.73, 0.68, -0.71, -0.48, 0.51, 0, 30, 0)
+shadow_enabled = true
+directional_shadow_max_distance = 150.0
+
+[node name="Ground" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+shape = SubResource("GroundShape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+material_override = SubResource("GroundMat")
+mesh = SubResource("GroundMesh")
+
+[node name="StartPad" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 22)
+material_override = SubResource("PadMat")
+mesh = SubResource("PadMesh")
+
+[node name="RampUp" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.98058, -0.19612, 0, 0.19612, 0.98058, 0, 0.755, 4.95)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RampUp"]
+shape = SubResource("RampShape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RampUp"]
+material_override = SubResource("RoadMat")
+mesh = SubResource("RampMesh")
+
+[node name="Plateau" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Plateau"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -10)
+shape = SubResource("PlateauShape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Plateau"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -10)
+material_override = SubResource("PlateauMat")
+mesh = SubResource("PlateauMesh")
+
+[node name="RampDown" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.98058, 0.19612, 0, -0.19612, 0.98058, 0, 0.755, -24.95)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RampDown"]
+shape = SubResource("RampShape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RampDown"]
+material_override = SubResource("RoadMat")
+mesh = SubResource("RampMesh")
+
+[node name="Kicker" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.95266, -0.30409, 0, 0.30409, 0.95266, 0, 1.362, -47.08)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Kicker"]
+shape = SubResource("KickerShape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Kicker"]
+material_override = SubResource("KickerMat")
+mesh = SubResource("KickerMesh")
+
+[node name="FlipZoneSE" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0.6, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="FlipZoneSE"]
+shape = SubResource("PostShape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="FlipZoneSE"]
+material_override = SubResource("PostMat")
+mesh = SubResource("PostMesh")
+
+[node name="FlipZoneSW" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0.6, -14)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="FlipZoneSW"]
+shape = SubResource("PostShape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="FlipZoneSW"]
+material_override = SubResource("PostMat")
+mesh = SubResource("PostMesh")
+
+[node name="FlipZoneNE" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0.6, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="FlipZoneNE"]
+shape = SubResource("PostShape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="FlipZoneNE"]
+material_override = SubResource("PostMat")
+mesh = SubResource("PostMesh")
+
+[node name="FlipZoneNW" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0.6, -14)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="FlipZoneNW"]
+shape = SubResource("PostShape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="FlipZoneNW"]
+material_override = SubResource("PostMat")
+mesh = SubResource("PostMesh")
+
+[node name="FlipZoneSign" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 2.5, -7)
+billboard = 1
+text = "FLIP ZONE
+F = flip upright"
+font_size = 220
+outline_size = 24
+
+[node name="DogeCar" parent="." instance=ExtResource("2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 22)
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("3")
+
+[node name="Telemetry" type="Label" parent="HUD"]
+offset_left = 16.0
+offset_top = 12.0
+offset_right = 420.0
+offset_bottom = 700.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = SubResource("Font_mono")
+theme_override_font_sizes/font_size = 17
+
+[node name="Speed" type="Label" parent="HUD"]
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -140.0
+offset_right = 150.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_fonts/font = SubResource("Font_mono")
+theme_override_font_sizes/font_size = 54
+text = "0"
+
+[node name="Help" type="Label" parent="HUD"]
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -220.0
+offset_right = 700.0
+offset_bottom = -16.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = SubResource("Font_mono")
+theme_override_font_sizes/font_size = 15
+text = "W/S throttle + brake/reverse   A/D steer   SPACE handbrake
+SHIFT/Ctrl gear up/down (gearbox, manual)   T automatic   P direct <-> gearbox
+E engine on/off   F flip car upright   R reset + refuel   ESC quit
+LOOP: east straight (x=24), keep 90+ km/h at the entrance"
