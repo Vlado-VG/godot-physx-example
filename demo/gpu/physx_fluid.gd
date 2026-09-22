@@ -10,6 +10,7 @@ const WATER_DENSITY := 1000.0
 
 var _fluid: PhysXParticleFluid3D
 var _balls: Array[RigidBody3D] = []
+var _tank: Array[Node3D] = [] # tank bodies -> MPM analytic colliders
 var _hud: Label
 var _t := 0.0
 
@@ -80,6 +81,7 @@ func _wall(pos: Vector3, size: Vector3, mat: Material) -> void:
 	mi.material_override = mat
 	sb.add_child(mi)
 	add_child(sb)
+	_tank.append(sb)
 
 func _spawn_fluid() -> void:
 	if _fluid and is_instance_valid(_fluid):
@@ -103,6 +105,16 @@ func _spawn_fluid() -> void:
 	_fluid.foam_particle_count = 30000
 	_fluid.foam_lifetime = 1.6
 	_fluid.foam_threshold = 120.0
+	# MPM: the node transform is the faucet AND the domain centre, so size the
+	# domain to cover the whole tank (floor at y = 0, walls to y ~ 2.35) around
+	# the faucet at y = 2.3, and hand the tank bodies to the solver as analytic
+	# colliders -- unlike the PBD path, the MPM grid collides only with its
+	# explicit collider list, never with the scene's static bodies.
+	_fluid.mpm_domain_size = Vector3(2.4, 5.0, 2.4)
+	var collider_paths: Array[NodePath] = []
+	for body in _tank:
+		collider_paths.append(body.get_path())
+	_fluid.mpm_colliders = collider_paths
 	var m := StandardMaterial3D.new()
 	m.albedo_color = Color(0.12, 0.4, 0.62, 0.55)
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
