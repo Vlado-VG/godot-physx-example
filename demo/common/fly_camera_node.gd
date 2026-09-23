@@ -20,4 +20,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _fly.handle_input(event):
 		return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		# Quit on ESC like the other run-mode demos (physx_fluid, showcase);
+		# release the captured mouse first so the window closes cleanly.
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		get_tree().quit()
