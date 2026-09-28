@@ -10,7 +10,7 @@
 [ext_resource type="Script" uid="uid://dv8je2geiisb2" path="res://demo/common/physx_motorcycle_rig.gd" id="6_physx_moto_rig"]
 [ext_resource type="Script" uid="uid://day646v48a3u7" path="res://demo/common/physx_tank_rig.gd" id="7_physx_tank_rig"]
 [ext_resource type="ArrayMesh" uid="uid://b5newvi7ftphg" path="res://demo/common/meshes/tankbody_Cube_001.res" id="8_61xs6"]
-[ext_resource type="Script" path="res://demo/common/tank_turret_rig.gd" id="9_tank_turret_rig"]
+[ext_resource type="Script" uid="uid://b7jvhjbn005v5" path="res://demo/common/tank_turret_rig.gd" id="9_tank_turret_rig"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -379,7 +379,6 @@ script = ExtResource("5_moto_rig")
 max_engine_force = 200.0
 max_brake_force = 5.0
 steer_speed = 3.0
-rear_braking_step_out_strength = 200.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Motorcycle" unique_id=100000022]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
