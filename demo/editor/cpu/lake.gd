@@ -11,7 +11,8 @@ extends Node3D
 # with strength=400 settles a bit below the waterline) to show a visibly
 # higher/lower float depth, not a real per-object density model.
 #
-#   SPACE  drop a random floater   left-drag  shove a floater   R  reset   ESC  quit
+#   SPACE  drop a random floater   left-drag  shove a floater
+#   WASD/Space/Ctrl  fly   hold RMB  look   R  reset   ESC  quit
 
 const WATER_LEVEL := 0.0
 # Spring-pull-toward-mouse drag, not a hard position snap -- keeps the
@@ -28,13 +29,19 @@ const DRAG_DAMPING := 12.0
 var _floaters: Array[RigidBody3D] = []
 var _dragging: RigidBody3D = null
 var _drag_height := 0.0 # world Y of the horizontal plane dragging happens along, frozen at grab time
+var _fly: FlyCamera
 
 func _ready() -> void:
 	for c in $Floaters.get_children():
 		if c is RigidBody3D:
 			_floaters.append(c)
+	_fly = FlyCamera.new(_camera)
 
 func _unhandled_input(event: InputEvent) -> void:
+	# FlyCamera only claims RMB (look toggle) and mouse-motion-while-captured
+	# -- left-click drag and every key below are untouched either way.
+	if _fly.handle_input(event):
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
 			KEY_SPACE:
@@ -146,8 +153,9 @@ func _drop_random() -> void:
 	$Floaters.add_child(rb)
 	_floaters.append(rb)
 
-func _process(_dt: float) -> void:
-	_hud.text = "Sample-point buoyancy (demo/common/buoyant_body.gd)   SPACE drop   left-drag shove   R reset   ESC\nfloaters: %d   FPS: %d" % [
+func _process(delta: float) -> void:
+	_fly.process(delta)
+	_hud.text = "Sample-point buoyancy (demo/common/buoyant_body.gd)   SPACE drop   left-drag shove   WASD/hold-RMB fly   R reset   ESC\nfloaters: %d   FPS: %d" % [
 		_floaters.size(), Engine.get_frames_per_second()]
 
 	# The pool has real walls/floor (see the scene) -- this is just a deep
