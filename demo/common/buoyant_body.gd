@@ -23,6 +23,14 @@ extends RigidBody3D
 @export var buoyancy_strength := 10.0 # upward force per meter submerged, per sample point
 @export var water_drag := 2.0 # damps each sample point's own velocity while submerged -- without this the hull bobs forever
 @export var hull_radius := 1.0 # approximate footprint radius, used only to register as a ripple-disturbing sphere proxy when water_surface_path is set
+# A moving hull genuinely displaces water (a real bow wave); a resting one
+# shouldn't -- a flat disturbance strength regardless of motion made even a
+# perfectly calm, stationary object carve a static crater in the water mesh.
+# Scaled by speed instead: resting_wake_strength is the floor (a small,
+# steady-state dimple, not zero -- a floating object does displace some
+# water even at rest), ramping up to full strength at wake_reference_speed.
+@export var wake_reference_speed := 5.0 # m/s at which the disturbance reaches full strength
+@export var resting_wake_strength := 0.15 # floor at zero velocity
 
 var _water: Node # PhysXWaterSurface3D -- untyped since this script must load even in a build without the water module
 
@@ -37,7 +45,9 @@ func _exit_tree() -> void:
 
 func _physics_process(_delta: float) -> void:
 	if _water != null:
-		_water.submit_sphere(get_instance_id(), global_position, hull_radius, 1.0)
+		var speed_frac := linear_velocity.length() / wake_reference_speed
+		var strength: float = clampf(resting_wake_strength + (1.0 - resting_wake_strength) * speed_frac, resting_wake_strength, 1.0)
+		_water.submit_sphere(get_instance_id(), global_position, hull_radius, strength)
 
 	for local_pt in sample_points:
 		var world_pt := to_global(local_pt)
