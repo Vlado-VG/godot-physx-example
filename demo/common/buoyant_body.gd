@@ -45,9 +45,25 @@ func _exit_tree() -> void:
 
 func _physics_process(_delta: float) -> void:
 	if _water != null:
-		var speed_frac := linear_velocity.length() / wake_reference_speed
-		var strength: float = clampf(resting_wake_strength + (1.0 - resting_wake_strength) * speed_frac, resting_wake_strength, 1.0)
-		_water.submit_sphere(get_instance_id(), global_position, hull_radius, strength)
+		# water_ripple.glsl's sphere coupling is a pure XZ falloff -- it has
+		# no idea how far above the surface the sphere actually is, so a
+		# falling object was pushing the water down well before it got
+		# anywhere near it. Same issue the caustic-volume reference's own
+		# surfaceWeight() exists to solve ("only bodies near the surface
+		# disturb it; deep bodies are hydrodynamically invisible") -- ported
+		# here at the GDScript level instead of the shader, since the height
+		# query this needs (sample_height) is already available here and
+		# adding world-Y to the GPU sphere buffer would be a bigger change
+		# for the same result.
+		var water_h: float = _water.sample_height(global_position)
+		var height_above_water := global_position.y - water_h
+		var proximity: float = clampf(1.0 - height_above_water / hull_radius, 0.0, 1.0)
+		if proximity > 0.0:
+			var speed_frac := linear_velocity.length() / wake_reference_speed
+			var strength: float = clampf(resting_wake_strength + (1.0 - resting_wake_strength) * speed_frac, resting_wake_strength, 1.0) * proximity
+			_water.submit_sphere(get_instance_id(), global_position, hull_radius, strength)
+		else:
+			_water.clear_sphere(get_instance_id())
 
 	for local_pt in sample_points:
 		var world_pt := to_global(local_pt)

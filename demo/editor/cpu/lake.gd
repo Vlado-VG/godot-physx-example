@@ -1,19 +1,33 @@
 extends Node3D
 
 # Sample-point buoyancy showcase (demo/common/buoyant_body.gd) -- three
-# pre-tuned floaters dropped onto a flat Phase-1 water plane (no waves/FFT/
-# caustics yet, see buoyant_body.gd's own header), plus SPACE to drop more at
-# random. The three starting props deliberately use different
-# buoyancy_strength/mass ratios off the one proven data point (buoyancy_test.gd:
-# a 50kg 2x1x2 hull with strength=400 settles a bit below the waterline) to
-# show a visibly higher/lower float depth, not a real per-object density model.
+# pre-tuned floaters on the real PhysXWaterSurface3D (see lake.tscn), plus
+# SPACE to drop more at random and left-click-drag to shove any floater
+# around by hand -- a real, direct way to disturb the water (see
+# buoyant_body.gd's height-proximity-gated submit_sphere() for why this
+# actually ripples the surface instead of just moving a prop around). The
+# three starting props deliberately use different buoyancy_strength/mass
+# ratios off the one proven data point (buoyancy_test.gd: a 50kg 2x1x2 hull
+# with strength=400 settles a bit below the waterline) to show a visibly
+# higher/lower float depth, not a real per-object density model.
 #
-#   SPACE  drop a random floater      R  reset      ESC  quit
+#   SPACE  drop a random floater   left-drag  shove a floater   R  reset   ESC  quit
 
 const WATER_LEVEL := 0.0
+# Spring-pull-toward-mouse drag, not a hard position snap -- keeps the
+# dragged body inside the real physics simulation (still collides, still
+# feeds a real linear_velocity into buoyant_body.gd's wake-strength coupling,
+# so dragging naturally disturbs the water with zero special-casing). Scaled
+# by the body's own mass so the drag "feels" similarly stiff regardless of
+# which floater (15-60 kg) is grabbed.
+const DRAG_SPRING := 60.0
+const DRAG_DAMPING := 12.0
 
 @onready var _hud: Label = $HUD/Label
+@onready var _camera: Camera3D = $Camera3D
 var _floaters: Array[RigidBody3D] = []
+var _dragging: RigidBody3D = null
+var _drag_height := 0.0 # world Y of the horizontal plane dragging happens along, frozen at grab time
 
 func _ready() -> void:
 	for c in $Floaters.get_children():
@@ -29,6 +43,41 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_tree().reload_current_scene()
 			KEY_ESCAPE:
 				get_tree().quit()
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			_try_start_drag(event.position)
+		else:
+			_dragging = null
+
+func _try_start_drag(screen_pos: Vector2) -> void:
+	var from := _camera.project_ray_origin(screen_pos)
+	var dir := _camera.project_ray_normal(screen_pos)
+	var params := PhysicsRayQueryParameters3D.create(from, from + dir * 200.0)
+	var result := get_world_3d().direct_space_state.intersect_ray(params)
+	if result.is_empty():
+		return
+	var body = result.get("collider")
+	if body is RigidBody3D and body in _floaters:
+		_dragging = body
+		_drag_height = body.global_position.y
+
+func _drag_target(screen_pos: Vector2) -> Vector3:
+	var from := _camera.project_ray_origin(screen_pos)
+	var dir := _camera.project_ray_normal(screen_pos)
+	var plane := Plane(Vector3.UP, _drag_height)
+	var hit = plane.intersects_ray(from, dir)
+	return hit if hit != null else from + dir * 10.0 # camera looking ~parallel to the plane -- fall back to a fixed distance
+
+func _physics_process(_delta: float) -> void:
+	if _dragging == null:
+		return
+	if not is_instance_valid(_dragging):
+		_dragging = null
+		return
+	var target := _drag_target(get_viewport().get_mouse_position())
+	var offset := target - _dragging.global_position
+	var force := offset * DRAG_SPRING * _dragging.mass - _dragging.linear_velocity * DRAG_DAMPING * _dragging.mass
+	_dragging.apply_central_force(force)
 
 func _drop_random() -> void:
 	var kinds := ["ball", "crate", "log"]
@@ -56,6 +105,7 @@ func _drop_random() -> void:
 			rb.mass = 15.0
 			rb.buoyancy_strength = 350.0
 			rb.water_drag = 90.0
+			rb.hull_radius = 0.7
 			rb.sample_points = [Vector3(-0.4, 0, -0.4), Vector3(0.4, 0, -0.4), Vector3(-0.4, 0, 0.4), Vector3(0.4, 0, 0.4)]
 		"crate":
 			var shape := BoxShape3D.new()
@@ -67,6 +117,7 @@ func _drop_random() -> void:
 			rb.mass = 50.0
 			rb.buoyancy_strength = 400.0
 			rb.water_drag = 100.0
+			rb.hull_radius = 1.4
 			# default sample_points already match this hull's footprint
 		"log":
 			var shape := BoxShape3D.new()
@@ -78,7 +129,15 @@ func _drop_random() -> void:
 			rb.mass = 60.0
 			rb.buoyancy_strength = 380.0
 			rb.water_drag = 95.0
+			rb.hull_radius = 1.3
 			rb.sample_points = [Vector3(-1.3, 0, -0.25), Vector3(1.3, 0, -0.25), Vector3(-1.3, 0, 0.25), Vector3(1.3, 0, 0.25)]
+
+	# water_surface_path must be set BEFORE add_child() -- buoyant_body.gd
+	# resolves it in _ready(), which fires as soon as the node enters the
+	# tree. An absolute path works before rb itself is in the tree (get_path_
+	# to() would not, since that needs both nodes already in the same tree).
+	if has_node("Water"):
+		rb.water_surface_path = $Water.get_path()
 
 	rb.add_child(cs)
 	rb.add_child(mi)
@@ -88,7 +147,7 @@ func _drop_random() -> void:
 	_floaters.append(rb)
 
 func _process(_dt: float) -> void:
-	_hud.text = "Sample-point buoyancy (demo/common/buoyant_body.gd)   SPACE drop   R reset   ESC\nfloaters: %d   FPS: %d" % [
+	_hud.text = "Sample-point buoyancy (demo/common/buoyant_body.gd)   SPACE drop   left-drag shove   R reset   ESC\nfloaters: %d   FPS: %d" % [
 		_floaters.size(), Engine.get_frames_per_second()]
 
 	# The pool has real walls/floor (see the scene) -- this is just a deep
