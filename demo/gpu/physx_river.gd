@@ -2,70 +2,66 @@ extends Node3D
 
 # GPU river-flow stress test for the PhysX backend (PhysXParticleFluid3D).
 #
-# A test river descends ~100 m -> 0 m as a terraced cascade: fourteen staged
-# plunge pools, each one PhysXParticleFluid3D fluid stepping ~6 m down the
-# hillside. Every stage exercises one flow regime -- source spring, laminar
-# run, swirl turn, boulder field, churn ridges, a jet split around a wedge,
-# two parallel branches (calm A vs rocky B), a merge confluence, rapids
-# steps, a constriction gap, a final chute and the 0 m collection basin,
-# which takes the course's one tall plunge. Foam, splash, rigid floaters and
-# fluid/rigid coupling are real; nothing is faked with shader effects.
+# A river is born at a single source pool at ~100 m and flows down a graded
+# hillside to the collection basin at 0 m: the upper course is steep and
+# waterfall-fed (cascades between plunge pockets), then the slopes ease into
+# long fine-grained channel reaches -- laminar run, boulder field, the heated
+# checkpoint, a split around an island into two contrasting branches, a merge
+# confluence, rapids steps, a constriction, a foam bed and slow drift runs.
+# The checkpoints exist to put obstacles into the flow, not to collect water:
+# the reaches are shallow channels, and the only true basin is at the bottom.
+# Rigid bodies (spheres, logs, crates, a dense rock) travel the course with
+# the river or get stuck, depending on their density. Nothing is faked with
+# shader effects.
 #
-# Why terraces: the foam-capable solver is the MPM compute backend, which is
-# confined to mpm_domain_size (a box centered on the node -- the faucet), with
-# the grid capped at 96 cells along X and 32 analytic colliders per fluid, and
-# -- decisively -- whose couple pass freezes the grid nodes of a particle film
-# lying on a surface. Thin overland flow and weir spillways therefore stall at
-# every scale (measured), while free-falling jets, plunge pools, splashes and
-# bulk pool sloshing all behave. The river is built from what the solver
-# actually does well: each terrace is a deep plunge pool -- prefilled at spawn
-# so its level is independent of the emission balance -- with its own cascade
-# plume at the pool head. Stages are hydraulically coupled: a submersion probe
-# at each pool's outlet modulates the next faucet's emission rate, so a surge
-# upstream propagates down the whole course; the hand-off itself is a measured
-# discharge transfer at each lip -- flow rate crosses the boundary, not mass.
+# Why the course is staged: the foam-capable solver is the MPM compute
+# backend, whose simulation is confined to mpm_domain_size (a box centered on
+# the node) with the grid capped at 96 cells along X -- and measured on this
+# build, grid cells above ~0.08 m either leak particles through geometry or
+# blow up their momentum accumulator, while at the working 0.07 m cells a
+# closed water body spreads and stalls instead of flowing. So the river is a
+# chain of short reaches at the proven scale. Water is injected only at the
+# source in play terms: each reach's faucet sits hidden on the previous
+# spillway lip and emits exactly the discharge the previous reach's outlet
+# probe measures, so a surge upstream propagates down the whole course. Flow
+# rate crosses each lip; the falling curtain masks the transfer.
 #
 # Simulation LOD: every MPM fluid syncs its own GPU queue once per physics
-# tick (~13 ms each on the test GPU), so all fourteen stages at once spend
-# more time in driver sync than in solver time. Stages near the camera run at
-# full rate and the rest hold their pools frozen, resuming -- with the
-# discharge coupling -- as the camera reaches them; lod=off removes the
-# culling for the all-on stress number, stages=N caps the simulating count.
+# tick (~13 ms each on the test GPU), so stages near the camera run at full
+# rate and the rest hold their water frozen, resuming -- with the discharge
+# coupling -- as the camera reaches them. lod=off removes the culling for the
+# all-on stress number, stages=N caps the simulating count.
 #
 #   WASD + RMB   fly camera          1..7  section cameras   C  tour the river
 #   TAB          cycle test mode     [ ]   quality preset    G  object burst
 #   P            pause               R     reset             F  toggle HUD
 #   ESC          quit
 #
-# Headless-friendly benchmark (needs a window -- the MPM solver needs a
-# RenderingDevice); presets/stage cap/lod can be preselected on the command line:
+# Screenshot / benchmark knobs (need a window; the MPM solver needs a
+# RenderingDevice):
 #   godot --path . demo/gpu/physx_river.tscn -- bench frames=600 preset=HIGH lod=off
+#   godot --path . demo/gpu/physx_river.tscn -- shots=shots_river
 
 const WATER_DENSITY := 1000.0
 
-# Per-stage fluid budget presets. Particle size sets the MPM grid cell (the
-# solver targets ~2 cells per particle, capped at 96 along X); the pool depth
-# is sized to stay several cells deep at every preset so the water always moves
-# as a body. Emission stays a fraction of capacity so most particles stand in
-# the pool -- the faucet is the through-flow, the buffer is the pool. The GPU
-# isosurface water mesh is HIGH/STRESS only: fourteen fluids re-meshing every
-# third tick costs far more CPU than the solver itself, so MEDIUM runs the
-# sphere MultiMesh (LOW too) and the surface is the detail preset's luxury.
+# Per-reach fluid budget presets. The particle size is fixed at the only
+# measured scale where water flows and does not leak (0.035 m particles on
+# 0.07 m cells); presets scale the water volume and through-flow instead.
 const PRESETS := {
 	"LOW": {
-		"particle_size": 0.07, "particles": 7000, "foam": 2500, "rate": 1100.0,
+		"particles": 9000, "foam": 2500, "rate": 2200.0,
 		"surface": false, "substeps": 4,
 	},
 	"MEDIUM": {
-		"particle_size": 0.058, "particles": 18000, "foam": 6000, "rate": 2200.0,
+		"particles": 17000, "foam": 5000, "rate": 4500.0,
 		"surface": false, "substeps": 5,
 	},
 	"HIGH": {
-		"particle_size": 0.058, "particles": 26000, "foam": 9000, "rate": 3000.0,
+		"particles": 26000, "foam": 8000, "rate": 7000.0,
 		"surface": true, "substeps": 5,
 	},
 	"STRESS": {
-		"particle_size": 0.058, "particles": 36000, "foam": 14000, "rate": 5000.0,
+		"particles": 36000, "foam": 13000, "rate": 11000.0,
 		"surface": true, "substeps": 6,
 	},
 }
@@ -81,12 +77,13 @@ const SECTION_COLORS := {
 	"LAMINAR": Color(0.6, 0.9, 0.6),
 	"TURN": Color(0.6, 0.8, 0.95),
 	"TURBULENT": Color(0.95, 0.7, 0.4),
+	"HEATED": Color(1.0, 0.45, 0.2),
 	"SPLIT": Color(0.8, 0.65, 0.95),
 	"CHANNEL A": Color(0.55, 0.9, 0.7),
 	"CHANNEL B": Color(0.95, 0.55, 0.45),
 	"MERGE": Color(0.95, 0.6, 0.75),
 	"RAPIDS": Color(1.0, 0.62, 0.35),
-	"CHUTE": Color(1.0, 0.75, 0.45),
+	"RIVER": Color(0.6, 0.85, 0.95),
 	"BASIN": Color(0.55, 0.85, 0.85),
 }
 
@@ -96,31 +93,40 @@ class Reach:
 	var root: Node3D # yawed frame; faucet at local origin
 	var fluid: PhysXParticleFluid3D
 	var domain := Vector3.ZERO # mpm_domain_size
-	var prefill := Vector3.ZERO # spawn_region_size: the plunge pool slab
-	var outlet_probe := AABB() # world-space fill probe at the pool's outlet end
-	var outlet_pos := Vector3.ZERO # world; feeds the next terrace's faucet
-	var exit_yaw := 0.0 # downstream heading leaving this terrace
-	var base_rate := 2200.0
-	var emit_vel := Vector3(1.8, -1.5, 0) # local (reach frame)
-	var static_bodies: Array[Node] = [] # basin geometry, always coupled
+	var prefill := Vector3.ZERO # spawn_region_size (channels prefill; plunge fills by jet)
+	var outlet_probe := AABB() # world-space fill probe at the reach's outlet
+	var lip_crest := Vector3.ZERO # world; the spillway the water pours over
+	var exit_yaw := 0.0 # downstream heading leaving this reach
+	var base_rate := 4500.0
+	var emit_vel := Vector3(1.2, -2.6, 0) # local (reach frame)
+	var static_bodies: Array[Node] = [] # channel geometry, always coupled
 	var obstacle_bodies: Array[Node] = [] # mode-toggled colliders
 	var floaters: Array[RigidBody3D] = [] # coupled + buoyancy-simulated
 	var upstream: Array[Reach] = [] # stages whose discharge feeds this faucet
-	var node_local := Vector3(2.0, -6.65, 0) # pool center, 0.5 m over the water
 	var anchor_pos := Vector3.ZERO # section-camera vantage
 	var anchor_look := Vector3.ZERO
-	var filled_at := -1.0 # sim seconds until the outlet probe first read >= 0.5
+	var filled_at := -1.0 # sim seconds until the outlet probe first read >= 0.35
 	var rate_scale := 1.0 # live emission multiplier (mode / coupling)
 
 	func _init(p_kind: String) -> void:
 		kind = p_kind
 
 var _reaches: Array[Reach] = []
-var _floaters: Array[RigidBody3D] = [] # every spawned body, in spawn order
+var _floaters: Array[RigidBody3D] = []
 var _floater_home := {} # body -> initial transform (reach-local)
 var _floater_reach := {} # body -> reach index
-var _floater_stranded := {} # body -> sim seconds since it fell below y = -6
+var _floater_stranded := {} # body -> sim seconds adrift below the course
 var _gate_reach := -1 # channel-B stage index (mode-toggled faucet)
+
+# The heated checkpoint: hot plates in the channel, NVIDIA Flow steam gated on
+# measured water contact, and an evaporation loss on the downstream discharge.
+var _flow_sim: Node3D
+var _flow_emitters: Array[Node3D] = []
+var _heat_probe := AABB()
+var _steam_level := 0.0
+var _steam_available := -1 # -1 unknown, 0 unavailable, 1 running
+var _evap_loss := 0.0
+var _heat_reach := -1
 
 var _preset := "MEDIUM"
 var _mode_idx := 0
@@ -135,24 +141,31 @@ var _paused := false
 var _couple_accum := 0.0
 var _hud_accum := 0.0
 var _scan_accum := 0.0
-var _scan_reach := 0 # staggered per-reach validation scan
+var _scan_reach := 0
+var _assign_accum := 0.0
 var _nan_total := 0
 var _escapes := 0
 var _obj_moved := false
 var _bench := false
 var _bench_frames := 600
 var _bench_frame := 0
-var _active_stages := 999 # stages beyond this are frozen (perf scaling knob)
-var _lod_off := false # lod=off: every stage simulates (the all-on stress number)
-var _sim_radius := 45.0 # stages within this of the camera simulate; others hold
+var _active_stages := 999
+var _lod_off := false
+var _sim_radius := 16.0
 var _sim_active := 0
+var _shots_dir := ""
+var _shot_idx := 0
 
-@onready var _mat_bed: StandardMaterial3D = _make_mat(Color(0.38, 0.36, 0.33), 1.0)
-@onready var _mat_bank: StandardMaterial3D = _make_mat(Color(0.45, 0.4, 0.34), 0.95)
+# chain-in-progress state consumed by the next stage builder
+var _pending_origin := Vector3.ZERO
+var _pending_yaw := 0.0
+var _pending_upstream: Array[Reach] = []
+
+@onready var _mat_bed: StandardMaterial3D = _make_mat(Color(0.36, 0.34, 0.31), 1.0)
+@onready var _mat_bank: StandardMaterial3D = _make_mat(Color(0.44, 0.39, 0.33), 0.95)
 @onready var _mat_rock: StandardMaterial3D = _make_mat(Color(0.32, 0.31, 0.3), 0.9)
-@onready var _mat_wall: StandardMaterial3D = _make_mat(Color(0.52, 0.5, 0.47), 0.85)
+@onready var _mat_wall: StandardMaterial3D = _make_mat(Color(0.5, 0.48, 0.45), 0.85)
 @onready var _mat_water: StandardMaterial3D = _make_water_mat()
-@onready var _mat_gate: StandardMaterial3D = _make_mat(Color(0.85, 0.3, 0.2), 0.6)
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS # keep input + HUD alive while paused
@@ -170,19 +183,30 @@ func _ready() -> void:
 			_active_stages = int(arg.substr(8))
 		elif arg == "lod=off":
 			_lod_off = true
+		elif arg.begins_with("shots="):
+			_shots_dir = arg.substr(6)
 
 	var env := WorldEnvironment.new()
 	var e := Environment.new()
 	e.background_mode = Environment.BG_SKY
 	var sky := Sky.new()
-	sky.sky_material = ProceduralSkyMaterial.new()
+	var pm := ProceduralSkyMaterial.new()
+	pm.sky_horizon_color = Color(0.62, 0.67, 0.74)
+	pm.ground_horizon_color = Color(0.62, 0.67, 0.74)
+	pm.ground_bottom_color = Color(0.42, 0.47, 0.55)
+	sky.sky_material = pm
 	e.sky = sky
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	e.ambient_light_energy = 0.6
 	e.tonemap_mode = Environment.TONE_MAPPER_ACES
+	# light overcast for mood; volumetric fog ON so the Flow steam's FogVolume
+	# actually draws (FogVolumes are skipped while volumetric fog is disabled)
 	e.fog_enabled = true
-	e.fog_density = 0.0012
-	e.fog_light_color = Color(0.75, 0.82, 0.9)
+	e.fog_density = 0.0006
+	e.fog_light_color = Color(0.55, 0.6, 0.68)
+	e.volumetric_fog_enabled = true
+	e.volumetric_fog_density = 0.04
+	e.volumetric_fog_albedo = Color(0.9, 0.9, 0.9)
 	env.environment = e
 	add_child(env)
 
@@ -195,17 +219,19 @@ func _ready() -> void:
 	_cam = Camera3D.new()
 	add_child(_cam)
 	_cam.far = 1200.0
-	_cam.position = Vector3(60, 55, 62)
-	_cam.look_at(Vector3(14, 42, 14))
-	_fly = FlyCamera.new(_cam, 22.0)
+	_fly = FlyCamera.new(_cam, 16.0)
 
 	_build_river()
 	_spawn_floaters()
 	_apply_mode() # builds the per-reach collider lists for the FULL mode
-	# bench/profiling knob: stages beyond the limit stay visible but frozen
 	for i in range(_active_stages, _reaches.size()):
 		if is_instance_valid(_reaches[i].fluid):
 			_reaches[i].fluid.process_mode = Node.PROCESS_MODE_DISABLED
+	var view := _overview_view()
+	_cam.position = view[0]
+	_cam.look_at(view[1])
+	_fly.yaw = _cam.rotation.y
+	_fly.pitch = _cam.rotation.x
 
 	var layer := CanvasLayer.new()
 	layer.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -228,7 +254,7 @@ func _make_mat(albedo: Color, rough: float) -> StandardMaterial3D:
 
 func _make_water_mat() -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
-	m.albedo_color = Color(0.1, 0.38, 0.6, 0.6)
+	m.albedo_color = Color(0.12, 0.4, 0.62, 0.6)
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.metallic = 0.1
 	m.roughness = 0.06
@@ -259,7 +285,7 @@ func _slab(parent: Node3D, pos: Vector3, size: Vector3, mat: Material, rot := Ve
 # A half-buried boulder; spheres resolve exactly as MPM analytic colliders.
 func _rock(parent: Node3D, pos: Vector3, radius: float, register_into: Reach = null) -> StaticBody3D:
 	var sb := StaticBody3D.new()
-	sb.position = pos + Vector3(0, radius * 0.45, 0)
+	sb.position = pos + Vector3(0, radius * 0.4, 0)
 	var cs := CollisionShape3D.new()
 	var shape := SphereShape3D.new()
 	shape.radius = radius
@@ -284,61 +310,51 @@ func _label(parent: Node3D, text: String, pos: Vector3, color: Color) -> void:
 	l.text = text
 	l.position = pos
 	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	l.font_size = 64
-	l.pixel_size = 0.055
-	l.outline_size = 14
+	l.font_size = 40
+	l.pixel_size = 0.05
+	l.outline_size = 12
 	l.modulate = color
 	l.outline_modulate = Color(0, 0, 0, 0.9)
 	parent.add_child(l)
 
-# ------------------------------------------------------------------ terraces
-# Terrace-local frame: the faucet hangs at the origin, `depth` above the plunge
-# pool's water surface. The pool is the prefill slab, walled, with the outlet
-# lip on +X where the next terrace's faucet hooks on. Proven working envelope:
-# pools several grid cells deep, jets in free fall, features as bulk obstructions.
+# ------------------------------------------------------------------ reaches
+# Two reach archetypes carry the whole course. Both work in the reach root's
+# yawed frame with the faucet at the local origin -- the node IS the MPM
+# domain center, and it sits on the previous spillway lip so the water appears
+# to pour over it.
+#   plunge: the jet free-falls `fall` meters into a pocket; the pocket's
+#           downstream lip is the next reach's pour-over. The waterfall in
+#           front of the pocket is just air between two stage domains.
+#   channel:a sloped run of `length` meters at `slope_deg` from the head to
+#           the outlet lip; fine water flows down it under through-flow.
 
-func _new_reach(stage: int, kind: String, origin: Vector3, yaw_deg: float) -> Reach:
+func _new_reach(kind: String, origin: Vector3, yaw_deg: float, domain: Vector3) -> Reach:
 	var reach := Reach.new(kind)
-	reach.stage = stage
+	reach.stage = _reaches.size() + 1
 	reach.root = Node3D.new()
 	reach.root.position = origin
 	reach.root.rotation = Vector3(0, deg_to_rad(yaw_deg), 0)
 	add_child(reach.root)
-	reach.domain = Vector3(12, 14, 7)
+	reach.domain = domain
+	reach.upstream = _pending_upstream
 	_reaches.append(reach)
 	return reach
 
-# The common pool: floor, side banks, upstream wall, outlet lip. Returns the
-# world-space outlet probe and lip position through the reach.
-# Build one terrace's pool at `water_y` below the faucet (the jet free-falls
-# that far); the pool spans local x 0.6 .. 0.6 + length.
-func _build_pool(reach: Reach, length: float, width: float, depth: float, water_y: float, bank_extra := 0.0) -> void:
-	var floor_y := water_y - depth
-	var bank_h := depth + 1.0 + bank_extra # banks stand 1 m above the water line
-	var wall_h := depth + 0.45 # upstream wall stays below the faucet
-	var t := 0.5
-	var cx := 2.0 # pool spans local x 0.6 .. 0.6 + length
-	reach.static_bodies.append(_slab(reach.root, Vector3(cx, floor_y - t * 0.5, 0), Vector3(length + 1.0, t, width + 1.0), _mat_bed))
-	for side in [-1.0, 1.0]:
-		reach.static_bodies.append(_slab(reach.root, Vector3(cx, floor_y + bank_h * 0.5, side * (width * 0.5 + t * 0.5)),
-				Vector3(length + 1.4, bank_h + t, t), _mat_bank))
-	reach.static_bodies.append(_slab(reach.root, Vector3(0.6 - t * 0.5, floor_y + wall_h * 0.5, 0),
-			Vector3(t, wall_h + t, width + 1.4), _mat_bank))
-	# outlet lip: crest 0.35 above the water line -- contains the pool, reads
-	# as the weir the next waterfall pours from
-	reach.static_bodies.append(_slab(reach.root, Vector3(0.6 + length + 0.25, floor_y + (depth + 0.35 + 1.0) * 0.5, 0),
-			Vector3(0.5, depth + 1.35, width + 1.0), _mat_wall))
+# Outlet lip: crest 0.25 over the reach's downstream water line + the probe.
+func _outlet(reach: Reach, x: float, water_y: float, width: float) -> void:
+	reach.static_bodies.append(_slab(reach.root, Vector3(x, water_y - 0.35, 0), Vector3(0.4, 1.3, width + 0.6), _mat_wall))
+	var probe_local := AABB(Vector3(x - 0.85, water_y - 0.26, -width * 0.32), Vector3(0.6, 0.22, width * 0.64))
 	var xf := reach.root.global_transform
-	var probe_local := AABB(Vector3(0.6 + length - 1.2, floor_y + 0.05, -width * 0.4), Vector3(1.1, depth - 0.1, width * 0.8))
 	reach.outlet_probe = AABB(xf * probe_local.position, probe_local.size)
-	reach.outlet_pos = xf * Vector3(0.6 + length + 0.5, water_y, 0)
+	reach.lip_crest = xf * Vector3(x, water_y + 0.25, 0)
 	var exit_dir := xf.basis * Vector3(1, 0, 0)
 	reach.exit_yaw = atan2(-exit_dir.z, exit_dir.x)
 
-func _finish_reach(reach: Reach, anchor_local: Vector3, look_local: Vector3) -> void:
+func _finish_reach(reach: Reach, wide := false) -> void:
 	var xf := reach.root.global_transform
-	reach.anchor_pos = xf * anchor_local
-	reach.anchor_look = xf * look_local
+	var off := Vector3(-7.0, 4.5, 10.0) if wide else Vector3(-4.0, 3.5, 8.5)
+	reach.anchor_pos = xf * off
+	reach.anchor_look = xf * Vector3(1.2, -2.2, 0)
 	_spawn_fluid(reach)
 
 func _spawn_fluid(reach: Reach) -> void:
@@ -347,246 +363,292 @@ func _spawn_fluid(reach: Reach) -> void:
 		reach.fluid.queue_free()
 	var f := PhysXParticleFluid3D.new()
 	f.solver = PhysXParticleFluid3D.SOLVER_MPM # the foam-capable path, on any GPU
-	f.spawn_on_ready = true # prefill: the plunge pool starts full and at rest
+	f.spawn_on_ready = true
 	f.particle_count = p.particles
-	f.particle_size = p.particle_size
+	f.particle_size = 0.035 # the only measured scale that flows without leaking
 	f.viscosity = 0.02
 	f.cohesion = 0.02
 	f.surface_tension = 0.006
-	f.spawn_region_size = Vector3(reach.prefill.x, minf(reach.prefill.y, 0.45), reach.prefill.z)
+	f.spawn_region_size = reach.prefill
 	f.mpm_domain_size = reach.domain
 	f.mpm_substeps = p.substeps
 	f.emitting = true
 	f.emission_rate = reach.base_rate * (p.rate / PRESETS["MEDIUM"].rate)
-	f.emission_radius = 0.16
+	f.emission_radius = 0.09
 	f.emission_velocity = reach.emit_vel
 	f.surface_mesh = p.surface # GPU marching-tetrahedra water surface
 	f.foam_enabled = true # MPM diffuse layer: foam/spray/bubbles where agitated
 	f.foam_particle_count = p.foam
-	f.foam_lifetime = 2.2
+	f.foam_lifetime = 1.8
 	f.foam_threshold = 170.0 # MPM scale; lower = foams more readily
 	f.foam_buoyancy = 0.9
 	f.material_override = _mat_water
 	f.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	f.process_mode = Node.PROCESS_MODE_PAUSABLE
 	reach.root.add_child(f)
-	f.position = reach.node_local # faucet = domain center, over the pool head
+	f.position = Vector3.ZERO # faucet = domain center, on the spillway lip
 	reach.fluid = f
 
-func _build_river() -> void:
-	# Each terrace's faucet hangs ~2.1 m above the previous outlet lip, one
-	# step downstream along the previous exit heading; its jet then free-falls
-	# ~6 m into the pool, so the waterfall IS the inter-stage descent.
-	var origin := Vector3(0, 100, 0)
-	var yaw := 0.0
-
-	# S1 SOURCE -- the spring: a deep pool plunged straight down into.
-	var r: Reach = _new_reach(1, "SOURCE", origin, yaw)
-	r.prefill = Vector3(2.2, 0.65, 2.2)
-	r.emit_vel = Vector3(0.4, -4.5, 0.4)
-	r.base_rate = 2400.0
-	_build_pool(r, 2.6, 2.6, 0.7, -7.15)
-	_label(r.root, "SOURCE - 100m", Vector3(0.5, 1.4, 0), SECTION_COLORS["SOURCE"])
-	_label(r.root, "STAGE 1/14", Vector3(2.2, -4.6, 0), Color(1, 1, 1, 0.6))
-	_finish_reach(r, Vector3(-4.5, 3.5, 4.5), Vector3(1.8, -6.6, 0))
-
-	# S2 LAMINAR -- long, wide, calm; the jet glides across the surface.
-	r = _chain_next(r, 22.0)
-	r.kind = "LAMINAR"
-	r.prefill = Vector3(3.3, 0.5, 2.3)
-	r.emit_vel = Vector3(2.6, -0.5, 0)
-	_build_pool(r, 3.4, 2.6, 0.55, -7.15)
-	_label(r.root, "LAMINAR FLOW", Vector3(1.5, 1.2, 0), SECTION_COLORS["LAMINAR"])
-	_finish_reach(r, Vector3(-3.8, 2.6, 4.6), Vector3(2.0, -6.7, 0))
-
-	# S3 TURN -- crescent pool; the tangential jet sets the whole basin swirling.
-	r = _chain_next(r, 40.0)
-	r.kind = "TURN"
-	r.prefill = Vector3(2.6, 0.55, 2.4)
-	r.emit_vel = Vector3(2.4, -0.9, 1.2)
-	_build_pool(r, 2.8, 2.8, 0.6, -7.15)
+# A sloped floor with banks between two floor-top points (reach frame).
+func _seg_run(reach: Reach, from: Vector3, to: Vector3, width: float, bank_h := 0.55) -> void:
+	var seg := Node3D.new()
+	var dir := to - from
+	var flat := Vector2(dir.x, dir.z).length()
+	seg.position = (from + to) * 0.5
+	seg.rotation = Vector3(0, atan2(-dir.z, dir.x), atan2(dir.y, flat))
+	reach.root.add_child(seg)
+	var t := 0.35
+	reach.static_bodies.append(_slab(seg, Vector3(0, -t * 0.5, 0), Vector3(dir.length() + 0.4, t, width), _mat_bed))
 	for side in [-1.0, 1.0]:
-		r.static_bodies.append(_slab(r.root, Vector3(2.0, -6.7, side * 1.85), Vector3(2.2, 1.0, 0.5), _mat_bank, Vector3(0, 0, side * 0.35)))
-	_label(r.root, "TURN / SWIRL", Vector3(1.2, 1.2, 0), SECTION_COLORS["TURN"])
-	_finish_reach(r, Vector3(-4.2, 3.0, -4.4), Vector3(1.8, -6.6, 0))
+		reach.static_bodies.append(_slab(seg, Vector3(0, bank_h * 0.5 - 0.1, side * (width * 0.5 + 0.18)),
+				Vector3(dir.length() + 0.8, bank_h + t, 0.36), _mat_bank))
 
-	# S4 ROCK GARDEN -- the jet slams a boulder field mid-pool.
-	r = _chain_next(r, -36.0)
-	r.kind = "TURBULENT"
-	r.prefill = Vector3(2.8, 0.5, 2.4)
-	r.emit_vel = Vector3(2.2, -2.4, 0)
-	_build_pool(r, 3.0, 2.8, 0.55, -7.15)
-	_rock(r.root, Vector3(1.9, -7.15, -0.5), 0.42, r)
-	_rock(r.root, Vector3(2.4, -7.15, 0.55), 0.3, r)
-	_rock(r.root, Vector3(1.4, -7.15, 0.7), 0.34, r)
-	_label(r.root, "TURBULENCE / OBSTACLES", Vector3(1.4, 1.2, 0), SECTION_COLORS["TURBULENT"])
-	_finish_reach(r, Vector3(-4.2, 2.8, 4.4), Vector3(2.0, -6.7, 0))
-
-	# S5 CHURN -- a submerged ridge and a partial barrier chop the splash up.
-	r = _chain_next(r, 30.0)
-	r.kind = "TURBULENT"
-	r.prefill = Vector3(2.6, 0.5, 2.3)
-	r.emit_vel = Vector3(2.0, -2.2, 0)
-	_build_pool(r, 2.8, 2.6, 0.55, -7.15)
-	r.static_bodies.append(_slab(r.root, Vector3(1.6, -7.35, 0), Vector3(1.2, 0.4, 2.6), _mat_bed)) # ridge
-	r.obstacle_bodies.append(_slab(r.root, Vector3(2.5, -7.05, -0.9), Vector3(0.8, 1.0, 1.0), _mat_wall)) # partial barrier
-	_label(r.root, "HIGH TURBULENCE", Vector3(1.4, 1.2, 0), SECTION_COLORS["TURBULENT"])
-	_finish_reach(r, Vector3(-3.8, 2.6, -4.6), Vector3(1.8, -6.7, 0))
-
-	# S6 SPLIT -- the jet divides around a wedge; both parallel branches feed
-	# from this terrace's discharge.
-	r = _chain_next(r, -24.0)
-	r.kind = "SPLIT"
-	r.prefill = Vector3(2.9, 0.5, 2.9)
-	r.emit_vel = Vector3(2.2, -2.2, 0)
-	r.base_rate = 2600.0
-	_build_pool(r, 3.1, 3.2, 0.55, -7.15)
-	r.static_bodies.append(_slab(r.root, Vector3(1.9, -6.95, 0), Vector3(1.3, 0.9, 0.45), _mat_wall, Vector3(0, 0, 0.18)))
-	_label(r.root, "FLOW SPLIT", Vector3(1.2, 1.2, 0), SECTION_COLORS["SPLIT"])
-	_finish_reach(r, Vector3(-4.4, 2.8, 4.4), Vector3(2.0, -6.7, 0))
-	var split := r
-
-	# S7A / S7B -- the two branches, in parallel at the same elevation.
-	var a := _branch_next(split, false, 26.0)
-	a.kind = "CHANNEL A"
-	a.prefill = Vector3(2.8, 0.5, 2.7)
-	a.emit_vel = Vector3(2.2, -1.8, 0)
-	_build_pool(a, 3.0, 3.0, 0.55, -7.15)
-	_label(a.root, "CHANNEL A - LOW TURBULENCE", Vector3(1.4, 1.2, 0), SECTION_COLORS["CHANNEL A"])
-	_finish_reach(a, Vector3(-4.0, 2.6, -4.6), Vector3(2.0, -6.7, 0))
-
-	var b := _branch_next(split, true, -26.0)
-	b.kind = "CHANNEL B"
-	b.base_rate = b.base_rate * 0.75 # the narrow branch carries less discharge
-	b.prefill = Vector3(2.6, 0.5, 2.0)
-	b.emit_vel = Vector3(2.0, -2.0, 0)
-	_build_pool(b, 2.8, 2.3, 0.55, -7.15)
-	_rock(b.root, Vector3(1.8, -7.15, -0.35), 0.3, b)
-	_rock(b.root, Vector3(2.3, -7.15, 0.4), 0.24, b)
-	b.static_bodies.append(_slab(b.root, Vector3(2.0, -6.8, 0.85), Vector3(1.0, 1.1, 0.4), _mat_wall)) # constriction wall
-	_gate_reach = _reaches.find(b)
-	_label(b.root, "CHANNEL B - HIGH TURBULENCE", Vector3(1.2, 1.2, 0), SECTION_COLORS["CHANNEL B"])
-	_finish_reach(b, Vector3(-3.8, 2.6, 4.4), Vector3(1.8, -6.7, 0))
-
-	# S8 MERGE -- both branches feed this faucet; deflector wedges split the
-	# plume into two arms that impinge -- a real confluence.
-	r = _chain_next(a, 0.0)
-	r.upstream = [a, b]
-	r.kind = "MERGE"
-	r.base_rate = 2400.0
-	r.prefill = Vector3(2.8, 0.5, 2.7)
-	r.emit_vel = Vector3(0.8, -3.4, 0)
-	_build_pool(r, 3.0, 3.0, 0.55, -7.15)
-	r.static_bodies.append(_slab(r.root, Vector3(2.0, -7.0, -0.8), Vector3(1.1, 0.9, 0.4), _mat_wall, Vector3(0, 0, -0.4)))
-	r.static_bodies.append(_slab(r.root, Vector3(2.0, -7.0, 0.8), Vector3(1.1, 0.9, 0.4), _mat_wall, Vector3(0, 0, 0.4)))
-	_label(r.root, "FLOW MERGE / TURBULENCE", Vector3(1.4, 1.2, 0), SECTION_COLORS["MERGE"])
-	_finish_reach(r, Vector3(-4.2, 2.8, 4.4), Vector3(2.0, -6.7, 0))
-
-	# S9 RAPIDS -- the jet hammers a staircase of submerged steps.
-	r = _chain_next(r, 28.0)
-	r.kind = "RAPIDS"
-	r.prefill = Vector3(2.7, 0.5, 2.3)
-	r.emit_vel = Vector3(1.6, -4.2, 0)
-	_build_pool(r, 2.9, 2.6, 0.55, -7.15)
-	for i in range(3):
-		r.static_bodies.append(_slab(r.root, Vector3(1.2 + i * 0.7, -7.5 + i * 0.22, 0), Vector3(0.6, 0.35, 2.5), _mat_bed))
-	_label(r.root, "RAPIDS / FOAM", Vector3(1.4, 1.2, 0), SECTION_COLORS["RAPIDS"])
-	_finish_reach(r, Vector3(-4.0, 3.4, -4.4), Vector3(1.8, -6.7, 0))
-
-	# S10 CONSTRICTION -- the whole stream is squeezed through a narrow gap.
-	r = _chain_next(r, -30.0)
-	r.kind = "TURBULENT"
-	r.prefill = Vector3(2.6, 0.5, 2.3)
-	r.emit_vel = Vector3(2.4, -2.6, 0)
-	_build_pool(r, 2.8, 2.6, 0.55, -7.15)
+# PLUNGE reach: the faucet jet free-falls `fall` m into a pocket; the pocket's
+# downstream lip is the next pour-over. Pocket center drifts downstream with
+# the jet's arc. Falls are free -- they happen in the air between domains.
+func _plunge_stage(kind: String, fall: float, width: float, label: String,
+		pocket_len := 1.8, depth := 0.38, bank_extra := 0.0) -> Reach:
+	var r := _new_reach(kind, _pending_origin, _pending_yaw, Vector3(6.7, 16, 5))
+	r.prefill = Vector3.ZERO # plunge pockets fill from their own waterfall
+	var water := -(fall + 0.3) # pocket water line below the faucet
+	var px := clampf(0.85 + fall * 0.11, 0.9, 1.55) # jet-arc landing drift
+	var bank_h := 0.75 + bank_extra
+	var t := 0.4
+	var floor_len := pocket_len + 1.2
+	r.static_bodies.append(_slab(r.root, Vector3(px, water - depth - t * 0.5, 0), Vector3(floor_len, t, width + 0.8), _mat_bed))
 	for side in [-1.0, 1.0]:
-		r.static_bodies.append(_slab(r.root, Vector3(1.8, -6.55, side * 0.62), Vector3(1.0, 1.5, 1.0), _mat_wall))
-	_label(r.root, "CONSTRICTION", Vector3(1.2, 1.2, 0), SECTION_COLORS["TURBULENT"])
-	_finish_reach(r, Vector3(-3.8, 2.6, 4.6), Vector3(1.8, -6.7, 0))
+		r.static_bodies.append(_slab(r.root, Vector3(px, water + bank_h * 0.5, side * (width * 0.5 + 0.22)),
+				Vector3(floor_len + 0.6, bank_h + t, 0.4), _mat_bank))
+	r.static_bodies.append(_slab(r.root, Vector3(px - floor_len * 0.5 - 0.22, water + bank_h * 0.5, 0),
+			Vector3(0.4, bank_h + t, width + 0.8), _mat_bank))
+	_outlet(r, px + floor_len * 0.5 + 0.1, water, width)
+	if label != "":
+		_label(r.root, label, Vector3(px, 1.0, 0), SECTION_COLORS.get(kind, Color.WHITE))
+	return r
 
-	# S11 CHURN 2 -- a dense small-rock bed for foam-on-impact.
-	r = _chain_next(r, 24.0)
-	r.kind = "TURBULENT"
-	r.prefill = Vector3(2.6, 0.5, 2.3)
-	r.emit_vel = Vector3(2.0, -2.6, 0)
-	_build_pool(r, 2.8, 2.5, 0.55, -7.15)
-	_rock(r.root, Vector3(1.7, -7.15, -0.4), 0.26, r)
-	_rock(r.root, Vector3(2.1, -7.15, 0.35), 0.22, r)
-	_rock(r.root, Vector3(2.5, -7.15, -0.15), 0.3, r)
-	_rock(r.root, Vector3(1.4, -7.15, 0.55), 0.2, r)
-	_label(r.root, "FOAM BED", Vector3(1.4, 1.2, 0), SECTION_COLORS["TURBULENT"])
-	_finish_reach(r, Vector3(-3.8, 2.6, -4.6), Vector3(1.8, -6.7, 0))
+# CHANNEL reach: a sloped run from the head (just past the lip) down to the
+# outlet lip. head_drop is the waterfall from the previous lip to the water.
+func _channel_stage(kind: String, head_drop: float, length: float, slope_deg: float,
+		width: float, label: String, bank_h := 0.55) -> Reach:
+	var r := _new_reach(kind, _pending_origin, _pending_yaw, Vector3(6.7, 15, 5))
+	r.prefill = Vector3(length * 0.7, 0.28, width * 0.65) # the run starts wet
+	var head_water := -(head_drop + 0.28)
+	var drop := length * tan(deg_to_rad(slope_deg))
+	_seg_run(r, Vector3(0.2, head_water, 0), Vector3(0.2 + length, head_water - drop, 0), width, bank_h)
+	_outlet(r, 0.2 + length + 0.2, head_water - drop, width)
+	if label != "":
+		_label(r.root, label, Vector3(length * 0.4, 0.8, 0), SECTION_COLORS.get(kind, Color.WHITE))
+	return r
 
-	# S12 FINAL CHUTE -- one last tall plunge.
-	r = _chain_next(r, -22.0)
-	r.kind = "CHUTE"
-	r.prefill = Vector3(2.5, 0.55, 2.2)
-	r.emit_vel = Vector3(0.9, -5.0, 0)
-	_build_pool(r, 2.7, 2.5, 0.6, -7.15)
-	_label(r.root, "FINAL CHUTE", Vector3(1.2, 1.2, 0), SECTION_COLORS["CHUTE"])
-	_finish_reach(r, Vector3(-3.6, 3.2, 4.4), Vector3(1.8, -6.7, 0))
-
-	# S13 BASIN -- the 0 m collection pool: wide, terminal, and the one tall
-	# plunge of the course. The faucet height lands the pool floor on y = 0.
-	var faucet_y := 0.7 + 6.55 + 6.0 # floor 0 -> water 0.7 -> faucet 13.25
-	var boost := faucet_y - (r.outlet_pos.y - 5.55)
-	r = _chain_next(r, 0.0, boost)
-	r.kind = "BASIN"
-	r.base_rate = 2600.0
-	r.node_local = Vector3(2.0, -0.55, 0) # plunge from 6 m up, pool center
-	r.prefill = Vector3(3.6, 0.65, 3.2)
-	r.emit_vel = Vector3(0.5, -4.0, 0)
-	r.domain = Vector3(12, 26, 8)
-	_build_pool(r, 3.8, 3.6, 0.7, -6.55, 2.0) # extra-tall banks hold the splash
-	_label(r.root, "COLLECTION BASIN - 0m", Vector3(1.4, 1.6, 0), SECTION_COLORS["BASIN"])
-	_label(r.root, "STAGE 14/14", Vector3(2.6, -4.2, -1.0), Color(1, 1, 1, 0.6))
-	_finish_reach(r, Vector3(-4.8, 4.0, -5.2), Vector3(1.8, -6.9, 0))
-
-func _chain_next(prev: Reach, yaw_delta_deg: float, height_boost := 0.0) -> Reach:
+# The chain: hook the next faucet onto the previous spillway lip.
+func _chain(prev: Reach, yaw_delta_deg: float) -> void:
 	var dir := Vector3(cos(prev.exit_yaw), 0, -sin(prev.exit_yaw))
-	var origin := prev.outlet_pos + dir * 1.1 + Vector3(0, -5.55 + height_boost, 0)
-	var yaw := rad_to_deg(prev.exit_yaw) + yaw_delta_deg
-	var reach := _new_reach(_reaches.size() + 1, "TBD", origin, yaw)
-	reach.upstream = [prev]
-	return reach
+	_pending_origin = prev.lip_crest + dir * 0.12 + Vector3(0, 0.15, 0)
+	_pending_yaw = rad_to_deg(prev.exit_yaw) + yaw_delta_deg
+	_pending_upstream = [prev]
 
-# A parallel branch: hooks onto the split terrace's outlet at a lateral offset.
-func _branch_next(split: Reach, right: bool, yaw_delta_deg: float) -> Reach:
+func _branch(split: Reach, right: bool, yaw_delta_deg: float) -> void:
 	var dir := Vector3(cos(split.exit_yaw), 0, -sin(split.exit_yaw))
-	var side := dir.cross(Vector3.UP) * (0.9 if right else -0.9)
-	var origin := split.outlet_pos + dir * 1.1 + side + Vector3(0, -5.55, 0)
-	var yaw := rad_to_deg(split.exit_yaw) + yaw_delta_deg
-	var reach := _new_reach(_reaches.size() + 1, "TBD", origin, yaw)
-	reach.upstream = [split]
-	return reach
+	var side := dir.cross(Vector3.UP) * (0.5 if right else -0.5)
+	_pending_origin = split.lip_crest + dir * 0.12 + side + Vector3(0, 0.15, 0)
+	_pending_yaw = rad_to_deg(split.exit_yaw) + yaw_delta_deg
+	_pending_upstream = [split]
+
+# ------------------------------------------------------------------ course
+# Graded profile: steep waterfall-fed upper course, then progressively
+# flatter fine-water reaches, ending in the one collecting basin at 0 m.
+func _build_river() -> void:
+	var origin := Vector3(0, 100, 0)
+	_pending_origin = origin
+	_pending_yaw = 0.0
+	_pending_upstream = []
+
+	# S1 SOURCE -- the only visible pour: a small header pool under the faucet.
+	var r := _plunge_stage("SOURCE", 1.6, 1.5, "SOURCE - 100m", 1.6, 0.45, 0.3)
+	r.base_rate = 5200.0
+	r.emit_vel = Vector3(0.6, -3.2, 0)
+	_finish_reach(r)
+
+	# S2 LAMINAR -- after a tall fall, a long smooth 24 deg run.
+	_chain(r, 10.0)
+	r = _channel_stage("LAMINAR", 6.0, 2.8, 24.0, 1.1, "LAMINAR FLOW")
+	_finish_reach(r)
+
+	# S3 TURN -- plunge pool in a tight bend.
+	_chain(r, 30.0)
+	r = _plunge_stage("TURN", 5.0, 1.4, "TURN / SWIRL", 1.7, 0.4, 0.15)
+	_finish_reach(r)
+
+	# S4 BOULDER FIELD -- steep channel strewn with rocks.
+	_chain(r, -16.0)
+	r = _channel_stage("TURBULENT", 4.5, 2.8, 32.0, 1.2, "TURBULENCE / OBSTACLES")
+	_rock(r.root, Vector3(1.0, -1.72, -0.2), 0.11, r)
+	_rock(r.root, Vector3(1.5, -2.0, 0.22), 0.08, r)
+	_rock(r.root, Vector3(2.0, -2.3, -0.08), 0.12, r)
+	_finish_reach(r)
+
+	# S5 CASCADE STEPS -- the marble-run staircase.
+	_chain(r, 12.0)
+	r = _channel_stage("RAPIDS", 4.0, 2.8, 38.0, 1.2, "CASCADE STEPS")
+	for i in range(3):
+		r.static_bodies.append(_slab(r.root, Vector3(0.7 + i * 0.68, -0.48 - i * 0.4, 0), Vector3(0.45, 0.16, 1.1), _mat_bed))
+	_finish_reach(r)
+
+	# S6 HEATED CHECKPOINT -- hot plates, Flow steam, evaporation loss.
+	_chain(r, -12.0)
+	r = _channel_stage("HEATED", 3.5, 2.8, 15.0, 1.2, "HEATED CHECKPOINT / STEAM")
+	_build_heat(r)
+	_finish_reach(r)
+
+	# S7 SPLIT -- the channel divides around a wedge island.
+	_chain(r, 12.0)
+	r = _channel_stage("SPLIT", 3.0, 2.8, 16.0, 1.7, "FLOW SPLIT")
+	r.static_bodies.append(_slab(r.root, Vector3(1.4, -0.78, 0), Vector3(1.2, 0.55, 0.22), _mat_wall, Vector3(0, 0, 0.1)))
+	_finish_reach(r)
+
+	# S8A / S8B -- the two branches in parallel.
+	_branch(r, false, 14.0)
+	var a := _channel_stage("CHANNEL A", 2.5, 2.6, 13.0, 1.0, "CHANNEL A - LOW TURBULENCE")
+	_branch(r, true, -14.0)
+	var b := _channel_stage("CHANNEL B", 2.5, 2.6, 19.0, 0.9, "CHANNEL B - HIGH TURBULENCE")
+	_rock(b.root, Vector3(1.1, -0.95, -0.12), 0.08, b)
+	b.static_bodies.append(_slab(b.root, Vector3(1.6, -0.9, 0.28), Vector3(0.7, 0.5, 0.18), _mat_wall))
+	_finish_reach(a)
+	_finish_reach(b)
+	_gate_reach = _reaches.find(b)
+
+	# S9 MERGE -- both branches feed one confluence pocket.
+	_chain(a, 0.0)
+	_pending_upstream = [a, b]
+	r = _plunge_stage("MERGE", 3.5, 1.6, "FLOW MERGE / TURBULENCE", 1.7, 0.42, 0.15)
+	r.static_bodies.append(_slab(r.root, Vector3(1.5, -3.15, -0.4), Vector3(0.6, 0.4, 0.22), _mat_wall, Vector3(0, 0, -0.28)))
+	r.static_bodies.append(_slab(r.root, Vector3(1.5, -3.15, 0.4), Vector3(0.6, 0.4, 0.22), _mat_wall, Vector3(0, 0, 0.28)))
+	_finish_reach(r)
+
+	# S10 RAPIDS -- one last steep staircase before the valley opens up.
+	_chain(r, -12.0)
+	r = _channel_stage("RAPIDS", 4.5, 2.8, 36.0, 1.3, "RAPIDS / FOAM")
+	for i in range(3):
+		r.static_bodies.append(_slab(r.root, Vector3(0.7 + i * 0.68, -0.5 - i * 0.38, 0), Vector3(0.45, 0.16, 1.15), _mat_bed))
+	_finish_reach(r)
+
+	# S11 CONSTRICTION -- walls pinch the stream to half width.
+	_chain(r, 12.0)
+	r = _channel_stage("TURBULENT", 3.0, 2.8, 13.0, 1.3, "CONSTRICTION")
+	for side in [-1.0, 1.0]:
+		r.static_bodies.append(_slab(r.root, Vector3(1.4, -0.85, side * 0.38), Vector3(0.8, 0.55, 0.32), _mat_wall))
+	_finish_reach(r)
+
+	# S12 FOAM BED -- a shallow pebble-strewn drift.
+	_chain(r, -10.0)
+	r = _channel_stage("RIVER", 2.6, 2.8, 10.0, 1.4, "FOAM BED")
+	for i in range(6):
+		_rock(r.root, Vector3(0.6 + i * 0.36, -0.58 - i * 0.05, (0.28 if i % 2 == 0 else -0.28)), 0.05 + 0.01 * (i % 3), r)
+	_finish_reach(r)
+
+	# S13 SLOW RIVER -- long flat drift where floaters ride the stream.
+	_chain(r, 10.0)
+	r = _channel_stage("RIVER", 2.2, 2.9, 8.0, 1.5, "SLOW RIVER - DRIFT")
+	_finish_reach(r)
+
+	# S14 BASIN -- the one true basin; its fall is computed to land the floor
+	# on world y = 0 so the whole course drains into it.
+	_chain(r, -8.0)
+	var basin_fall := maxf(_pending_origin.y - 1.0, 2.0)
+	r = _plunge_stage("BASIN", basin_fall, 3.0, "COLLECTION BASIN - 0m", 3.2, 0.9, 1.2)
+	r.base_rate = 5200.0
+	r.emit_vel = Vector3(0.6, -3.0, 0)
+	_finish_reach(r, true)
+
+# ------------------------------------------------------------------- heat
+
+# The heated checkpoint: emissive plates across the channel floor, a hot
+# light, and a NVIDIA Flow smoke simulation standing by above them. The steam
+# emitters are gated every coupling tick on the measured water contact with
+# the plates, so the plume is driven by the fluid, not by the clock.
+func _build_heat(reach: Reach) -> void:
+	var mat_hot := StandardMaterial3D.new()
+	mat_hot.albedo_color = Color(0.25, 0.08, 0.03)
+	mat_hot.emission_enabled = true
+	mat_hot.emission = Color(1.0, 0.35, 0.08)
+	mat_hot.emission_energy_multiplier = 2.6
+	for i in range(3):
+		reach.static_bodies.append(_slab(reach.root, Vector3(0.85 + i * 0.7, -0.42 - i * 0.13, 0.0),
+				Vector3(0.55, 0.09, 1.0), mat_hot))
+	var light := OmniLight3D.new()
+	light.position = Vector3(1.4, 0.6, 0.0)
+	light.light_color = Color(1.0, 0.45, 0.15)
+	light.light_energy = 2.2
+	light.omni_range = 5.0
+	reach.root.add_child(light)
+
+	_heat_probe = AABB(reach.root.global_transform * Vector3(0.6, -0.55, -0.45), Vector3(2.0, 0.45, 0.9))
+	_heat_reach = _reaches.find(reach)
+
+	if not ClassDB.class_exists("PhysXFlowSimulation3D"):
+		_steam_available = 0
+		return
+	_flow_sim = ClassDB.instantiate("PhysXFlowSimulation3D")
+	reach.root.add_child(_flow_sim)
+	_flow_sim.position = Vector3(1.4, 0.2, 0.0)
+	_flow_sim.process_mode = Node.PROCESS_MODE_PAUSABLE
+	_flow_sim.set("max_blocks", 1024)
+	_flow_sim.set("cell_size", 0.35)
+	_flow_sim.set("combustion_enabled", false) # pure steam: no fuel, no combustion
+	_flow_sim.set("buoyancy_per_temp", 600.0) # 0.9 temp must beat gravity 100 and rise
+	_flow_sim.set("cooling_rate", 0.25)
+	_flow_sim.set("fog_density", 30.0)
+	for side in [-1.0, 1.0]:
+		var e: Node3D = ClassDB.instantiate("PhysXFlowEmitter3D")
+		reach.root.add_child(e)
+		e.position = Vector3(1.4, -0.3, side * 0.32)
+		e.set("shape", 1) # box
+		e.set("size", Vector3(2.4, 0.5, 0.8))
+		e.set("velocity", Vector3(0, 6.0, 0))
+		e.set("smoke", 0.0) # gated on contact; scales with the measured intensity
+		e.set("temperature", 0.9)
+		e.set("fuel", 0.0)
+		_flow_emitters.append(e)
+	var paths: Array[NodePath] = []
+	for e in _flow_emitters:
+		paths.append(_flow_sim.get_path_to(e))
+	_flow_sim.set("emitters", paths)
 
 # --------------------------------------------------------------- floaters
 
-# Deterministic floaters across the regimes; offsets are terrace-local (y
-# relative to the faucet) and each body starts just above its pool.
+# Free bodies along the course: light ones ride the stream and tumble over
+# the spillways, dense ones sit against the flow. Reach assignment is dynamic
+# -- a body is buoyed by whichever stage currently contains it.
 const FLOATER_TABLE := [
-	# reach, kind, local offset, size, density
-	[1, "buoy", Vector3(1.8, -6.6, 0.5), 0.3, 350.0],
-	[2, "log", Vector3(2.0, -6.5, -0.3), 1.5, 500.0],
-	[3, "crate", Vector3(2.2, -6.5, 0.4), 0.6, 550.0],
-	[5, "sphere", Vector3(2.4, -6.5, -0.4), 0.32, 400.0],
-	[6, "barrel", Vector3(2.6, -6.5, 0.6), 0.8, 450.0],
-	[7, "crate", Vector3(2.2, -6.5, 0.0), 0.7, 1800.0],
-	[8, "log", Vector3(2.0, -6.5, 0.3), 1.4, 500.0],
-	[13, "buoy", Vector3(2.4, -6.5, -0.5), 0.34, 300.0],
-	[13, "crate", Vector3(3.0, -6.5, 0.6), 0.65, 600.0],
+	# start reach, kind, local offset, size, density
+	[1, "ball", Vector3(0.7, 0.5, 0.2), 0.07, 250.0],
+	[1, "ball", Vector3(1.3, 0.5, -0.2), 0.09, 400.0],
+	[3, "crate", Vector3(0.8, 0.5, 0.15), 0.13, 650.0],
+	[3, "rock", Vector3(2.0, 0.5, -0.15), 0.1, 3200.0],
+	[5, "sphere", Vector3(0.9, 0.5, 0.2), 0.08, 450.0],
+	[6, "log", Vector3(0.8, 0.5, 0.0), 0.45, 420.0],
+	[7, "crate", Vector3(0.9, 0.5, 0.1), 0.11, 1150.0],
+	[9, "ball", Vector3(0.8, 0.5, -0.15), 0.08, 300.0],
+	[10, "log", Vector3(0.9, 0.5, 0.1), 0.4, 400.0],
+	[12, "ball", Vector3(0.8, 0.5, 0.2), 0.09, 260.0],
+	[12, "crate", Vector3(1.4, 0.5, -0.1), 0.12, 700.0],
+	[13, "ball", Vector3(0.8, 0.5, 0.0), 0.1, 300.0],
+	[13, "log", Vector3(1.5, 0.5, 0.15), 0.42, 420.0],
+	[14, "buoy", Vector3(1.5, 1.2, -0.3), 0.11, 240.0],
+	[14, "crate", Vector3(2.0, 1.2, 0.4), 0.14, 700.0],
 ]
 
 func _spawn_floaters() -> void:
 	for entry in FLOATER_TABLE:
-		var reach: Reach = _reaches[entry[0]]
+		var idx: int = mini(entry[0], _reaches.size() - 1)
+		var reach := _reaches[idx]
 		var body := _make_floater(entry[1], entry[3], entry[4])
-		body.position = entry[2] # terrace-local; parented under the terrace root
+		body.position = entry[2] # reach-local; parented under the reach root
 		reach.root.add_child(body)
 		body.process_mode = Node.PROCESS_MODE_PAUSABLE
 		_floaters.append(body)
 		_floater_home[body] = body.transform
-		_floater_reach[body] = entry[0]
+		_floater_reach[body] = idx
 		_floater_stranded[body] = -1.0
 		reach.floaters.append(body)
 
@@ -604,14 +666,15 @@ func _make_floater(kind: String, size: float, density: float) -> RigidBody3D:
 			var sh := SphereShape3D.new()
 			sh.radius = size
 			_add_shape_mesh(rb, sh, _sphere_mesh(size), Color(0.95, 0.55, 0.15), 0.5, 0.0)
-		"sphere":
+		"sphere", "ball":
 			volume = 4.0 / 3.0 * PI * pow(size, 3.0)
 			rb.mass = density * volume
 			var sh := SphereShape3D.new()
 			sh.radius = size
-			_add_shape_mesh(rb, sh, _sphere_mesh(size), Color.from_hsv(0.55, 0.7, 0.9), 0.4, 0.0)
-		"log", "barrel":
-			var radius := size * 0.16 if kind == "log" else size * 0.42
+			var color := Color.from_hsv(0.55, 0.7, 0.9) if kind == "sphere" else Color(0.95, 0.8, 0.3)
+			_add_shape_mesh(rb, sh, _sphere_mesh(size), color, 0.4, 0.0)
+		"log":
+			var radius := size * 0.14
 			volume = PI * radius * radius * size
 			rb.mass = density * volume
 			var cap := CapsuleShape3D.new()
@@ -620,20 +683,22 @@ func _make_floater(kind: String, size: float, density: float) -> RigidBody3D:
 			var mesh := CapsuleMesh.new()
 			mesh.radius = radius
 			mesh.height = size
-			var color := Color(0.55, 0.38, 0.2) if kind == "log" else Color(0.35, 0.5, 0.65)
-			var rough := 0.9 if kind == "log" else 0.35
-			var mi := _add_shape_mesh(rb, cap, mesh, color, rough, 0.0 if kind == "log" else 0.6)
+			var mi := _add_shape_mesh(rb, cap, mesh, Color(0.55, 0.38, 0.2), 0.9, 0.0)
 			mi.rotation = Vector3(PI / 2, 0, 0) # lie along the flow
-		"crate", "rock":
-			var shrink := 0.7 if kind == "rock" else 1.0
-			volume = pow(size * shrink, 3.0)
+		"crate":
+			volume = pow(size, 3.0)
 			rb.mass = density * volume
 			var box := BoxShape3D.new()
-			box.size = Vector3.ONE * size * shrink
+			box.size = Vector3.ONE * size
 			var mesh := BoxMesh.new()
-			mesh.size = Vector3.ONE * size * shrink
-			var color := Color(0.3, 0.29, 0.28) if kind == "rock" else Color(0.72, 0.55, 0.3)
-			_add_shape_mesh(rb, box, mesh, color, 0.95 if kind == "rock" else 0.85, 0.0)
+			mesh.size = Vector3.ONE * size
+			_add_shape_mesh(rb, box, mesh, Color(0.72, 0.55, 0.3), 0.85, 0.0)
+		"rock":
+			volume = 4.0 / 3.0 * PI * pow(size, 3.0)
+			rb.mass = density * volume
+			var sh := SphereShape3D.new()
+			sh.radius = size
+			_add_shape_mesh(rb, sh, _sphere_mesh(size), Color(0.3, 0.29, 0.28), 0.95, 0.0)
 	rb.set_meta("volume", volume) # buoyancy probe size
 	return rb
 
@@ -700,17 +765,17 @@ func _rebuild_colliders(reach: Reach) -> void:
 	reach.fluid.mpm_colliders = paths
 
 func _spawn_floater_burst() -> void:
-	# Object-interaction stress: a wave of crates and buoys into the source
-	# pool, the rock garden and the merge pool. Seeded, so bursts repeat.
-	var spots := [[0, Vector3(0.4, -6.2, 0.0)], [3, Vector3(1.6, -6.2, 0.2)], [7, Vector3(1.4, -6.2, 0.0)]]
+	# Object-interaction stress: a seeded wave of bodies into the source and
+	# the boulder field -- they ride the river down the whole course.
+	var spots := [[0, Vector3(0.4, 0.6, 0.0)], [3, Vector3(1.0, 0.6, 0.1)], [5, Vector3(0.9, 0.6, 0.0)]]
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 20260929
-	for i in range(9):
+	for i in range(8):
 		var spot: Array = spots[i % spots.size()]
 		var reach: Reach = _reaches[spot[0]]
-		var kind := "crate" if i % 3 != 0 else "buoy"
-		var body := _make_floater(kind, 0.45 + 0.25 * (i % 3), 450.0 if kind == "crate" else 350.0)
-		var local: Vector3 = spot[1] + Vector3(rng.randf_range(-0.4, 0.4), 0.35 * int(i / spots.size()), rng.randf_range(-0.4, 0.4))
+		var kind := "crate" if i % 3 != 0 else "ball"
+		var body := _make_floater(kind, 0.07 + 0.03 * (i % 3), 450.0 if kind == "crate" else 320.0)
+		var local: Vector3 = spot[1] + Vector3(rng.randf_range(-0.2, 0.2), 0.2 * int(i / spots.size()), rng.randf_range(-0.2, 0.2))
 		body.position = local
 		reach.root.add_child(body)
 		body.process_mode = Node.PROCESS_MODE_PAUSABLE
@@ -733,7 +798,7 @@ func _reset(full_presets := false) -> void:
 		if full_presets:
 			_spawn_fluid(reach)
 		elif is_instance_valid(reach.fluid):
-			reach.fluid.clear() # next emit reconfigures; the pool refills by circulation
+			reach.fluid.clear() # next emit reconfigures; reaches refill by flow
 		for floater in reach.floaters:
 			_reset_floater(floater)
 	if full_presets:
@@ -786,8 +851,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_3: _goto_anchor(3)
 			KEY_4: _goto_anchor(5)
 			KEY_5: _goto_anchor(8)
-			KEY_6: _goto_anchor(9)
-			KEY_7: _goto_anchor(13)
+			KEY_6: _goto_anchor(10)
+			KEY_7: _goto_anchor(_reaches.size() - 1)
 
 func _cycle_preset(dir: int) -> void:
 	var idx := PRESET_ORDER.find(_preset)
@@ -797,8 +862,9 @@ func _cycle_preset(dir: int) -> void:
 func _goto_anchor(reach_idx: int) -> void:
 	_tour = false
 	if reach_idx < 0 or reach_idx >= _reaches.size():
-		_cam.position = Vector3(60, 55, 62)
-		_cam.look_at(Vector3(14, 42, 14))
+		var view := _overview_view()
+		_cam.position = view[0]
+		_cam.look_at(view[1])
 	else:
 		var reach := _reaches[reach_idx]
 		_cam.position = reach.anchor_pos
@@ -809,10 +875,21 @@ func _sync_fly() -> void:
 	_fly.yaw = _cam.rotation.y
 	_fly.pitch = _cam.rotation.x
 
+func _overview_view() -> Array:
+	if _reaches.is_empty():
+		return [Vector3(40, 55, 45), Vector3.ZERO]
+	var aabb := AABB(_reaches[0].fluid.global_position, Vector3.ZERO)
+	for reach in _reaches:
+		if is_instance_valid(reach.fluid):
+			aabb = aabb.expand(reach.fluid.global_position)
+	var center := aabb.get_center()
+	var off := Vector3(0.85, 0.55, 0.85) * maxf(aabb.size.length() * 0.62, 40.0)
+	return [center + off, center]
+
 # ------------------------------------------------------------------- camera
 
 func _tour_step(delta: float) -> void:
-	# Glide down the course: ease toward each terrace anchor in turn.
+	# Glide down the course: ease toward each reach anchor in turn.
 	var target := _reaches[_tour_target % _reaches.size()]
 	_cam.position = _cam.position.lerp(target.anchor_pos, clampf(delta * 0.8, 0.0, 1.0))
 	var to_look := (target.anchor_look - _cam.position).normalized()
@@ -821,7 +898,7 @@ func _tour_step(delta: float) -> void:
 		var blended := current.slerp(to_look, clampf(delta * 2.0, 0.0, 1.0)).normalized()
 		_cam.look_at(_cam.position + blended, Vector3.UP)
 	_sync_fly()
-	if _cam.position.distance_to(target.anchor_pos) < 6.0:
+	if _cam.position.distance_to(target.anchor_pos) < 5.0:
 		_tour_target = (_tour_target + 1) % _reaches.size()
 
 # -------------------------------------------------------------- simulation
@@ -831,20 +908,27 @@ func _physics_process(delta: float) -> void:
 		return
 	_t += delta
 
-	# Discharge coupling: each pool's outlet probe modulates the next faucet,
-	# so upstream surges propagate down the course instead of every terrace
-	# running at a blind fixed rate.
+	_assign_accum += delta
+	if _assign_accum >= 0.3:
+		_assign_accum = 0.0
+		_reassign_floaters()
+
+	# Discharge coupling: each reach's outlet probe modulates the next faucet
+	# (hidden on the spillway lip), so the single top source drives the whole
+	# course and upstream surges propagate downstream.
 	_couple_accum += delta
 	if _couple_accum >= 0.2:
 		var dt := _couple_accum
 		_couple_accum = 0.0
 		var preset_scale: float = PRESETS[_preset].rate / PRESETS["MEDIUM"].rate
 		var mode_scale := 2.2 if MODES[_mode_idx] == "STRESS" else 1.0
-		for reach in _reaches:
+		_update_steam(dt)
+		for i in range(_reaches.size()):
+			var reach := _reaches[i]
 			if not is_instance_valid(reach.fluid):
 				continue
 			var fill := clampf(reach.fluid.get_submersion(reach.outlet_probe), 0.0, 1.0)
-			if fill >= 0.5 and reach.filled_at < 0.0:
+			if fill >= 0.35 and reach.filled_at < 0.0:
 				reach.filled_at = _t
 			var target := 1.0
 			var n := 0
@@ -854,36 +938,43 @@ func _physics_process(delta: float) -> void:
 					n += 1
 			if n > 0:
 				target = clampf(0.15 + (target - 1.0) / n * 1.05, 0.15, 1.0)
-			if _reaches.find(reach) == _gate_reach and not (MODES[_mode_idx] in ["FULL", "SPLIT/MERGE", "STRESS"]):
+			if i == _heat_reach + 1:
+				target *= 1.0 - _evap_loss # discharge lost to evaporation
+			if i == _gate_reach and not (MODES[_mode_idx] in ["FULL", "SPLIT/MERGE", "STRESS"]):
 				reach.rate_scale = 0.0 # channel B gated off
 				reach.fluid.emission_rate = 0.0
 			else:
 				reach.rate_scale = lerpf(reach.rate_scale, target, clampf(dt * 1.6, 0.0, 1.0))
 				reach.fluid.emission_rate = reach.base_rate * reach.rate_scale * mode_scale * preset_scale
 
-	# Script-side buoyancy + drag, per floater, from its pool's fluid state --
-	# the same approximation the faucet demo uses (the MPM couple pass nudges
-	# coupled bodies but does not float them by density).
+	# Script-side buoyancy + drag, per floater, from its current stage's fluid
+	# state -- the same approximation the faucet demo uses (the MPM couple pass
+	# nudges coupled bodies but does not float them by density).
 	for body in _floaters:
 		if not is_instance_valid(body):
 			continue
-		var reach := _reaches[_floater_reach.get(body, 0)]
+		var ridx := _reach_index_of(body)
+		if ridx < 0:
+			continue
+		if _floater_reach.get(body, -1) != ridx:
+			_move_floater_reach(body, ridx)
+		var reach := _reaches[ridx]
 		if not is_instance_valid(reach.fluid):
 			continue
 		var vol: float = body.get_meta("volume", 1.0)
 		var side := pow(maxf(vol, 0.001), 1.0 / 3.0)
 		var aabb := AABB(body.global_position - Vector3.ONE * side * 0.5, Vector3.ONE * side)
 		var submerged := clampf(reach.fluid.get_submersion(aabb), 0.0, 1.0)
-		body.linear_damp = lerpf(0.05, 2.5, submerged)
+		body.linear_damp = lerpf(0.05, 2.2, submerged)
 		if submerged > 0.0:
 			var buoy: float = WATER_DENSITY * submerged * vol * 9.8
 			body.apply_central_force(Vector3.UP * minf(buoy, body.mass * 9.8 * 1.35))
 
-	# Strayed-body recovery: anything below the site for 15 s goes back home.
+	# Adrift-body recovery: anything well below the course for 15 s goes back.
 	for body in _floaters:
 		if not is_instance_valid(body):
 			continue
-		if body.global_position.y < -6.0:
+		if body.global_position.y < -8.0:
 			var since: float = _floater_stranded.get(body, -1.0)
 			if since < 0.0:
 				_floater_stranded[body] = _t
@@ -891,6 +982,37 @@ func _physics_process(delta: float) -> void:
 				_reset_floater(body)
 		else:
 			_floater_stranded[body] = -1.0
+
+# Which stage's domain currently contains this body?
+func _reach_index_of(body: RigidBody3D) -> int:
+	for i in range(_reaches.size()):
+		var reach := _reaches[i]
+		if not is_instance_valid(reach.fluid):
+			continue
+		var rel := (body.global_position - reach.fluid.global_position).abs()
+		var half := reach.domain * 0.5
+		if rel.x <= half.x and rel.y <= half.y and rel.z <= half.z:
+			return i
+	return -1
+
+# Hand a floater's coupling from its old stage to its new one.
+func _move_floater_reach(body: RigidBody3D, new_idx: int) -> void:
+	var old_idx: int = _floater_reach.get(body, -1)
+	if old_idx >= 0 and old_idx < _reaches.size():
+		_reaches[old_idx].floaters.erase(body)
+		_rebuild_colliders(_reaches[old_idx])
+	if new_idx >= 0 and new_idx < _reaches.size():
+		_reaches[new_idx].floaters.append(body)
+		_rebuild_colliders(_reaches[new_idx])
+
+# Periodic re-assignment pass (covers bodies the per-tick check missed).
+func _reassign_floaters() -> void:
+	for body in _floaters:
+		if not is_instance_valid(body):
+			continue
+		var ridx := _reach_index_of(body)
+		if ridx >= 0 and _floater_reach.get(body, -1) != ridx:
+			_move_floater_reach(body, ridx)
 
 func _process(delta: float) -> void:
 	if _tour:
@@ -905,13 +1027,65 @@ func _process(delta: float) -> void:
 		_hud_accum = 0.0
 		_update_sim_lod()
 		_update_hud()
+	if _shots_dir != "" and _bench_frame % 140 == 70:
+		_capture_shot()
 	if _bench and _bench_frame >= _bench_frames:
 		_finish_bench()
 
-# Broad sanity instrumentation -- one terrace per 1.5 s so the full GPU
-# readback stays off the hot path. NaNs and out-of-domain particles should both
-# stay at zero (the MPM clamps to its domain box); per-terrace fill times give
-# the 100 m -> 0 m transit; floater displacement proves the water does work.
+# Steam at the heated checkpoint: measure water contact on the hot plates,
+# smooth it into a steam intensity, gate the Flow emitters with it (smoke
+# injection scales with the contact), and derive the evaporation loss the
+# downstream reach's discharge suffers. Flow availability is checked once,
+# shortly after startup -- the runtime loads nvflow.dll lazily.
+func _update_steam(dt: float) -> void:
+	if _steam_available == 0 or _heat_reach < 0:
+		return
+	var heat := _reaches[_heat_reach]
+	if not is_instance_valid(heat.fluid):
+		return
+	var contact := clampf(heat.fluid.get_submersion(_heat_probe) * 2.0, 0.0, 1.0)
+	# fast attack, slow release: steam lingers briefly after the water passes
+	var rate := 3.0 if contact > _steam_level else 0.7
+	_steam_level = lerpf(_steam_level, contact, clampf(dt * rate, 0.0, 1.0))
+	if _steam_available < 0 and _t > 1.5:
+		var diag: Dictionary = _flow_sim.call("get_diagnostics")
+		_steam_available = 1 if bool(diag.get("available", false)) else 0
+		if _steam_available == 0:
+			print("[river] Flow runtime unavailable -- steam inert (", diag.get("backend", "?"), ")")
+	if _steam_available == 1:
+		var smoking := _steam_level > 0.08
+		for e in _flow_emitters:
+			e.set("enabled", smoking)
+			e.set("smoke", 4.0 * _steam_level)
+	_evap_loss = 0.3 * _steam_level
+
+# Simulation LOD: every MPM fluid syncs its own GPU queue once per physics
+# tick (~13 ms each on the test GPU), so stages near the camera run at full
+# rate and the rest hold their water frozen, resuming -- with the discharge
+# coupling -- as the camera reaches them.
+func _update_sim_lod() -> void:
+	if _lod_off:
+		return
+	var dists := {}
+	for i in range(_reaches.size()):
+		if is_instance_valid(_reaches[i].fluid) and i < _active_stages:
+			dists[i] = _cam.position.distance_squared_to(_reaches[i].fluid.global_position)
+	var order := dists.keys()
+	order.sort_custom(func(a, b): return dists[a] < dists[b])
+	var keep := {}
+	for i in range(mini(3, order.size())): # the nearest reaches always run
+		keep[order[i]] = true
+	for i in order: # plus anything inside the radius
+		if dists[i] < _sim_radius * _sim_radius:
+			keep[i] = true
+	_sim_active = keep.size()
+	for i in range(_reaches.size()):
+		if is_instance_valid(_reaches[i].fluid) and i < _active_stages:
+			_reaches[i].fluid.process_mode = Node.PROCESS_MODE_PAUSABLE if keep.has(i) else Node.PROCESS_MODE_DISABLED
+
+# Broad sanity instrumentation -- one reach per 1.5 s so the full GPU readback
+# stays off the hot path. NaNs and out-of-domain particles should both stay at
+# zero (the MPM clamps to its domain box).
 func _validate_next_reach() -> void:
 	if _reaches.is_empty():
 		return
@@ -934,13 +1108,19 @@ func _validate_next_reach() -> void:
 	for body in _floaters:
 		if is_instance_valid(body):
 			var home: Transform3D = _floater_home.get(body, Transform3D.IDENTITY)
-			if body.global_position.distance_to(home.origin) > 2.0:
+			if body.global_position.distance_to(_floater_world_home(home, body)) > 3.0:
 				_obj_moved = true
 			if body.linear_velocity.length() > 200.0:
 				_nan_total += 1 # velocity blow-up counts against stability
 
+func _floater_world_home(home: Transform3D, body: RigidBody3D) -> Vector3:
+	var parent := body.get_parent()
+	if parent is Node3D:
+		return (parent as Node3D).global_transform * home.origin
+	return home.origin
+
 func _fluid_totals() -> Array:
-	var totals := [0, 0, 0.0, 0] # particles, foam, step ms, active reaches
+	var totals := [0, 0, 0.0, 0] # particles, foam, step ms, reaches
 	for reach in _reaches:
 		if is_instance_valid(reach.fluid):
 			totals[0] += reach.fluid.get_live_particle_count()
@@ -949,15 +1129,37 @@ func _fluid_totals() -> Array:
 			totals[3] += 1
 	return totals
 
+func _capture_shot() -> void:
+	var spots := [-1, _heat_reach, _reaches.size() - 1] # overview, heated, basin
+	if _shot_idx >= spots.size():
+		get_tree().quit()
+		return
+	var reach_idx: int = spots[_shot_idx]
+	if reach_idx < 0:
+		var view := _overview_view()
+		_cam.position = view[0]
+		_cam.look_at(view[1])
+	else:
+		_cam.position = _reaches[reach_idx].anchor_pos
+		_cam.look_at(_reaches[reach_idx].anchor_look)
+	_sync_fly()
+	# let the LOD + camera + steam plume settle before the grab
+	await get_tree().create_timer(2.0).timeout
+	var img := get_viewport().get_texture().get_image()
+	var path := _shots_dir.path_join("river_%d.png" % reach_idx)
+	img.save_png(path)
+	print("[river] shot -> ", path)
+	_shot_idx += 1
+
 func _finish_bench() -> void:
 	var totals := _fluid_totals()
 	var fps := maxf(Engine.get_frames_per_second(), 1.0)
 	var proc_ms := Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
 	var phys_ms := Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
-	print("[river] benchA frames=%d fps=%.1f frame_ms=%.2f mpm_step_ms=%.2f proc=%.1f phys=%.1f" % [
-			_bench_frame, fps, 1000.0 / fps, totals[2], proc_ms, phys_ms])
-	print("[river] benchB particles=%d foam=%d sim=%d/%d preset=%s mode=%s nan=%d escapes=%d" % [
-			totals[0], totals[1], _sim_active, _reaches.size(), _preset, MODES[_mode_idx], _nan_total, _escapes])
+	print("[river] bench frames=%d  fps=%.1f  frame_ms=%.2f  mpm_step_ms=%.2f  script_proc=%.1fms  script_phys=%.1fms  particles=%d  foam=%d  sim=%d/%d  steam=%s  evap=%.0f%%  preset=%s  mode=%s  nan=%d  escapes=%d" % [
+			_bench_frame, fps, 1000.0 / fps, totals[2], proc_ms, phys_ms,
+			totals[0], totals[1], _sim_active, _reaches.size(), _steam_status(), _evap_loss * 100.0,
+			_preset, MODES[_mode_idx], _nan_total, _escapes])
 	get_tree().quit()
 
 func _section_for_camera() -> String:
@@ -966,37 +1168,18 @@ func _section_for_camera() -> String:
 	var best := 0
 	var best_d := 1e18
 	for i in range(_reaches.size()):
-		var d := _cam.position.distance_squared_to(_reaches[i].root.global_transform.origin)
+		var d := _cam.position.distance_squared_to(_reaches[i].fluid.global_position)
 		if d < best_d:
 			best_d = d
 			best = i
 	return _reaches[best].kind
 
-# Simulation LOD: every MPM fluid syncs its own GPU queue once per physics
-# tick (~13 ms on the test GPU), so simulating all fourteen stages at once
-# costs more in driver sync than in solver time. Stages near the camera run at
-# full rate; the rest hold their prefilled pools frozen and resume -- with the
-# measured discharge coupling -- as the camera reaches them. lod=off removes
-# the culling for the all-on stress number.
-func _update_sim_lod() -> void:
-	if _lod_off:
-		return
-	var dists := {}
-	for i in range(_reaches.size()):
-		if is_instance_valid(_reaches[i].fluid) and i < _active_stages:
-			dists[i] = _cam.position.distance_squared_to(_reaches[i].fluid.global_position)
-	var order := dists.keys()
-	order.sort_custom(func(a, b): return dists[a] < dists[b])
-	var keep := {}
-	for i in range(mini(3, order.size())): # the nearest stages always run
-		keep[order[i]] = true
-	for i in order: # plus anything inside the radius
-		if dists[i] < _sim_radius * _sim_radius:
-			keep[i] = true
-	_sim_active = keep.size()
-	for i in range(_reaches.size()):
-		if is_instance_valid(_reaches[i].fluid) and i < _active_stages:
-			_reaches[i].fluid.process_mode = Node.PROCESS_MODE_PAUSABLE if keep.has(i) else Node.PROCESS_MODE_DISABLED
+func _steam_status() -> String:
+	if _steam_available == 0:
+		return "unavailable"
+	if _steam_available < 0:
+		return "checking"
+	return "STEAM %.0f%%" % (_steam_level * 100.0) if _steam_level > 0.08 else "hot (idle)"
 
 func _update_hud() -> void:
 	if not _hud_visible:
@@ -1011,15 +1194,16 @@ func _update_hud() -> void:
 			last_fill = maxf(last_fill, reach.filled_at)
 	var transit := ""
 	if filled == _reaches.size():
-		transit = "  transit 100m->0m: %ds" % int(last_fill)
+		transit = "  outlets fed in %ds" % int(last_fill)
 	var state := "PAUSED" if _paused else ("TOUR" if _tour else "FLY")
 	var stability := "STABLE" if _nan_total == 0 and _escapes == 0 else "UNSTABLE (nan=%d escapes=%d)" % [_nan_total, _escapes]
 	_hud.text = "\n".join([
-		"PHYSX GPU RIVER TEST - terraced MPM cascade, %d stages (%d simulating)" % [_reaches.size(), _sim_active],
+		"PHYSX GPU RIVER TEST - staged MPM river, %d reaches (%d simulating)" % [_reaches.size(), _sim_active],
 		"engine=%s  particles=%d  foam=%d  emit=%.0f/s  mpm step=%.1f ms" % [
 			ProjectSettings.get_setting("physics/3d/physics_engine", "?"), totals[0], totals[1], _emit_rate_total(), totals[2]],
 		"fps=%d (%.1f ms)  preset=%s  mode=%s  %s" % [fps, 1000.0 / maxf(fps, 1), _preset, MODES[_mode_idx], state],
 		"flow: %d/%d outlets fed%s  objects moved=%s  %s" % [filled, _reaches.size(), transit, "yes" if _obj_moved else "no", stability],
+		"heat: %s  evap loss=%.0f%%" % [_steam_status(), _evap_loss * 100.0],
 		"section: %s" % _section_for_camera(),
 		"WASD+RMB fly  1-7 sections  C tour  TAB mode  [ ] preset  G objects  P pause  R reset  F hud  ESC",
 	])

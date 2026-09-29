@@ -107,6 +107,8 @@ func _ready() -> void:
 	if "--autotest" in OS.get_cmdline_user_args():
 		_autotest.call_deferred()
 
+	_make_ice_patch()
+
 
 func _physics_process(delta: float) -> void:
 	_read_inputs(delta)
@@ -121,6 +123,7 @@ func _physics_process(delta: float) -> void:
 	telemetry["brake"] = _in_brake
 	telemetry["steer"] = _steer_smooth
 	telemetry["handbrake"] = _in_handbrake
+	_update_ice_friction()
 	_sample_telemetry()
 	flip_cooldown = maxf(0.0, flip_cooldown - delta)
 
@@ -211,8 +214,17 @@ func _read_inputs(delta: float) -> void:
 	# brakes on. PhysX vehicle tires model no rolling resistance, so a settled
 	# car would otherwise coast forever on whatever momentum or terrain slope
 	# it has (and slowly yaw on any geometry asymmetry).
-	if _in_throttle <= 0.0 and not _in_reverse and brake_in <= 0.0 			and absf(get_forward_speed()) < 0.25:
+	if _in_throttle <= 0.0 and not _in_reverse and brake_in <= 0.0 		and absf(get_forward_speed()) < 0.25:
 		_in_brake = 1.0
+
+	# Neutral coast drag: in engine-drive neutral the drivetrain is fully
+	# decoupled and the tire model has no rolling resistance, so the car
+	# would coast almost forever on inertia alone. A light speed-proportional
+	# brake stands in for rolling resistance + driveline drag while rolling
+	# in N (suppressed while throttling -- that would fight a blip).
+	if use_gearbox and get_engine_gear() == GEAR_NEUTRAL and _in_throttle <= 0.0:
+		var coast_kmh := get_linear_velocity().length() * 3.6
+		_in_brake = maxf(_in_brake, clampf(coast_kmh / 150.0, 0.0, 0.05))
 
 	# Speed-sensitive steering: full lock for parking, progressively limited
 	# with speed so holding A/D at highway pace no longer spins the car.
@@ -254,23 +266,80 @@ func _do_flip() -> void:
 
 
 # ---------------------------------------------------------------------------
+# Ice patch: demonstrates the LIVE tire-friction API. The patch is a visual
+# quad off the driving lines; each physics tick any wheel inside its rect
+# runs at ice friction via PhysXVehicleWheel3D.set_tire_friction (which
+# rewrites the built vehicle's tire data in place, no rebuild), and leaves
+# restore the authored value.
+# ---------------------------------------------------------------------------
+
+# Rect in world XZ: position (x, z) + size (w, d). Kept OFF the driving
+# lines (the straight is at x=0 and the loop at x=24) so scripted runs and
+# the autotest never cross it.
+const ICE_RECT := Rect2(-10.0, 26.0, 6.0, 18.0)
+const ICE_FRICTION := 0.25
+
+var _ice_mesh: MeshInstance3D
+var _base_friction := 1.0
+
+
+func _make_ice_patch() -> void:
+	_ice_mesh = MeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(ICE_RECT.size.x, 0.04, ICE_RECT.size.y)
+	_ice_mesh.mesh = mesh
+	var mat := StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(0.55, 0.85, 1.0, 0.4)
+	_ice_mesh.material_override = mat
+	_ice_mesh.position = Vector3(
+			ICE_RECT.position.x + ICE_RECT.size.x * 0.5, 0.025,
+			ICE_RECT.position.y + ICE_RECT.size.y * 0.5)
+	# Deferred: _ready runs while the parent scene root is still setting up
+	# its own children, so a direct add_child here fails.
+	get_parent().add_child.call_deferred(_ice_mesh)
+	_base_friction = _wheel_nodes[0].get("tire_friction")
+
+
+func _update_ice_friction() -> void:
+	for w in _wheel_nodes:
+		var p: Vector3 = w.global_position
+		var wanted: float = ICE_FRICTION if ICE_RECT.has_point(Vector2(p.x, p.z)) else _base_friction
+		if absf(float(w.get("tire_friction")) - wanted) > 0.01:
+			w.set("tire_friction", wanted)
+
+
+# ---------------------------------------------------------------------------
 # Telemetry
 # ---------------------------------------------------------------------------
 
 func _sample_telemetry() -> void:
 	telemetry["speed_kmh"] = get_linear_velocity().length() * 3.6
-	# Drive mode + engine telemetry (engine drive fills the real values; the
-	# direct drivetrain has no engine state, so it reads as DIRECT / no rpm).
+	# Transmission state: in engine-drive mode the GEAR row shows the real
+	# gearbox gear (R / N / forward; D<n> with the autobox), direct drive
+	# keeps the direction readout.
 	telemetry["engine_rpm"] = get_engine_rpm() if use_gearbox else 0.0
 	if use_gearbox:
+		var g := get_engine_gear()
 		if use_autobox:
-			telemetry["drive_label"] = "GEARBOX (AUTO)"
+			telemetry["drive_label"] = "GEARBOX AUTO"
+			if g == GEAR_REVERSE:
+				telemetry["gear_label"] = "R"
+			elif g == GEAR_NEUTRAL:
+				telemetry["gear_label"] = "N"
+			else:
+				telemetry["gear_label"] = "D%d" % (g - 1)
 		else:
-			var g := get_engine_gear()
-			telemetry["drive_label"] = "GEARBOX %s" % ("R" if g == 0 else ("N" if g == 1 else str(g - 1)))
+			telemetry["drive_label"] = "GEARBOX"
+			if g == GEAR_REVERSE:
+				telemetry["gear_label"] = "R"
+			elif g == GEAR_NEUTRAL:
+				telemetry["gear_label"] = "N"
+			else:
+				telemetry["gear_label"] = str(g - 1)
 	else:
 		telemetry["drive_label"] = "DIRECT"
-	telemetry["gear_label"] = "REV" if reverse else ("FWD" if absf(_in_throttle) > 0.01 or absf(_in_brake) > 0.01 else "--")
+		telemetry["gear_label"] = "REV" if reverse else ("FWD" if absf(_in_throttle) > 0.01 or absf(_in_brake) > 0.01 else "--")
 
 	var wheels: Array = []
 	for i in 4:
