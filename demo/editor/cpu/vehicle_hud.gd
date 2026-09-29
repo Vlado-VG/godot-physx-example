@@ -2,11 +2,10 @@ extends CanvasLayer
 
 # Forza-Horizon-style telemetry readout -- plain numbers, monospace, no
 # gauges. Everything is read off vehicle_car.gd's telemetry dict, which the
-# car fills from the NODE vehicle stack each physics tick (the node-level
-# PhysXVehicle3D has no engine/gearbox state, so those rows are gone; the
-# wheel grid shows per-wheel suspension jounce + contact instead of rpm).
+# car fills from the NODE vehicle stack each physics tick (P toggles the
+# engine-drive drivetrain: DRIVE shows the mode, ENGINE shows live rpm).
 #
-#   SPEED / GEAR / THROTTLE / BRAKE / STEERING / HANDBRAKE
+#   SPEED / GEAR / DRIVE / ENGINE / THROTTLE / BRAKE / STEERING / HANDBRAKE
 #   PITCH / ROLL / G-force lat+long, and a per-wheel contact+jounce grid.
 
 @onready var _car: Node3D = get_node("../DogeCar")
@@ -17,15 +16,16 @@ extends CanvasLayer
 func _process(_delta: float) -> void:
 	var t: Dictionary = _car.telemetry
 	var wheel_lines := _wheel_grid(t["wheels"])
+	var rpm: float = t["engine_rpm"]
 	_panel.text = "\n".join(PackedStringArray([
 		"SPEED      %6.1f km/h" % t["speed_kmh"],
 		"GEAR       %6s" % t["gear_label"],
+		"DRIVE      %6s" % t["drive_label"],
+		"ENGINE     %s" % ("%6.0f rpm" % rpm if rpm > 0.5 else "    --"),
 		"THROTTLE   %6.2f" % t["throttle"],
 		"BRAKE      %6.2f" % t["brake"],
 		"STEERING   %6.2f" % t["steer"],
 		"HANDBRAKE  %6.2f" % t["handbrake"],
-		"",
-		"DRIVE      %6s" % "DIRECT (node)",
 		"",
 		"PITCH      %6.1f deg" % t["pitch"],
 		"ROLL       %6.1f deg" % t["roll"],

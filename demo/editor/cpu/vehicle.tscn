@@ -196,7 +196,7 @@ font_size = 220
 outline_size = 24
 
 [node name="DogeCar" parent="." instance=ExtResource("2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 22)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 22)
 
 [node name="Props" type="Node3D" parent="."]
 
@@ -248,6 +248,5 @@ theme_override_constants/outline_size = 4
 theme_override_fonts/font = SubResource("Font_mono")
 theme_override_font_sizes/font_size = 15
 text = "W/S throttle + brake/reverse   A/D steer   SPACE handbrake
-SHIFT/Ctrl gear up/down (gearbox, manual)   T automatic   P direct <-> gearbox
-E engine on/off   F flip car upright   R reset + refuel   ESC quit
+F flip car upright   R reset   ESC quit
 LOOP: east straight (x=24), keep 90+ km/h at the entrance"

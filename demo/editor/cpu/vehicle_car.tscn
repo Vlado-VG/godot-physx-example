@@ -34,12 +34,14 @@ follow_speed = 10.0
 
 [node name="WheelRF" type="PhysXVehicleWheel3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.997421, 0.340338, -1.50006)
+use_as_steering = true
 
 [node name="Wheel" parent="WheelRF" instance=ExtResource("4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.142656, 0, 0)
 
 [node name="WheelLF" type="PhysXVehicleWheel3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.02668, 0.340338, -1.50006)
+use_as_steering = true
 
 [node name="Wheel" parent="WheelLF" instance=ExtResource("4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0775136, 0, 0)

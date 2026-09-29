@@ -13,13 +13,14 @@ extends PhysXVehicle3D
 # side -- exactly how the old scene was authored, so the geometry ports over
 # unchanged (the doge-body glb keeps its original Y-180 rotation).
 #
-# The node stack is direct-drive only: the old demo's gearbox/autobox/manual
-# shifting, fuel burn and engine on/off (P/T/E/Shift/Ctrl) have no node-level
-# equivalent and are gone. Wheel visuals need no script at all: the node poses
-# its PhysXVehicleWheel3D children every tick (jounce + steer + spin baked
-# in), so the Wheel.glb meshes just hang under them.
+# The node stack drives DIRECT by default; P toggles the PhysX engine-drive
+# drivetrain (use_gearbox: engine + clutch + gearbox), T toggles its autobox
+# (automatic DRIVE vs manual gears). Wheel visuals need no script at all: the
+# node poses its PhysXVehicleWheel3D children every tick (jounce + steer +
+# spin baked in), so the Wheel.glb meshes just hang under them.
 #
 # Controls:  W/S throttle+brake/reverse   A/D steer   Space handbrake
+#            P direct <-> gearbox   T autobox on/off (gearbox mode)
 #            F flip the car upright (GTA style)   R reset   ESC quit
 
 @export var drive_torque := 350.0         # direct drive, PER WHEEL (the response applies it at each driven wheel; 4 driven wheels -> 4x)
@@ -34,9 +35,11 @@ const WHEEL_RADIUS := 0.37     # original Doge.tscn wheel_radius
 const WHEEL_TRAVEL := 0.357    # original Doge.tscn suspension_travel
 
 # Telemetry consumed by the HUD (vehicle_hud.gd). The node stack exposes what
-# it exposes: forward speed, linear velocity, per-wheel jounce/separation.
+# it exposes: forward speed, linear velocity, per-wheel jounce/separation, and
+# in engine-drive mode (P) the live engine rpm + gearbox gear.
 var telemetry := {
 	"speed_kmh": 0.0, "gear_label": "--",
+	"drive_label": "DIRECT", "engine_rpm": 0.0,
 	"throttle": 0.0, "brake": 0.0, "steer": 0.0, "handbrake": 0.0,
 	"pitch": 0.0, "roll": 0.0,
 	"g_lat": 0.0, "g_long": 0.0,
@@ -53,6 +56,12 @@ var _in_steer := 0.0         # +1 = left (positive steer yaws toward -X)
 var _in_handbrake := 0.0
 var _in_reverse := false
 var _auto_inputs = null      # Dictionary set by the autotest to drive without keys
+
+# Brief handbrake hold after spawn: a dropped/settling vehicle otherwise
+# keeps whatever horizontal momentum the landing leaves (a free-rolling car
+# has no rolling resistance in the tire model), so the car appears to creep
+# away on its own. Released by the first drive input or on timeout.
+var _spawn_brake := 0.75
 
 var _prev_velocity := Vector3.ZERO
 var _wheel_nodes: Array[Node3D] = []
@@ -82,8 +91,11 @@ func _ready() -> void:
 		w.set("suspension_damping", 1100.0)
 		w.set("wheel_mass", 20.0)
 		w.set("tire_friction", tire_friction)
-		w.set("use_as_steering", i < 2)
-		w.set("use_as_traction", true)
+		# NOTE: use_as_steering/use_as_traction are authored in the .tscn
+		# (front two steered, all four driven) -- NOT here. The vehicle
+		# rebuilds on every wheel property change, so flipping the flags from
+		# script walks the composition through invalid "1 steering wheel"
+		# intermediate states and spams the "exactly 2 steering" error.
 
 	# Vehicle-level tuning (was vehicle_set_response_params / ackermann).
 	mass = 900.0
@@ -117,6 +129,22 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.pressed or event.echo:
 		return
 	match event.keycode:
+		KEY_P:
+			# Direct <-> engine drive (PhysXVehicle3D rebuilds live; the pose
+			# is kept by the node's two-way transform contract).
+			use_gearbox = not use_gearbox
+			if use_gearbox:
+				use_autobox = true   # come up in DRIVE so W works right away
+				target_gear = 255
+			telemetry["g_lat"] = 0.0
+			telemetry["g_long"] = 0.0
+		KEY_T:
+			# Autobox on/off (engine drive only). Leaving the autobox puts the
+			# gearbox in 1st so W keeps driving; reverse still works via S.
+			if use_gearbox:
+				use_autobox = not use_autobox
+				if not use_autobox:
+					target_gear = 2
 		KEY_F:
 			_do_flip()
 		KEY_R:
@@ -135,6 +163,10 @@ func _read_inputs(delta: float) -> void:
 	var steer_in := 0.0
 	var handbrake_in := 0.0
 	var want_reverse := false
+
+	if _spawn_brake > 0.0:
+		_spawn_brake -= delta
+		brake_in = 1.0
 
 	if _auto_inputs != null:
 		throttle_in = _auto_inputs.get("throttle", 0.0)
@@ -174,6 +206,13 @@ func _read_inputs(delta: float) -> void:
 	_in_reverse = want_reverse
 	_in_steer = steer_in
 	_in_handbrake = handbrake_in
+
+	# Standstill auto-hold: with no input and the car nearly stopped, keep the
+	# brakes on. PhysX vehicle tires model no rolling resistance, so a settled
+	# car would otherwise coast forever on whatever momentum or terrain slope
+	# it has (and slowly yaw on any geometry asymmetry).
+	if _in_throttle <= 0.0 and not _in_reverse and brake_in <= 0.0 			and absf(get_forward_speed()) < 0.25:
+		_in_brake = 1.0
 
 	# Speed-sensitive steering: full lock for parking, progressively limited
 	# with speed so holding A/D at highway pace no longer spins the car.
@@ -220,6 +259,17 @@ func _do_flip() -> void:
 
 func _sample_telemetry() -> void:
 	telemetry["speed_kmh"] = get_linear_velocity().length() * 3.6
+	# Drive mode + engine telemetry (engine drive fills the real values; the
+	# direct drivetrain has no engine state, so it reads as DIRECT / no rpm).
+	telemetry["engine_rpm"] = get_engine_rpm() if use_gearbox else 0.0
+	if use_gearbox:
+		if use_autobox:
+			telemetry["drive_label"] = "GEARBOX (AUTO)"
+		else:
+			var g := get_engine_gear()
+			telemetry["drive_label"] = "GEARBOX %s" % ("R" if g == 0 else ("N" if g == 1 else str(g - 1)))
+	else:
+		telemetry["drive_label"] = "DIRECT"
 	telemetry["gear_label"] = "REV" if reverse else ("FWD" if absf(_in_throttle) > 0.01 or absf(_in_brake) > 0.01 else "--")
 
 	var wheels: Array = []
@@ -252,6 +302,8 @@ func _update_gforces(delta: float) -> void:
 
 func _autotest() -> void:
 	await _frames(40)
+	_auto_inputs = {"throttle": 0.0, "brake": 0.0, "steer": 0.0, "handbrake": 0.0}
+	await _frames(20)
 	print("AUTOTEST: mode=DIRECT settled speed_kmh=%.1f" % telemetry["speed_kmh"])
 
 	_auto_inputs = {"throttle": 1.0, "brake": 0.0, "steer": 0.0, "handbrake": 0.0}
