@@ -47,6 +47,8 @@ uniform float caustics_half_extent = 10.0;
 uniform float caustics_filter_radius = 1.5;
 uniform float caustics_surface_fade_depth = 1.25;
 uniform float caustic_strength = 1.5;
+uniform vec4 absorption_color : source_color = vec4(0.012, 0.07, 0.12, 1.0);
+uniform float absorption_density : hint_range(0.0, 2.0) = 0.55;
 
 varying vec3 v_world_position;
 varying vec3 v_world_normal;
@@ -89,8 +91,9 @@ void fragment() {
 		float surface_fade = smoothstep(0.0, caustics_surface_fade_depth, depth_below_surface);
 		caustic = vec3(sample_caustics(uv) * receiver_incidence * surface_fade);
 	}
-	ALBEDO = albedo_color.rgb;
-	EMISSION = caustic * caustic_strength;
+	float absorption = 1.0 - exp(-absorption_density * max(depth_below_surface, 0.0));
+	ALBEDO = mix(albedo_color.rgb, absorption_color.rgb, absorption);
+	EMISSION = caustic * caustic_strength * (1.0 - absorption * 0.85);
 	ROUGHNESS = roughness_val;
 	METALLIC = 0.0;
 }
@@ -101,10 +104,16 @@ render_priority = 0
 shader = SubResource("Shader_caustics_receiver")
 shader_parameter/albedo_color = Color(0.68, 0.6, 0.42, 1)
 shader_parameter/roughness_val = 0.95
+shader_parameter/caustics_origin = Vector3(0, 0, 0)
+shader_parameter/caustics_light_right = Vector3(1, 0, 0)
+shader_parameter/caustics_light_up = Vector3(0, 0, 1)
+shader_parameter/caustics_sun_direction = Vector3(-0.35, -1, -0.25)
 shader_parameter/caustics_half_extent = 10.0
 shader_parameter/caustics_filter_radius = 1.5
 shader_parameter/caustics_surface_fade_depth = 1.25
 shader_parameter/caustic_strength = 1.0
+shader_parameter/absorption_color = Color(0.012, 0.07, 0.12, 1)
+shader_parameter/absorption_density = 0.55
 
 [sub_resource type="BoxMesh" id="FloorMesh"]
 size = Vector3(16, 1, 16)
@@ -113,13 +122,20 @@ size = Vector3(16, 1, 16)
 size = Vector3(0.5, 4, 16.5)
 
 [sub_resource type="ShaderMaterial" id="Stone"]
+render_priority = 0
 shader = SubResource("Shader_caustics_receiver")
 shader_parameter/albedo_color = Color(0.42, 0.4, 0.37, 1)
 shader_parameter/roughness_val = 0.9
+shader_parameter/caustics_origin = Vector3(0, 0, 0)
+shader_parameter/caustics_light_right = Vector3(1, 0, 0)
+shader_parameter/caustics_light_up = Vector3(0, 0, 1)
+shader_parameter/caustics_sun_direction = Vector3(-0.35, -1, -0.25)
 shader_parameter/caustics_half_extent = 10.0
 shader_parameter/caustics_filter_radius = 1.5
 shader_parameter/caustics_surface_fade_depth = 1.25
 shader_parameter/caustic_strength = 1.0
+shader_parameter/absorption_color = Color(0.012, 0.07, 0.12, 1)
+shader_parameter/absorption_density = 0.55
 
 [sub_resource type="BoxMesh" id="WallMeshX"]
 size = Vector3(0.5, 4, 16.5)
@@ -202,13 +218,20 @@ shader_parameter/roughness_val = 0.04
 radius = 0.6
 
 [sub_resource type="ShaderMaterial" id="BallMat"]
+render_priority = 0
 shader = SubResource("Shader_caustics_receiver")
 shader_parameter/albedo_color = Color(0.85, 0.25, 0.2, 1)
 shader_parameter/roughness_val = 0.5
+shader_parameter/caustics_origin = Vector3(0, 0, 0)
+shader_parameter/caustics_light_right = Vector3(1, 0, 0)
+shader_parameter/caustics_light_up = Vector3(0, 0, 1)
+shader_parameter/caustics_sun_direction = Vector3(-0.35, -1, -0.25)
 shader_parameter/caustics_half_extent = 10.0
 shader_parameter/caustics_filter_radius = 1.5
 shader_parameter/caustics_surface_fade_depth = 1.25
 shader_parameter/caustic_strength = 1.0
+shader_parameter/absorption_color = Color(0.012, 0.07, 0.12, 1)
+shader_parameter/absorption_density = 0.55
 
 [sub_resource type="SphereMesh" id="BallMesh"]
 radius = 0.6
@@ -218,13 +241,20 @@ height = 1.2
 size = Vector3(2, 1, 2)
 
 [sub_resource type="ShaderMaterial" id="CrateMat"]
+render_priority = 0
 shader = SubResource("Shader_caustics_receiver")
 shader_parameter/albedo_color = Color(0.8, 0.6, 0.3, 1)
 shader_parameter/roughness_val = 0.8
+shader_parameter/caustics_origin = Vector3(0, 0, 0)
+shader_parameter/caustics_light_right = Vector3(1, 0, 0)
+shader_parameter/caustics_light_up = Vector3(0, 0, 1)
+shader_parameter/caustics_sun_direction = Vector3(-0.35, -1, -0.25)
 shader_parameter/caustics_half_extent = 10.0
 shader_parameter/caustics_filter_radius = 1.5
 shader_parameter/caustics_surface_fade_depth = 1.25
 shader_parameter/caustic_strength = 1.0
+shader_parameter/absorption_color = Color(0.012, 0.07, 0.12, 1)
+shader_parameter/absorption_density = 0.55
 
 [sub_resource type="BoxMesh" id="CrateMesh"]
 size = Vector3(2, 1, 2)
@@ -233,13 +263,20 @@ size = Vector3(2, 1, 2)
 size = Vector3(2.6, 0.6, 0.6)
 
 [sub_resource type="ShaderMaterial" id="LogMat"]
+render_priority = 0
 shader = SubResource("Shader_caustics_receiver")
 shader_parameter/albedo_color = Color(0.45, 0.3, 0.18, 1)
 shader_parameter/roughness_val = 0.85
+shader_parameter/caustics_origin = Vector3(0, 0, 0)
+shader_parameter/caustics_light_right = Vector3(1, 0, 0)
+shader_parameter/caustics_light_up = Vector3(0, 0, 1)
+shader_parameter/caustics_sun_direction = Vector3(-0.35, -1, -0.25)
 shader_parameter/caustics_half_extent = 10.0
 shader_parameter/caustics_filter_radius = 1.5
 shader_parameter/caustics_surface_fade_depth = 1.25
 shader_parameter/caustic_strength = 1.0
+shader_parameter/absorption_color = Color(0.012, 0.07, 0.12, 1)
+shader_parameter/absorption_density = 0.55
 
 [sub_resource type="BoxMesh" id="LogMesh"]
 size = Vector3(2.6, 0.6, 0.6)
@@ -317,11 +354,12 @@ mesh = SubResource("WallMeshZ")
 
 [node name="Water" type="PhysXWaterSurface3D" parent="." unique_id=1306440232]
 domain_size = Vector2(16, 16)
+damping = 1.2
+ripple_amplitude = 0.69
 ocean_grid_resolution = 128
 ocean_domain_size = Vector2(16, 16)
 wind_speed = 6.0
 wind_direction = Vector2(1, 0.4)
-wave_amplitude = 0.6
 water_material = SubResource("ShaderMaterial_j8ovg")
 
 [node name="Floaters" type="Node3D" parent="." unique_id=1793373968]
@@ -336,7 +374,6 @@ sample_points = Array[Vector3]([Vector3(-0.4, 0, -0.4), Vector3(0.4, 0, -0.4), V
 buoyancy_strength = 350.0
 water_drag = 90.0
 hull_radius = 0.7
-resting_wake_strength = 0.01
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Floaters/Ball" unique_id=1451983821]
 shape = SubResource("BallShape")
@@ -354,7 +391,6 @@ water_surface_path = NodePath("../../Water")
 buoyancy_strength = 400.0
 water_drag = 100.0
 hull_radius = 1.4
-resting_wake_strength = 0.01
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Floaters/Crate" unique_id=1261571853]
 shape = SubResource("CrateShape")
@@ -373,7 +409,6 @@ sample_points = Array[Vector3]([Vector3(-1.3, 0, -0.25), Vector3(1.3, 0, -0.25),
 buoyancy_strength = 380.0
 water_drag = 95.0
 hull_radius = 1.3
-resting_wake_strength = 0.01
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Floaters/Log" unique_id=223262084]
 shape = SubResource("LogShape")

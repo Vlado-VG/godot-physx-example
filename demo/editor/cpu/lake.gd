@@ -35,9 +35,18 @@ var _dragging: RigidBody3D = null
 var _drag_height := 0.0 # world Y of the horizontal plane dragging happens along, frozen at grab time
 var _fly: FlyCamera
 var _caustics_bound := false # get_caustics_texture() is null until the water node builds (never in the editor) -- bind once available, not every frame
+@export var absorption_color := Color(0.012, 0.07, 0.12, 1.0):
+	set(value):
+		absorption_color = value
+		_update_receiver_absorption()
+@export_range(0.0, 2.0, 0.01) var absorption_density := 0.55:
+	set(value):
+		absorption_density = value
+		_update_receiver_absorption()
 
 func _ready() -> void:
 	_caustics_shader = (_floor_mesh.material_override as ShaderMaterial).shader
+	_update_receiver_absorption()
 	for c in $Floaters.get_children():
 		if c is RigidBody3D:
 			_floaters.append(c)
@@ -110,6 +119,8 @@ func _drop_random() -> void:
 	mat.set_shader_parameter("caustics_filter_radius", 1.5)
 	mat.set_shader_parameter("caustics_surface_fade_depth", 1.25)
 	mat.set_shader_parameter("caustic_strength", 1.0)
+	mat.set_shader_parameter("absorption_color", absorption_color)
+	mat.set_shader_parameter("absorption_density", absorption_density)
 	mi.material_override = mat
 	_bind_caustics_to_material(mat)
 
@@ -202,3 +213,14 @@ func _bind_caustics_to_material(material: ShaderMaterial) -> void:
 	material.set_shader_parameter("caustics_light_up", _water.get_caustics_light_up())
 	material.set_shader_parameter("caustics_sun_direction", _water.get_caustics_sun_direction())
 	material.set_shader_parameter("caustics_half_extent", _water.get_caustics_half_extent())
+
+func _update_receiver_absorption() -> void:
+	if not is_node_ready():
+		return
+	for receiver_root in [$Pool, $Floaters]:
+		for node in receiver_root.find_children("*", "MeshInstance3D", true, false):
+			var receiver := node as MeshInstance3D
+			var material := receiver.material_override as ShaderMaterial
+			if material != null and material.shader == _caustics_shader:
+				material.set_shader_parameter("absorption_color", absorption_color)
+				material.set_shader_parameter("absorption_density", absorption_density)
