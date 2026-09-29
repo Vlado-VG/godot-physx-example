@@ -26,12 +26,18 @@ const DRAG_DAMPING := 12.0
 
 @onready var _hud: Label = $HUD/Label
 @onready var _camera: Camera3D = $Camera3D
+@onready var _floor_mesh: MeshInstance3D = $Pool/Floor/MeshInstance3D
+@onready var _water: PhysXWaterSurface3D = $Water
+var _caustics_shader: Shader
+var _caustics_texture: Texture2D
 var _floaters: Array[RigidBody3D] = []
 var _dragging: RigidBody3D = null
 var _drag_height := 0.0 # world Y of the horizontal plane dragging happens along, frozen at grab time
 var _fly: FlyCamera
+var _caustics_bound := false # get_caustics_texture() is null until the water node builds (never in the editor) -- bind once available, not every frame
 
 func _ready() -> void:
+	_caustics_shader = (_floor_mesh.material_override as ShaderMaterial).shader
 	for c in $Floaters.get_children():
 		if c is RigidBody3D:
 			_floaters.append(c)
@@ -96,9 +102,16 @@ func _drop_random() -> void:
 
 	var cs := CollisionShape3D.new()
 	var mi := MeshInstance3D.new()
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color.from_hsv(randf(), 0.5, 0.9)
+	var mat := ShaderMaterial.new()
+	mat.shader = _caustics_shader
+	mat.set_shader_parameter("albedo_color", Color.from_hsv(randf(), 0.5, 0.9))
+	mat.set_shader_parameter("roughness_val", 0.8)
+	mat.set_shader_parameter("caustics_half_extent", 10.0)
+	mat.set_shader_parameter("caustics_filter_radius", 1.5)
+	mat.set_shader_parameter("caustics_surface_fade_depth", 1.25)
+	mat.set_shader_parameter("caustic_strength", 1.0)
 	mi.material_override = mat
+	_bind_caustics_to_material(mat)
 
 	match kind:
 		"ball":
@@ -155,6 +168,18 @@ func _drop_random() -> void:
 
 func _process(delta: float) -> void:
 	_fly.process(delta)
+
+	if not _caustics_bound:
+		_caustics_texture = _water.get_caustics_texture()
+		if _caustics_texture != null:
+			for receiver_root in [$Pool, $Floaters]:
+				for node in receiver_root.find_children("*", "MeshInstance3D", true, false):
+					var receiver := node as MeshInstance3D
+					var material := receiver.material_override as ShaderMaterial
+					if material != null and material.shader == _caustics_shader:
+						_bind_caustics_to_material(material)
+			_caustics_bound = true
+
 	_hud.text = "Sample-point buoyancy (demo/common/buoyant_body.gd)   SPACE drop   left-drag shove   WASD/hold-RMB fly   R reset   ESC\nfloaters: %d   FPS: %d" % [
 		_floaters.size(), Engine.get_frames_per_second()]
 
@@ -167,3 +192,13 @@ func _process(delta: float) -> void:
 		elif f.global_position.y < -20.0:
 			f.queue_free()
 			_floaters.remove_at(i)
+
+func _bind_caustics_to_material(material: ShaderMaterial) -> void:
+	if _caustics_texture == null:
+		return
+	material.set_shader_parameter("caustics_tex", _caustics_texture)
+	material.set_shader_parameter("caustics_origin", _water.get_caustics_origin())
+	material.set_shader_parameter("caustics_light_right", _water.get_caustics_light_right())
+	material.set_shader_parameter("caustics_light_up", _water.get_caustics_light_up())
+	material.set_shader_parameter("caustics_sun_direction", _water.get_caustics_sun_direction())
+	material.set_shader_parameter("caustics_half_extent", _water.get_caustics_half_extent())
