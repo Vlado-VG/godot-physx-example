@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3]
+[gd_scene load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://demo/editor/cpu/lake.gd" id="1"]
 [ext_resource type="Script" path="res://demo/common/buoyant_body.gd" id="2"]
@@ -40,15 +40,6 @@ size = Vector3(16.5, 4, 0.5)
 [sub_resource type="StandardMaterial3D" id="Stone"]
 albedo_color = Color(0.42, 0.4, 0.37, 1)
 roughness = 0.9
-
-[sub_resource type="BoxMesh" id="WaterMesh"]
-size = Vector3(16, 0.1, 16)
-
-[sub_resource type="StandardMaterial3D" id="Water"]
-albedo_color = Color(0.15, 0.45, 0.55, 0.55)
-transparency = 1
-roughness = 0.05
-metallic = 0.1
 
 [sub_resource type="SphereShape3D" id="BallShape"]
 radius = 0.6
@@ -151,9 +142,16 @@ shape = SubResource("WallShapeZ")
 material_override = SubResource("Stone")
 mesh = SubResource("WallMeshZ")
 
-[node name="WaterVisual" type="MeshInstance3D" parent="."]
-mesh = SubResource("WaterMesh")
-material_override = SubResource("Water")
+[node name="Water" type="PhysXWaterSurface3D" parent="."]
+domain_size = Vector2(16, 16)
+grid_resolution = 96
+water_level = 0.0
+damping = 0.5
+ocean_grid_resolution = 64
+ocean_domain_size = Vector2(16, 16)
+wind_speed = 6.0
+wind_direction = Vector2(1, 0.4)
+wave_amplitude = 0.6
 
 [node name="Floaters" type="Node3D" parent="."]
 
@@ -163,6 +161,8 @@ script = ExtResource("2")
 mass = 15.0
 can_sleep = false
 water_level = 0.0
+water_surface_path = NodePath("../../Water")
+hull_radius = 0.7
 sample_points = Array[Vector3]([Vector3(-0.4, 0, -0.4), Vector3(0.4, 0, -0.4), Vector3(-0.4, 0, 0.4), Vector3(0.4, 0, 0.4)])
 buoyancy_strength = 350.0
 water_drag = 90.0
@@ -180,6 +180,8 @@ script = ExtResource("2")
 mass = 50.0
 can_sleep = false
 water_level = 0.0
+water_surface_path = NodePath("../../Water")
+hull_radius = 1.4
 buoyancy_strength = 400.0
 water_drag = 100.0
 
@@ -196,6 +198,8 @@ script = ExtResource("2")
 mass = 60.0
 can_sleep = false
 water_level = 0.0
+water_surface_path = NodePath("../../Water")
+hull_radius = 1.3
 sample_points = Array[Vector3]([Vector3(-1.3, 0, -0.25), Vector3(1.3, 0, -0.25), Vector3(-1.3, 0, 0.25), Vector3(1.3, 0, 0.25)])
 buoyancy_strength = 380.0
 water_drag = 95.0
