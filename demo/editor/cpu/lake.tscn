@@ -14,6 +14,11 @@ sky = SubResource("Sky_2")
 ambient_light_source = 3
 ambient_light_energy = 0.5
 tonemap_mode = 3
+ssr_enabled = true
+ssr_max_steps = 64
+ssr_fade_in = 0.15
+ssr_fade_out = 2.0
+ssr_depth_tolerance = 0.5
 
 [sub_resource type="BoxShape3D" id="FloorShape"]
 size = Vector3(16, 1, 16)
