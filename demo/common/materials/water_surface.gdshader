@@ -6,16 +6,16 @@ render_mode blend_mix, cull_disabled, diffuse_burley, specular_schlick_ggx;
 // and the domain sizes; the rest are look settings.
 
 uniform sampler2D ripple_height_tex : hint_default_black, filter_linear, repeat_disable;
-uniform sampler2D ocean_height_tex : hint_default_black, filter_linear, repeat_disable;
+uniform sampler2D ocean_height_tex : hint_default_black, filter_linear, repeat_enable;
 // Ocean chop multiplier over the ripple domain: 1 in deep water, fading to 0
 // at the waterline (bound by PhysXWaterSurface3D when it has a seabed).
 uniform sampler2D ocean_fade_tex : hint_default_white, filter_linear, repeat_disable;
 // Choppy horizontal displacement (x, z) of the ocean layer.
-uniform sampler2D ocean_disp_tex : hint_default_black, filter_linear, repeat_disable;
+uniform sampler2D ocean_disp_tex : hint_default_black, filter_linear, repeat_enable;
 uniform float choppiness = 1.0;
 // Ocean slopes and displacement derivatives (dh/dx, dh/dz, dDx/dx, dDz/dz),
 // straight from the FFT, for exact per-pixel normals and foam.
-uniform sampler2D ocean_deriv_tex : hint_default_black, filter_linear, repeat_disable;
+uniform sampler2D ocean_deriv_tex : hint_default_black, filter_linear, repeat_enable;
 // true: normals and foam per pixel from ocean_deriv_tex (smooth crests at any
 // mesh density). false: per vertex, from finite differences of the displaced
 // mesh (set by PhysXWaterSurface3D::normal_mode).
@@ -23,12 +23,15 @@ uniform bool per_pixel_normals = true;
 uniform vec2 ripple_domain_size = vec2(20.0, 20.0);
 uniform vec2 ocean_domain_size = vec2(40.0, 40.0);
 uniform vec2 grid_center = vec2(0.0);
+// Mean surface height (node-relative), what the ripple layer settles back to
+// past the edge of its domain when the surface is rendered further out.
+uniform float water_level = 0.0;
 uniform vec4 water_color : source_color = vec4(0.09, 0.32, 0.42, 0.65);
 uniform float roughness_val : hint_range(0.0, 1.0) = 0.04;
 // Persistent whitecap foam (0..1) on the ocean grid, injected where the
 // waves fold and fading over the node's foam_persistence (set by
 // PhysXWaterSurface3D).
-uniform sampler2D ocean_foam_tex : hint_default_black, filter_linear, repeat_disable;
+uniform sampler2D ocean_foam_tex : hint_default_black, filter_linear, repeat_enable;
 uniform vec4 foam_color : source_color = vec4(0.92, 0.95, 0.97, 0.95);
 // How much fading foam breaks up into lace instead of thinning evenly
 // (0 = solid sheet until it's gone).
@@ -67,12 +70,16 @@ varying vec2 v_rest_xz;
 vec3 surface_offset(vec2 world_xz) {
 	vec2 rel = world_xz - grid_center;
 	vec2 cuv_r = clamp(rel / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
-	vec2 cuv_o = clamp(rel / ocean_domain_size + 0.5, vec2(0.0), vec2(1.0));
+	vec2 cuv_o = rel / ocean_domain_size + 0.5; // wraps: the FFT ocean is periodic
 	float fade = texture(ocean_fade_tex, cuv_r).r;
 	// Negative: moving against the displacement gathers points into the
 	// crests (same convention as the node's built-in material).
 	vec2 d = -choppiness * fade * texture(ocean_disp_tex, cuv_o).rg;
-	float h = texture(ripple_height_tex, cuv_r).r + texture(ocean_height_tex, cuv_o).r * fade;
+	// The ripple layer isn't periodic: past its domain, ease back to still water.
+	vec2 from_center = abs(rel / ripple_domain_size);
+	float inside = 1.0 - smoothstep(0.46, 0.5, max(from_center.x, from_center.y));
+	float ripple = mix(water_level, texture(ripple_height_tex, cuv_r).r, inside);
+	float h = ripple + texture(ocean_height_tex, cuv_o).r * fade;
 	return vec3(d.x, h, d.y);
 }
 
@@ -82,7 +89,7 @@ vec3 surface_offset(vec2 world_xz) {
 vec3 surface_normal_pixel(vec2 world_xz) {
 	vec2 rel = world_xz - grid_center;
 	vec2 cuv_r = clamp(rel / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
-	vec2 cuv_o = clamp(rel / ocean_domain_size + 0.5, vec2(0.0), vec2(1.0));
+	vec2 cuv_o = rel / ocean_domain_size + 0.5; // wraps: the FFT ocean is periodic
 	float fade = texture(ocean_fade_tex, cuv_r).r;
 	float s = -choppiness * fade;
 	vec4 der = texture(ocean_deriv_tex, cuv_o);
@@ -115,7 +122,7 @@ float foam_value_noise(vec2 p) {
 float foam_at(vec2 world_xz) {
 	vec2 rel = world_xz - grid_center;
 	vec2 cuv_r = clamp(rel / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
-	vec2 cuv_o = clamp(rel / ocean_domain_size + 0.5, vec2(0.0), vec2(1.0));
+	vec2 cuv_o = rel / ocean_domain_size + 0.5; // wraps: the FFT ocean is periodic
 	float amount = texture(ocean_foam_tex, cuv_o).r * texture(ocean_fade_tex, cuv_r).r;
 	vec2 p = world_xz * foam_detail_scale;
 	float n = 0.5 * foam_value_noise(p) + 0.3 * foam_value_noise(p * 2.7 + 17.0) + 0.2 * foam_value_noise(p * 7.3 - 5.0);
@@ -143,7 +150,7 @@ float shore_foam_at(vec2 world_xz) {
 float shore_signal(vec2 world_xz, float time) {
 	vec2 rel = world_xz - grid_center;
 	vec2 cuv_r = clamp(rel / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
-	vec2 cuv_o = clamp(rel / ocean_domain_size + 0.5, vec2(0.0), vec2(1.0));
+	vec2 cuv_o = rel / ocean_domain_size + 0.5; // wraps: the FFT ocean is periodic
 	float fade = texture(ocean_fade_tex, cuv_r).r;
 	float eta = texture(ocean_height_tex, cuv_o).r; // unfaded: the waves arriving here
 	// Lobes a few metres across (like real swash), drifting, with the waves
