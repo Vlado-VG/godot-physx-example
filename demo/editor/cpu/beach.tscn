@@ -111,7 +111,11 @@ void fragment() {
 		float receiver_incidence = max(dot(normalize(v_world_normal), -normalize(caustics_sun_direction)), 0.0);
 		float surface_fade = smoothstep(0.0, caustics_surface_fade_depth, depth_below_surface);
 		surface_fade *= 1.0 - smoothstep(caustics_max_depth * 0.35, caustics_max_depth, depth_below_surface);
-		caustic = vec3(sample_caustics(uv) * receiver_incidence * surface_fade);
+		// G = whether this spot's sunlight came through water at all (see
+		// get_caustics_texture()): the outside of a wall lines up with lit
+		// photons inside the pool, but its light never touched the water.
+		float through_water = texture(caustics_tex, uv).g;
+		caustic = vec3(sample_caustics(uv) * receiver_incidence * surface_fade * through_water);
 	}
 	float absorption = 1.0 - exp(-absorption_density * max(depth_below_surface, 0.0));
 	ALBEDO = mix(albedo_color.rgb, absorption_color.rgb, absorption);
