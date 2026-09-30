@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" uid="uid://ccqu4sjj0rgac" path="res://demo/editor/cpu/lake.gd" id="1"]
 [ext_resource type="Script" uid="uid://bcv7jvi8qhxub" path="res://demo/common/buoyant_body.gd" id="2"]
-[ext_resource type="ArrayMesh" path="res://demo/editor/cpu/round_pool_wall_mesh.res" id="wall_mesh"]
-[ext_resource type="ConcavePolygonShape3D" path="res://demo/editor/cpu/round_pool_wall_shape.res" id="wall_shape"]
+[ext_resource type="ArrayMesh" path="res://demo/common/meshes/round_pool_wall_mesh.res" id="wall_mesh"]
+[ext_resource type="ConcavePolygonShape3D" path="res://demo/common/meshes/round_pool_wall_shape.res" id="wall_shape"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_1"]
 
