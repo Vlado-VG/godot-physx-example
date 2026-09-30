@@ -1,0 +1,372 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://ccqu4sjj0rgac" path="res://demo/editor/cpu/lake.gd" id="1"]
+[ext_resource type="Script" uid="uid://bcv7jvi8qhxub" path="res://demo/common/buoyant_body.gd" id="2"]
+[ext_resource type="ArrayMesh" path="res://demo/common/meshes/beach_floor_mesh.res" id="beach_mesh"]
+[ext_resource type="ConcavePolygonShape3D" path="res://demo/common/meshes/beach_floor_shape.res" id="beach_shape"]
+
+[sub_resource type="ProceduralSkyMaterial" id="Sky_1"]
+
+[sub_resource type="Sky" id="Sky_2"]
+sky_material = SubResource("Sky_1")
+
+[sub_resource type="Environment" id="Env_1"]
+background_mode = 2
+sky = SubResource("Sky_2")
+ambient_light_source = 3
+tonemap_mode = 3
+ssr_enabled = true
+ssao_enabled = true
+
+[sub_resource type="Shader" id="Shader_caustics_receiver"]
+code = "
+shader_type spatial;
+render_mode cull_back, diffuse_burley, specular_schlick_ggx;
+
+// Opaque receiver material with an additive caustics overlay. The world-
+// position projection works for flat, curved, and vertical receiver geometry;
+// each receiving material gets the shared light-space map from lake.gd.
+//
+// Real bug, found by the user: this material is fully opaque (ALPHA is
+// never set, so it's always 1.0) but had render_mode blend_mix,
+// depth_draw_opaque copy-pasted in from the water shader -- blend_mix
+// unconditionally puts a material in the transparent-pass pipeline
+// regardless of its actual alpha, so the floor was rendering through the
+// same pipeline as the translucent water for no reason, independent of
+// whether water was even present above it. Removed -- this is a plain
+// opaque surface and belongs in the normal opaque pass, like the walls.
+uniform vec4 albedo_color : source_color = vec4(0.68, 0.6, 0.42, 1.0);
+uniform float roughness_val : hint_range(0.0, 1.0) = 0.95;
+uniform sampler2D caustics_tex : hint_default_black, filter_linear;
+uniform vec3 caustics_origin = vec3(0.0);
+uniform vec3 caustics_light_right = vec3(1.0, 0.0, 0.0);
+uniform vec3 caustics_light_up = vec3(0.0, 0.0, 1.0);
+uniform vec3 caustics_sun_direction = vec3(-0.35, -1.0, -0.25);
+uniform float caustics_half_extent = 10.0;
+uniform float caustics_filter_radius = 1.5;
+uniform float caustics_surface_fade_depth = 1.25;
+uniform float caustic_strength = 1.5;
+uniform vec4 absorption_color : source_color = vec4(0.012, 0.07, 0.12, 1.0);
+uniform float absorption_density : hint_range(0.0, 2.0) = 0.55;
+
+varying vec3 v_world_position;
+varying vec3 v_world_normal;
+
+void vertex() {
+	v_world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	v_world_normal = normalize(MODEL_NORMAL_MATRIX * NORMAL);
+}
+
+float sample_caustics(vec2 uv) {
+	vec2 texel = 1.0 / vec2(textureSize(caustics_tex, 0));
+	vec2 offset = texel * caustics_filter_radius;
+	float center = texture(caustics_tex, uv).r * 4.0;
+	float axial = (
+		texture(caustics_tex, uv + vec2(offset.x, 0.0)).r +
+		texture(caustics_tex, uv - vec2(offset.x, 0.0)).r +
+		texture(caustics_tex, uv + vec2(0.0, offset.y)).r +
+		texture(caustics_tex, uv - vec2(0.0, offset.y)).r
+	) * 2.0;
+	float diagonal = (
+		texture(caustics_tex, uv + offset).r +
+		texture(caustics_tex, uv - offset).r +
+		texture(caustics_tex, uv + vec2(offset.x, -offset.y)).r +
+		texture(caustics_tex, uv + vec2(-offset.x, offset.y)).r
+	);
+	return (center + axial + diagonal) / 16.0;
+}
+
+void fragment() {
+	vec3 relative_position = v_world_position - caustics_origin;
+	vec2 uv = vec2(
+		dot(relative_position, caustics_light_right),
+		dot(relative_position, caustics_light_up)
+	) / (caustics_half_extent * 2.0) + 0.5;
+	vec3 caustic = vec3(0.0);
+	float depth_below_surface = caustics_origin.y - v_world_position.y;
+	if (depth_below_surface > 0.0 &&
+			uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
+		float receiver_incidence = max(dot(normalize(v_world_normal), -normalize(caustics_sun_direction)), 0.0);
+		float surface_fade = smoothstep(0.0, caustics_surface_fade_depth, depth_below_surface);
+		caustic = vec3(sample_caustics(uv) * receiver_incidence * surface_fade);
+	}
+	float absorption = 1.0 - exp(-absorption_density * max(depth_below_surface, 0.0));
+	ALBEDO = mix(albedo_color.rgb, absorption_color.rgb, absorption);
+	EMISSION = caustic * caustic_strength * (1.0 - absorption * 0.85);
+	ROUGHNESS = roughness_val;
+	METALLIC = 0.0;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="Sand"]
+render_priority = 0
+shader = SubResource("Shader_caustics_receiver")
+shader_parameter/albedo_color = Color(0.68, 0.6, 0.42, 1)
+shader_parameter/roughness_val = 0.95
+shader_parameter/caustics_origin = Vector3(0, 0, 0)
+shader_parameter/caustics_light_right = Vector3(1, 0, 0)
+shader_parameter/caustics_light_up = Vector3(0, 0, 1)
+shader_parameter/caustics_sun_direction = Vector3(-0.35, -1, -0.25)
+shader_parameter/caustics_half_extent = 10.0
+shader_parameter/caustics_filter_radius = 1.5
+shader_parameter/caustics_surface_fade_depth = 1.25
+shader_parameter/caustic_strength = 1.0
+shader_parameter/absorption_color = Color(0.012, 0.07, 0.12, 1)
+shader_parameter/absorption_density = 0.55
+
+[sub_resource type="ShaderMaterial" id="Stone"]
+render_priority = 0
+shader = SubResource("Shader_caustics_receiver")
+shader_parameter/albedo_color = Color(0.42, 0.4, 0.37, 1)
+shader_parameter/roughness_val = 0.9
+shader_parameter/caustics_origin = Vector3(0, 0, 0)
+shader_parameter/caustics_light_right = Vector3(1, 0, 0)
+shader_parameter/caustics_light_up = Vector3(0, 0, 1)
+shader_parameter/caustics_sun_direction = Vector3(-0.35, -1, -0.25)
+shader_parameter/caustics_half_extent = 10.0
+shader_parameter/caustics_filter_radius = 1.5
+shader_parameter/caustics_surface_fade_depth = 1.25
+shader_parameter/caustic_strength = 1.0
+shader_parameter/absorption_color = Color(0.012, 0.07, 0.12, 1)
+shader_parameter/absorption_density = 0.55
+
+[sub_resource type="Shader" id="Shader_tjgyv"]
+code = "
+shader_type spatial;
+render_mode blend_mix, cull_disabled, diffuse_burley, specular_schlick_ggx;
+
+uniform sampler2D ripple_height_tex : hint_default_black, filter_linear, repeat_disable;
+uniform sampler2D ocean_height_tex : hint_default_black, filter_linear, repeat_disable;
+uniform vec2 ripple_domain_size = vec2(20.0, 20.0);
+uniform vec2 ocean_domain_size = vec2(40.0, 40.0);
+uniform vec2 grid_center = vec2(0.0);
+uniform vec4 water_color : source_color = vec4(0.09, 0.32, 0.42, 0.65);
+uniform float roughness_val : hint_range(0.0, 1.0) = 0.04;
+
+varying vec3 v_world_normal;
+
+float sample_h(vec2 world_xz) {
+	vec2 rel = world_xz - grid_center;
+	vec2 uv_r = rel / ripple_domain_size + 0.5;
+	vec2 uv_o = rel / ocean_domain_size + 0.5;
+	return texture(ripple_height_tex, clamp(uv_r, vec2(0.0), vec2(1.0))).r + texture(ocean_height_tex, clamp(uv_o, vec2(0.0), vec2(1.0))).r;
+}
+
+void vertex() {
+	vec3 world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	VERTEX.y += sample_h(world_pos.xz);
+
+	// Central-difference normal -- e is in world meters, small relative to
+	// the ripple/ocean grids' own cell size so it stays a meaningful local
+	// gradient estimate, not aliased noise between texels.
+	const float e = 0.2;
+	float hx1 = sample_h(world_pos.xz + vec2(e, 0.0));
+	float hx0 = sample_h(world_pos.xz - vec2(e, 0.0));
+	float hz1 = sample_h(world_pos.xz + vec2(0.0, e));
+	float hz0 = sample_h(world_pos.xz - vec2(0.0, e));
+	v_world_normal = normalize(vec3(hx0 - hx1, 2.0 * e, hz0 - hz1));
+}
+
+void fragment() {
+	// Fragment-stage NORMAL is view space in this engine's spatial shader
+	// pipeline -- transform the world-space normal computed in vertex().
+	NORMAL = normalize((VIEW_MATRIX * vec4(v_world_normal, 0.0)).xyz);
+
+	// Real transparency via Godot's own GPU alpha blending (ALPHA,
+	// blend_mix) -- see this file's own top-of-namespace comment for why
+	// manual screen-space refraction was dropped. The root cause of the
+	// \"whitewash\" turned out to be neither refraction nor blending at all:
+	// a plain EMISSION=(0,1,0) diagnostic, well inside [0,1], still crushed
+	// to near-white -- confirmed via real research (not guessing) that this
+	// engine's Forward+ renderer always computes lighting in an internal
+	// HDR buffer before a final tonemap pass, and this scene's Environment
+	// uses ACES tonemapping with the engine's default tonemap_white=1.0,
+	// far below the 6.0-8.0 Godot's own docs recommend for ACES -- any
+	// reasonably-lit or blended value easily exceeds that low a reference
+	// white and blows out. Fixed at the Environment level (tonemap_white),
+	// not in this shader.
+	ALBEDO = water_color.rgb;
+	ALPHA = water_color.a;
+	ROUGHNESS = roughness_val;
+	METALLIC = 0.0;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_j8ovg"]
+render_priority = 0
+shader = SubResource("Shader_tjgyv")
+shader_parameter/ripple_domain_size = Vector2(16, 16)
+shader_parameter/ocean_domain_size = Vector2(16, 16)
+shader_parameter/water_color = Color(0.09, 0.32, 0.42, 0.65)
+shader_parameter/roughness_val = 0.04
+
+[sub_resource type="SphereShape3D" id="BallShape"]
+radius = 0.6
+
+[sub_resource type="ShaderMaterial" id="BallMat"]
+render_priority = 0
+shader = SubResource("Shader_caustics_receiver")
+shader_parameter/albedo_color = Color(0.85, 0.25, 0.2, 1)
+shader_parameter/roughness_val = 0.5
+shader_parameter/caustics_origin = Vector3(0, 0, 0)
+shader_parameter/caustics_light_right = Vector3(1, 0, 0)
+shader_parameter/caustics_light_up = Vector3(0, 0, 1)
+shader_parameter/caustics_sun_direction = Vector3(-0.35, -1, -0.25)
+shader_parameter/caustics_half_extent = 10.0
+shader_parameter/caustics_filter_radius = 1.5
+shader_parameter/caustics_surface_fade_depth = 1.25
+shader_parameter/caustic_strength = 1.0
+shader_parameter/absorption_color = Color(0.012, 0.07, 0.12, 1)
+shader_parameter/absorption_density = 0.55
+
+[sub_resource type="SphereMesh" id="BallMesh"]
+radius = 0.6
+height = 1.2
+
+[sub_resource type="BoxShape3D" id="CrateShape"]
+size = Vector3(2, 1, 2)
+
+[sub_resource type="ShaderMaterial" id="CrateMat"]
+render_priority = 0
+shader = SubResource("Shader_caustics_receiver")
+shader_parameter/albedo_color = Color(0.8, 0.6, 0.3, 1)
+shader_parameter/roughness_val = 0.8
+shader_parameter/caustics_origin = Vector3(0, 0, 0)
+shader_parameter/caustics_light_right = Vector3(1, 0, 0)
+shader_parameter/caustics_light_up = Vector3(0, 0, 1)
+shader_parameter/caustics_sun_direction = Vector3(-0.35, -1, -0.25)
+shader_parameter/caustics_half_extent = 10.0
+shader_parameter/caustics_filter_radius = 1.5
+shader_parameter/caustics_surface_fade_depth = 1.25
+shader_parameter/caustic_strength = 1.0
+shader_parameter/absorption_color = Color(0.012, 0.07, 0.12, 1)
+shader_parameter/absorption_density = 0.55
+
+[sub_resource type="BoxMesh" id="CrateMesh"]
+size = Vector3(2, 1, 2)
+
+[sub_resource type="BoxShape3D" id="LogShape"]
+size = Vector3(2.6, 0.6, 0.6)
+
+[sub_resource type="ShaderMaterial" id="LogMat"]
+render_priority = 0
+shader = SubResource("Shader_caustics_receiver")
+shader_parameter/albedo_color = Color(0.45, 0.3, 0.18, 1)
+shader_parameter/roughness_val = 0.85
+shader_parameter/caustics_origin = Vector3(0, 0, 0)
+shader_parameter/caustics_light_right = Vector3(1, 0, 0)
+shader_parameter/caustics_light_up = Vector3(0, 0, 1)
+shader_parameter/caustics_sun_direction = Vector3(-0.35, -1, -0.25)
+shader_parameter/caustics_half_extent = 10.0
+shader_parameter/caustics_filter_radius = 1.5
+shader_parameter/caustics_surface_fade_depth = 1.25
+shader_parameter/caustic_strength = 1.0
+shader_parameter/absorption_color = Color(0.012, 0.07, 0.12, 1)
+shader_parameter/absorption_density = 0.55
+
+[sub_resource type="BoxMesh" id="LogMesh"]
+size = Vector3(2.6, 0.6, 0.6)
+
+[node name="BeachShowcase" type="Node3D" unique_id=1973821850]
+script = ExtResource("1")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=317484449]
+environment = SubResource("Env_1")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1691904237]
+transform = Transform3D(0.7, -0.49, 0.52, 0, 0.73, 0.68, -0.71, -0.48, 0.51, 0, 6, 0)
+shadow_enabled = true
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1284043259]
+transform = Transform3D(0.4657, 0.1815, -0.8661, -0.0000, 0.9787, 0.2051, 0.8849, -0.0955, 0.4558, -17.0000, 3.5000, 9.0000)
+current = true
+
+[node name="Pool" type="Node3D" parent="." unique_id=1071477686]
+
+[node name="Floor" type="StaticBody3D" parent="Pool" unique_id=1959167398]
+collision_layer = 33
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Pool/Floor" unique_id=1302102035]
+shape = ExtResource("beach_shape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Pool/Floor" unique_id=1940099285]
+material_override = SubResource("Sand")
+mesh = ExtResource("beach_mesh")
+
+[node name="Water" type="PhysXWaterSurface3D" parent="." unique_id=1306440232]
+domain_size = Vector2(40, 40)
+grid_resolution = 160
+damping = 1.2
+ripple_amplitude = 0.69
+ocean_grid_resolution = 128
+ocean_domain_size = Vector2(40, 40)
+wind_speed = 6.0
+wind_direction = Vector2(1, 0.4)
+water_material = SubResource("ShaderMaterial_j8ovg")
+
+[node name="Floaters" type="Node3D" parent="." unique_id=1793373968]
+
+[node name="Ball" type="RigidBody3D" parent="Floaters" unique_id=1331007011]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 4, -2)
+mass = 15.0
+can_sleep = false
+script = ExtResource("2")
+water_surface_path = NodePath("../../Water")
+sample_points = Array[Vector3]([Vector3(-0.4, 0, -0.4), Vector3(0.4, 0, -0.4), Vector3(-0.4, 0, 0.4), Vector3(0.4, 0, 0.4)])
+buoyancy_strength = 350.0
+water_drag = 90.0
+hull_radius = 0.7
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floaters/Ball" unique_id=1451983821]
+shape = SubResource("BallShape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floaters/Ball" unique_id=680015410]
+material_override = SubResource("BallMat")
+mesh = SubResource("BallMesh")
+
+[node name="Crate" type="RigidBody3D" parent="Floaters" unique_id=312677428]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+mass = 50.0
+can_sleep = false
+script = ExtResource("2")
+water_surface_path = NodePath("../../Water")
+buoyancy_strength = 400.0
+water_drag = 100.0
+hull_radius = 1.4
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floaters/Crate" unique_id=1261571853]
+shape = SubResource("CrateShape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floaters/Crate" unique_id=723999878]
+material_override = SubResource("CrateMat")
+mesh = SubResource("CrateMesh")
+
+[node name="Log" type="RigidBody3D" parent="Floaters" unique_id=386508050]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 4, 2)
+mass = 60.0
+can_sleep = false
+script = ExtResource("2")
+water_surface_path = NodePath("../../Water")
+sample_points = Array[Vector3]([Vector3(-1.3, 0, -0.25), Vector3(1.3, 0, -0.25), Vector3(-1.3, 0, 0.25), Vector3(1.3, 0, 0.25)])
+buoyancy_strength = 380.0
+water_drag = 95.0
+hull_radius = 1.3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floaters/Log" unique_id=223262084]
+shape = SubResource("LogShape")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floaters/Log" unique_id=409771952]
+material_override = SubResource("LogMat")
+mesh = SubResource("LogMesh")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1907713885]
+
+[node name="Label" type="Label" parent="HUD" unique_id=1269433466]
+offset_left = 16.0
+offset_top = 12.0
+offset_right = 640.0
+offset_bottom = 60.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
