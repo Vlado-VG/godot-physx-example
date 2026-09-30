@@ -71,6 +71,8 @@ uniform float swash_film_thickness : hint_range(0.0, 0.2, 0.005) = 0.03;
 // Wet sand: rgb blended over the ground where the water has been, alpha the
 // strength -- darkens it, fading as it dries.
 uniform vec4 wet_sand_color : source_color = vec4(0.16, 0.12, 0.07, 0.45);
+// Wet sand sheen: lower is glossier (more sun glare off the wet beach).
+uniform float wet_sand_roughness : hint_range(0.0, 1.0) = 0.5;
 // Wave height (m) that pushes the waterline all the way in.
 uniform float swash_wave_height = 0.3;
 // Thin bright foam rim just behind the moving edge.
@@ -117,6 +119,12 @@ vec3 surface_normal_pixel(vec2 world_xz) {
 	vec2 du = vec2(e) / ripple_domain_size;
 	float rx = (texture(ripple_height_tex, cuv_r + vec2(du.x, 0.0)).r - texture(ripple_height_tex, cuv_r - vec2(du.x, 0.0)).r) / (2.0 * e);
 	float rz = (texture(ripple_height_tex, cuv_r + vec2(0.0, du.y)).r - texture(ripple_height_tex, cuv_r - vec2(0.0, du.y)).r) / (2.0 * e);
+	// The ripple layer steps at the waterline (dry cells report their wet
+	// neighbours' mean), which the sun picked out as bright streaks along the
+	// shore; over the sand the swash film just follows the ground.
+	float wet_w = smoothstep(0.0, 0.15, texture(shore_depth_tex, cuv_r).r);
+	rx *= wet_w;
+	rz *= wet_w;
 	vec3 tx = vec3(1.0 + s * der.z, der.x * fade + rx, s * dxz);
 	vec3 tz = vec3(s * dxz, der.y * fade + rz, 1.0 + s * der.w);
 	return normalize(cross(tz, tx));
@@ -212,6 +220,13 @@ void fragment() {
 		world_normal = surface_normal_pixel(v_rest_xz);
 		foam = foam_at(v_rest_xz);
 	}
+	// The swash film over the sand is flat, so the sun made one smooth mirror
+	// disc on it; small drifting ripples break that into glitter.
+	vec2 cuv_film = clamp((v_rest_xz - grid_center) / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
+	float film = 1.0 - smoothstep(0.0, 0.15, texture(shore_depth_tex, cuv_film).r);
+	vec2 gp = v_rest_xz * 6.0;
+	vec2 tilt = vec2(foam_value_noise(gp + vec2(TIME * 0.9, 0.0)), foam_value_noise(gp * 1.3 + vec2(0.0, TIME * 0.7) + 13.0)) - 0.5;
+	world_normal = normalize(world_normal + vec3(tilt.x, 0.0, tilt.y) * 0.35 * film);
 	// Fragment-stage NORMAL is view space -- transform the world-space normal.
 	NORMAL = normalize((VIEW_MATRIX * vec4(world_normal, 0.0)).xyz);
 	float shore = shore_signal(v_rest_xz, TIME);
@@ -247,6 +262,6 @@ void fragment() {
 	ALPHA = water_a + wet_a;
 	ALBEDO = (ALBEDO * water_a + wet_sand_color.rgb * wet_a) / max(ALPHA, 1e-4);
 	// Wet sand is glossy.
-	ROUGHNESS = mix(mix(roughness_val, 0.8, foam), 0.3, wet_a / max(ALPHA, 1e-4));
+	ROUGHNESS = mix(mix(roughness_val, 0.8, foam), wet_sand_roughness, wet_a / max(ALPHA, 1e-4));
 	METALLIC = 0.0;
 }
