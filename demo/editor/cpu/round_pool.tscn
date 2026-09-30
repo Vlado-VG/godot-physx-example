@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://bcv7jvi8qhxub" path="res://demo/common/buoyant_body.gd" id="2"]
 [ext_resource type="ArrayMesh" path="res://demo/common/meshes/round_pool_wall_mesh.res" id="wall_mesh"]
 [ext_resource type="ConcavePolygonShape3D" path="res://demo/common/meshes/round_pool_wall_shape.res" id="wall_shape"]
+[ext_resource type="ArrayMesh" path="res://demo/common/meshes/round_pool_water_mesh.res" id="water_mesh"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_1"]
 
@@ -145,14 +146,16 @@ uniform sampler2D ripple_height_tex : hint_default_black, filter_linear, repeat_
 uniform sampler2D ocean_height_tex : hint_default_black, filter_linear, repeat_disable;
 uniform vec2 ripple_domain_size = vec2(20.0, 20.0);
 uniform vec2 ocean_domain_size = vec2(40.0, 40.0);
+uniform vec2 grid_center = vec2(0.0);
 uniform vec4 water_color : source_color = vec4(0.09, 0.32, 0.42, 0.65);
 uniform float roughness_val : hint_range(0.0, 1.0) = 0.04;
 
 varying vec3 v_world_normal;
 
 float sample_h(vec2 world_xz) {
-	vec2 uv_r = world_xz / ripple_domain_size + 0.5;
-	vec2 uv_o = world_xz / ocean_domain_size + 0.5;
+	vec2 rel = world_xz - grid_center;
+	vec2 uv_r = rel / ripple_domain_size + 0.5;
+	vec2 uv_o = rel / ocean_domain_size + 0.5;
 	return texture(ripple_height_tex, clamp(uv_r, vec2(0.0), vec2(1.0))).r + texture(ocean_height_tex, clamp(uv_o, vec2(0.0), vec2(1.0))).r;
 }
 
@@ -310,6 +313,7 @@ material_override = SubResource("Stone")
 mesh = ExtResource("wall_mesh")
 
 [node name="Water" type="PhysXWaterSurface3D" parent="." unique_id=1306440232]
+surface_mesh = ExtResource("water_mesh")
 domain_size = Vector2(16, 16)
 damping = 1.2
 ripple_amplitude = 0.69
