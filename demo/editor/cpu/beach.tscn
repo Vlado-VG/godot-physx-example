@@ -61,6 +61,9 @@ uniform float caustics_surface_fade_depth = 1.25;
 // folding the position into the tile around caustics_origin lights the whole
 // seabed, not just the simulated square. 0 = no folding.
 uniform vec2 caustics_tile_size = vec2(0.0);
+// Caustics spread out and wash away with depth: gone below this (m), fading
+// in from about a third of it.
+uniform float caustics_max_depth = 4.0;
 uniform float caustic_strength = 1.5;
 uniform vec4 absorption_color : source_color = vec4(0.012, 0.07, 0.12, 1.0);
 uniform float absorption_density : hint_range(0.0, 2.0) = 0.55;
@@ -107,6 +110,7 @@ void fragment() {
 			uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
 		float receiver_incidence = max(dot(normalize(v_world_normal), -normalize(caustics_sun_direction)), 0.0);
 		float surface_fade = smoothstep(0.0, caustics_surface_fade_depth, depth_below_surface);
+		surface_fade *= 1.0 - smoothstep(caustics_max_depth * 0.35, caustics_max_depth, depth_below_surface);
 		caustic = vec3(sample_caustics(uv) * receiver_incidence * surface_fade);
 	}
 	float absorption = 1.0 - exp(-absorption_density * max(depth_below_surface, 0.0));
