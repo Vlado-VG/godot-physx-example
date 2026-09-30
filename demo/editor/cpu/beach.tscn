@@ -1,10 +1,10 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://vxsyeyr12upn"]
 
 [ext_resource type="Script" uid="uid://ccqu4sjj0rgac" path="res://demo/editor/cpu/lake.gd" id="1"]
 [ext_resource type="Script" uid="uid://bcv7jvi8qhxub" path="res://demo/common/buoyant_body.gd" id="2"]
 [ext_resource type="ArrayMesh" path="res://demo/common/meshes/beach_floor_mesh.res" id="beach_mesh"]
-[ext_resource type="ConcavePolygonShape3D" path="res://demo/common/meshes/beach_floor_shape.res" id="beach_shape"]
-[ext_resource type="Shader" path="res://demo/common/materials/water_surface.gdshader" id="water_shader"]
+[ext_resource type="Shape3D" path="res://demo/common/meshes/beach_floor_shape.res" id="beach_shape"]
+[ext_resource type="Shader" uid="uid://v3k718kk64l6" path="res://demo/common/materials/water_surface.gdshader" id="water_shader"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_1"]
 
@@ -115,29 +115,24 @@ shader_parameter/caustic_strength = 1.0
 shader_parameter/absorption_color = Color(0.012, 0.07, 0.12, 1)
 shader_parameter/absorption_density = 0.55
 
-[sub_resource type="ShaderMaterial" id="Stone"]
-render_priority = 0
-shader = SubResource("Shader_caustics_receiver")
-shader_parameter/albedo_color = Color(0.42, 0.4, 0.37, 1)
-shader_parameter/roughness_val = 0.9
-shader_parameter/caustics_origin = Vector3(0, 0, 0)
-shader_parameter/caustics_light_right = Vector3(1, 0, 0)
-shader_parameter/caustics_light_up = Vector3(0, 0, 1)
-shader_parameter/caustics_sun_direction = Vector3(-0.35, -1, -0.25)
-shader_parameter/caustics_half_extent = 10.0
-shader_parameter/caustics_filter_radius = 1.5
-shader_parameter/caustics_surface_fade_depth = 1.25
-shader_parameter/caustic_strength = 1.0
-shader_parameter/absorption_color = Color(0.012, 0.07, 0.12, 1)
-shader_parameter/absorption_density = 0.55
-
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_j8ovg"]
 render_priority = 0
 shader = ExtResource("water_shader")
-shader_parameter/ripple_domain_size = Vector2(16, 16)
-shader_parameter/ocean_domain_size = Vector2(16, 16)
+shader_parameter/choppiness = 1.2
+shader_parameter/per_pixel_normals = true
+shader_parameter/ripple_domain_size = Vector2(40, 40)
+shader_parameter/ocean_domain_size = Vector2(40, 40)
+shader_parameter/grid_center = Vector2(0, 0)
 shader_parameter/water_color = Color(0.09, 0.32, 0.42, 0.65)
 shader_parameter/roughness_val = 0.04
+shader_parameter/foam_color = Color(0.92, 0.95, 0.97, 0.95)
+shader_parameter/foam_breakup = 0.6
+shader_parameter/foam_detail_scale = 2.5
+shader_parameter/shore_foam_strength = 0.65
+shader_parameter/shore_foam_breakup = 0.85
+shader_parameter/shallow_color = Color(0.42, 0.66, 0.64, 0.55)
+shader_parameter/shallow_tint = 0.6
+shader_parameter/shore_edge_softness = 0.12
 
 [sub_resource type="SphereShape3D" id="BallShape"]
 radius = 0.6
@@ -217,7 +212,7 @@ transform = Transform3D(0.7, -0.49, 0.52, 0, 0.73, 0.68, -0.71, -0.48, 0.51, 0, 
 shadow_enabled = true
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1284043259]
-transform = Transform3D(0.4657, 0.1815, -0.8661, -0.0000, 0.9787, 0.2051, 0.8849, -0.0955, 0.4558, -17.0000, 3.5000, 9.0000)
+transform = Transform3D(0.4657, 0.1815, -0.8661, 0, 0.9787, 0.2051, 0.8849, -0.0955, 0.4558, -17, 3.5, 9)
 current = true
 
 [node name="Pool" type="Node3D" parent="." unique_id=1071477686]
@@ -233,16 +228,21 @@ material_override = SubResource("Sand")
 mesh = ExtResource("beach_mesh")
 
 [node name="Water" type="PhysXWaterSurface3D" parent="." unique_id=1306440232]
-seabed_from_floor = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85737467, 0)
 domain_size = Vector2(40, 40)
 grid_resolution = 160
 damping = 1.2
 ripple_amplitude = 0.69
-ocean_grid_resolution = 128
-ocean_domain_size = Vector2(40, 40)
-wind_speed = 12.0
-choppiness = 1.2
+seabed_from_floor = true
+shallow_fade_depth = 2.07
+ocean_grid_resolution = 256
+wind_speed = 15.0
 wind_direction = Vector2(-1, 0.3)
+render_extent = 2000.0
+choppiness = 1.2
+foam_threshold = 0.63
+shore_foam_band = 1.9
+shore_undertow = 0.47
 water_material = SubResource("ShaderMaterial_j8ovg")
 
 [node name="Floaters" type="Node3D" parent="." unique_id=1793373968]
