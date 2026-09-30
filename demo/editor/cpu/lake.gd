@@ -199,8 +199,16 @@ func _process(delta: float) -> void:
 		var p := cam.global_position
 		var r := cam.global_rotation
 		cam_text = "   cam (%.1f, %.1f, %.1f) pitch %.2f yaw %.2f" % [p.x, p.y, p.z, r.x, r.y]
-	_hud.text = "Sample-point buoyancy (demo/common/buoyant_body.gd)   SPACE drop   left-drag shove   WASD/hold-RMB fly   R reset   ESC\nfloaters: %d   FPS: %d%s" % [
-		_floaters.size(), Engine.get_frames_per_second(), cam_text]
+	# Where the frame goes: CPU process/physics (ms) and GPU render time.
+	var vp_rid := get_viewport().get_viewport_rid()
+	RenderingServer.viewport_set_measure_render_time(vp_rid, true)
+	var timing := "\nprocess %.2f ms   physics %.2f ms   render cpu %.2f ms   gpu %.2f ms" % [
+		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+		Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
+		RenderingServer.viewport_get_measured_render_time_cpu(vp_rid) + RenderingServer.get_frame_setup_time_cpu(),
+		RenderingServer.viewport_get_measured_render_time_gpu(vp_rid)]
+	_hud.text = "Sample-point buoyancy (demo/common/buoyant_body.gd)   SPACE drop   left-drag shove   WASD/hold-RMB fly   R reset   ESC\nfloaters: %d   FPS: %d%s%s" % [
+		_floaters.size(), Engine.get_frames_per_second(), cam_text, timing]
 
 	# The pool has real walls/floor (see the scene) -- this is just a deep
 	# safety net for anything that somehow escapes them.
