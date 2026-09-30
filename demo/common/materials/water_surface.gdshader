@@ -26,6 +26,12 @@ uniform vec2 grid_center = vec2(0.0);
 // Mean surface height (node-relative), what the ripple layer settles back to
 // past the edge of its domain when the surface is rendered further out.
 uniform float water_level = 0.0;
+// Animation clock for the shore noise, set by PhysXWaterSurface3D while the
+// game runs -- not the shader's built-in clock: a material that reads it makes
+// the editor redraw its 3D view every frame, and with a big scene open that
+// ate half of Play Scene's frame rate. In the editor this stays 0 (the water
+// is a static preview there anyway).
+uniform float water_time = 0.0;
 uniform vec4 water_color : source_color = vec4(0.09, 0.32, 0.42, 0.65);
 uniform float roughness_val : hint_range(0.0, 1.0) = 0.04;
 // Persistent whitecap foam (0..1) on the ocean grid, injected where the
@@ -260,11 +266,11 @@ void fragment() {
 	vec2 cuv_film = clamp((v_rest_xz - grid_center) / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
 	float film = 1.0 - smoothstep(0.0, 0.15, texture(shore_depth_tex, cuv_film).r);
 	vec2 gp = v_rest_xz * 6.0;
-	vec2 tilt = vec2(foam_value_noise(gp + vec2(TIME * 0.9, 0.0)), foam_value_noise(gp * 1.3 + vec2(0.0, TIME * 0.7) + 13.0)) - 0.5;
+	vec2 tilt = vec2(foam_value_noise(gp + vec2(water_time * 0.9, 0.0)), foam_value_noise(gp * 1.3 + vec2(0.0, water_time * 0.7) + 13.0)) - 0.5;
 	world_normal = normalize(world_normal + vec3(tilt.x, 0.0, tilt.y) * 0.35 * film);
 	// Fragment-stage NORMAL is view space -- transform the world-space normal.
 	NORMAL = normalize((VIEW_MATRIX * vec4(world_normal, 0.0)).xyz);
-	float shore = shore_signal(v_rest_xz, TIME);
+	float shore = shore_signal(v_rest_xz, water_time);
 	// Shore foam belongs to the moving edge: full at it, thinning over the
 	// next ~0.6 m of depth, so the white sheet scallops with the edge instead
 	// of filling the band. (Whitecaps are left alone.)
