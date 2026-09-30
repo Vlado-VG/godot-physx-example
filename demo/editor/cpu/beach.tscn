@@ -242,7 +242,7 @@ ocean_grid_resolution = 128
 ocean_domain_size = Vector2(40, 40)
 wind_speed = 12.0
 choppiness = 1.2
-wind_direction = Vector2(1, 0.4)
+wind_direction = Vector2(-1, 0.3)
 water_material = SubResource("ShaderMaterial_j8ovg")
 
 [node name="Floaters" type="Node3D" parent="." unique_id=1793373968]
