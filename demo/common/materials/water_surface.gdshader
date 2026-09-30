@@ -35,6 +35,20 @@ uniform vec4 foam_color : source_color = vec4(0.92, 0.95, 0.97, 0.95);
 uniform float foam_breakup : hint_range(0.0, 1.0) = 0.6;
 // Size of that lace: noise cells per metre, fixed to the water.
 uniform float foam_detail_scale = 1.5;
+// Shore foam (0..1) on the ripple grid: the foamy sheet where waves wash in
+// over the shallows (set by PhysXWaterSurface3D; needs a seabed).
+uniform sampler2D shore_foam_tex : hint_default_black, filter_linear, repeat_disable;
+// Shore foam is a thin sheet, not a whitecap: fainter, finer and lacier.
+uniform float shore_foam_strength : hint_range(0.0, 1.0) = 0.65;
+uniform float shore_foam_breakup : hint_range(0.0, 1.0) = 0.85;
+// Churned, milky water over the shallows: tints toward shallow_color as the
+// ocean fade drops off near the shore (shallow_tint 0 = off). Its alpha also
+// replaces water_color's there.
+uniform vec4 shallow_color : source_color = vec4(0.42, 0.66, 0.64, 0.55);
+uniform float shallow_tint : hint_range(0.0, 1.0) = 0.6;
+// Soft contact with the shore: the surface fades out over this much of the
+// fade ramp at the waterline instead of meeting the sand at a hard line.
+uniform float shore_edge_softness : hint_range(0.0, 1.0) = 0.12;
 
 varying vec3 v_world_normal;
 varying float v_foam;
@@ -99,7 +113,20 @@ float foam_at(vec2 world_xz) {
 	// Gentle ramp: fresh foam is solid, thinning foam turns translucent and
 	// lacy as the noise eats into it, rather than cutting off at an edge.
 	float f = clamp(amount * (1.0 + foam_breakup) - n * foam_breakup, 0.0, 1.0);
-	return f * f * (3.0 - 2.0 * f);
+	f = f * f * (3.0 - 2.0 * f);
+	// Shore foam: finer, heavier lace at partial strength.
+	vec2 q = world_xz * foam_detail_scale * 2.2 + 31.0;
+	float ns = 0.5 * foam_value_noise(q) + 0.5 * foam_value_noise(q * 2.3 - 11.0);
+	float shore = texture(shore_foam_tex, cuv_r).r;
+	float g = clamp(shore * (1.0 + shore_foam_breakup) - ns * shore_foam_breakup, 0.0, 1.0);
+	g = g * g * (3.0 - 2.0 * g) * shore_foam_strength;
+	return max(f, g);
+}
+
+// 0 in deep water, rising to 1 at the waterline (from the ocean fade).
+float shallowness_at(vec2 world_xz) {
+	vec2 cuv_r = clamp((world_xz - grid_center) / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
+	return 1.0 - texture(ocean_fade_tex, cuv_r).r;
 }
 
 void vertex() {
@@ -134,8 +161,11 @@ void fragment() {
 	}
 	// Fragment-stage NORMAL is view space -- transform the world-space normal.
 	NORMAL = normalize((VIEW_MATRIX * vec4(world_normal, 0.0)).xyz);
-	ALBEDO = mix(water_color.rgb, foam_color.rgb, foam);
-	ALPHA = mix(water_color.a, foam_color.a, foam);
+	float shallow = shallowness_at(v_rest_xz) * shallow_tint;
+	vec3 base_rgb = mix(water_color.rgb, shallow_color.rgb, shallow);
+	float base_a = mix(water_color.a, shallow_color.a, shallow);
+	ALBEDO = mix(base_rgb, foam_color.rgb, foam);
+	ALPHA = mix(base_a, foam_color.a, foam) * smoothstep(0.0, max(shore_edge_softness, 1e-3), 1.0 - shallowness_at(v_rest_xz));
 	ROUGHNESS = mix(roughness_val, 0.8, foam);
 	METALLIC = 0.0;
 }
