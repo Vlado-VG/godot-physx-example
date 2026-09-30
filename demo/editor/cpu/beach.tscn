@@ -70,6 +70,9 @@ uniform float absorption_density : hint_range(0.0, 2.0) = 0.55;
 
 varying vec3 v_world_position;
 varying vec3 v_world_normal;
+// Caustic light for this pixel, handed to light(): caustics are focused
+// sunlight, so they're applied there, where the sun's shadow is known.
+varying vec3 v_caustic;
 
 void vertex() {
 	v_world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
@@ -119,9 +122,18 @@ void fragment() {
 	}
 	float absorption = 1.0 - exp(-absorption_density * max(depth_below_surface, 0.0));
 	ALBEDO = mix(albedo_color.rgb, absorption_color.rgb, absorption);
-	EMISSION = caustic * caustic_strength * (1.0 - absorption * 0.85);
+	v_caustic = caustic * caustic_strength * (1.0 - absorption * 0.85);
 	ROUGHNESS = roughness_val;
 	METALLIC = 0.0;
+}
+
+void light() {
+	DIFFUSE_LIGHT += clamp(dot(NORMAL, LIGHT), 0.0, 1.0) * ATTENUATION * LIGHT_COLOR / PI;
+	if (LIGHT_IS_DIRECTIONAL) {
+		// Shadowed like the sunlight itself: no caustics in a wall's or a
+		// floating body's shadow (as emission they ignored shadows).
+		SPECULAR_LIGHT += v_caustic * ATTENUATION * LIGHT_COLOR / PI;
+	}
 }
 "
 
