@@ -137,7 +137,8 @@ func _drop_random() -> void:
 			rb.buoyancy_strength = 350.0
 			rb.water_drag = 90.0
 			rb.hull_radius = 0.7
-			rb.sample_points = [Vector3(-0.4, 0, -0.4), Vector3(0.4, 0, -0.4), Vector3(-0.4, 0, 0.4), Vector3(0.4, 0, 0.4)]
+			var pts: Array[Vector3] = [Vector3(-0.4, 0, -0.4), Vector3(0.4, 0, -0.4), Vector3(-0.4, 0, 0.4), Vector3(0.4, 0, 0.4)]
+			rb.sample_points = pts
 		"crate":
 			var shape := BoxShape3D.new()
 			shape.size = Vector3(2, 1, 2)
@@ -161,7 +162,8 @@ func _drop_random() -> void:
 			rb.buoyancy_strength = 380.0
 			rb.water_drag = 95.0
 			rb.hull_radius = 1.3
-			rb.sample_points = [Vector3(-1.3, 0, -0.25), Vector3(1.3, 0, -0.25), Vector3(-1.3, 0, 0.25), Vector3(1.3, 0, 0.25)]
+			var pts: Array[Vector3] = [Vector3(-1.3, 0, -0.25), Vector3(1.3, 0, -0.25), Vector3(-1.3, 0, 0.25), Vector3(1.3, 0, 0.25)]
+			rb.sample_points = pts
 
 	# water_surface_path must be set BEFORE add_child() -- buoyant_body.gd
 	# resolves it in _ready(), which fires as soon as the node enters the
