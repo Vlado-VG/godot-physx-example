@@ -25,11 +25,16 @@ uniform vec2 ocean_domain_size = vec2(40.0, 40.0);
 uniform vec2 grid_center = vec2(0.0);
 uniform vec4 water_color : source_color = vec4(0.09, 0.32, 0.42, 0.65);
 uniform float roughness_val : hint_range(0.0, 1.0) = 0.04;
-// Whitecaps where the choppy displacement squeezes the surface: foam fades
-// in as the area Jacobian drops below foam_threshold (1 = unsqueezed, 0 =
-// folding over).
-uniform float foam_threshold : hint_range(0.0, 1.0) = 0.7;
+// Persistent whitecap foam (0..1) on the ocean grid, injected where the
+// waves fold and fading over the node's foam_persistence (set by
+// PhysXWaterSurface3D).
+uniform sampler2D ocean_foam_tex : hint_default_black, filter_linear, repeat_disable;
 uniform vec4 foam_color : source_color = vec4(0.92, 0.95, 0.97, 0.95);
+// How much fading foam breaks up into lace instead of thinning evenly
+// (0 = solid sheet until it's gone).
+uniform float foam_breakup : hint_range(0.0, 1.0) = 0.6;
+// Size of that lace: noise cells per metre, fixed to the water.
+uniform float foam_detail_scale = 1.5;
 
 varying vec3 v_world_normal;
 varying float v_foam;
@@ -48,11 +53,10 @@ vec3 surface_offset(vec2 world_xz) {
 	return vec3(d.x, h, d.y);
 }
 
-// Exact normal of the displaced surface at the point resting at world_xz,
-// and its area Jacobian (for foam): tangents of P(x0) = x0 + s D(x0) + h(x0)
-// from the FFT's own derivatives. The ripple layer has no FFT, so its slope
+// Exact normal of the displaced surface at the point resting at world_xz:
+// tangents of P(x0) = x0 + s D(x0) + h(x0) from the FFT's own derivatives. The ripple layer has no FFT, so its slope
 // is a small central difference.
-vec3 surface_normal_pixel(vec2 world_xz, out float jacobian) {
+vec3 surface_normal_pixel(vec2 world_xz) {
 	vec2 rel = world_xz - grid_center;
 	vec2 cuv_r = clamp(rel / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
 	vec2 cuv_o = clamp(rel / ocean_domain_size + 0.5, vec2(0.0), vec2(1.0));
@@ -66,8 +70,36 @@ vec3 surface_normal_pixel(vec2 world_xz, out float jacobian) {
 	float rz = (texture(ripple_height_tex, cuv_r + vec2(0.0, du.y)).r - texture(ripple_height_tex, cuv_r - vec2(0.0, du.y)).r) / (2.0 * e);
 	vec3 tx = vec3(1.0 + s * der.z, der.x * fade + rx, s * dxz);
 	vec3 tz = vec3(s * dxz, der.y * fade + rz, 1.0 + s * der.w);
-	jacobian = tx.x * tz.z - tx.z * tz.x;
 	return normalize(cross(tz, tx));
+}
+
+float foam_hash(vec2 p) {
+	vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+	p3 += dot(p3, p3.yzx + 33.33);
+	return fract((p3.x + p3.y) * p3.z);
+}
+
+float foam_value_noise(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(mix(foam_hash(i), foam_hash(i + vec2(1.0, 0.0)), u.x),
+			mix(foam_hash(i + vec2(0.0, 1.0)), foam_hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+
+// Visible foam for the water resting at world_xz: the persistent foam amount,
+// eroded by fixed-to-the-water noise so it breaks into lace as it fades.
+float foam_at(vec2 world_xz) {
+	vec2 rel = world_xz - grid_center;
+	vec2 cuv_r = clamp(rel / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
+	vec2 cuv_o = clamp(rel / ocean_domain_size + 0.5, vec2(0.0), vec2(1.0));
+	float amount = texture(ocean_foam_tex, cuv_o).r * texture(ocean_fade_tex, cuv_r).r;
+	vec2 p = world_xz * foam_detail_scale;
+	float n = 0.5 * foam_value_noise(p) + 0.3 * foam_value_noise(p * 2.7 + 17.0) + 0.2 * foam_value_noise(p * 7.3 - 5.0);
+	// Gentle ramp: fresh foam is solid, thinning foam turns translucent and
+	// lacy as the noise eats into it, rather than cutting off at an edge.
+	float f = clamp(amount * (1.0 + foam_breakup) - n * foam_breakup, 0.0, 1.0);
+	return f * f * (3.0 - 2.0 * f);
 }
 
 void vertex() {
@@ -78,9 +110,9 @@ void vertex() {
 	v_foam = 0.0;
 	// Per pixel, fragment() computes the normal and foam instead.
 	if (!per_pixel_normals) {
-		// Per-vertex: normal and Jacobian from central differences of the
-		// displaced surface -- e is in world metres, small against the grids'
-		// cell size.
+		// Per-vertex: normal from central differences of the displaced
+		// surface -- e is in world metres, small against the grids' cell
+		// size.
 		const float e = 0.2;
 		vec3 px1 = vec3(e, 0.0, 0.0) + surface_offset(world_pos.xz + vec2(e, 0.0));
 		vec3 px0 = vec3(-e, 0.0, 0.0) + surface_offset(world_pos.xz - vec2(e, 0.0));
@@ -89,8 +121,7 @@ void vertex() {
 		vec3 tx = px1 - px0;
 		vec3 tz = pz1 - pz0;
 		v_world_normal = normalize(cross(tz, tx));
-		float jacobian = (tx.x * tz.z - tx.z * tz.x) / (4.0 * e * e);
-		v_foam = 1.0 - smoothstep(foam_threshold - 0.3, foam_threshold, jacobian);
+		v_foam = foam_at(world_pos.xz);
 	}
 }
 
@@ -98,9 +129,8 @@ void fragment() {
 	vec3 world_normal = v_world_normal;
 	float foam = v_foam;
 	if (per_pixel_normals) {
-		float jacobian;
-		world_normal = surface_normal_pixel(v_rest_xz, jacobian);
-		foam = 1.0 - smoothstep(foam_threshold - 0.3, foam_threshold, jacobian);
+		world_normal = surface_normal_pixel(v_rest_xz);
+		foam = foam_at(v_rest_xz);
 	}
 	// Fragment-stage NORMAL is view space -- transform the world-space normal.
 	NORMAL = normalize((VIEW_MATRIX * vec4(world_normal, 0.0)).xyz);
