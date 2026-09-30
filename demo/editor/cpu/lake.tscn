@@ -294,6 +294,7 @@ material_override = SubResource("Stone")
 mesh = SubResource("WallMeshZ")
 
 [node name="Water" type="PhysXWaterSurface3D" parent="." unique_id=1306440232]
+foam_enabled = false
 domain_size = Vector2(16, 16)
 damping = 1.2
 ripple_amplitude = 0.69
