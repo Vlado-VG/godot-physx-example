@@ -18,6 +18,17 @@ ambient_light_source = 3
 tonemap_mode = 3
 ssr_enabled = true
 ssao_enabled = true
+sdfgi_enabled = true
+sdfgi_use_occlusion = true
+sdfgi_min_cell_size = 1.0
+glow_enabled = true
+glow_normalized = true
+glow_bloom = 0.14
+fog_enabled = true
+fog_sun_scatter = 0.12
+fog_sky_affect = 0.319
+volumetric_fog_density = 0.01
+volumetric_fog_sky_affect = 0.286
 
 [sub_resource type="Shader" id="Shader_caustics_receiver"]
 code = "
@@ -46,6 +57,10 @@ uniform vec3 caustics_sun_direction = vec3(-0.35, -1.0, -0.25);
 uniform float caustics_half_extent = 10.0;
 uniform float caustics_filter_radius = 1.5;
 uniform float caustics_surface_fade_depth = 1.25;
+// The caustics repeat with the ocean tile (PhysXWaterSurface3D.get_caustics_tile_size()):
+// folding the position into the tile around caustics_origin lights the whole
+// seabed, not just the simulated square. 0 = no folding.
+uniform vec2 caustics_tile_size = vec2(0.0);
 uniform float caustic_strength = 1.5;
 uniform vec4 absorption_color : source_color = vec4(0.012, 0.07, 0.12, 1.0);
 uniform float absorption_density : hint_range(0.0, 2.0) = 0.55;
@@ -79,6 +94,9 @@ float sample_caustics(vec2 uv) {
 
 void fragment() {
 	vec3 relative_position = v_world_position - caustics_origin;
+	if (caustics_tile_size.x > 0.0 && caustics_tile_size.y > 0.0) {
+		relative_position.xz -= caustics_tile_size * round(relative_position.xz / caustics_tile_size);
+	}
 	vec2 uv = vec2(
 		dot(relative_position, caustics_light_right),
 		dot(relative_position, caustics_light_up)
@@ -110,7 +128,7 @@ shader_parameter/caustics_light_up = Vector3(0, 0, 1)
 shader_parameter/caustics_sun_direction = Vector3(-0.35, -1, -0.25)
 shader_parameter/caustics_half_extent = 10.0
 shader_parameter/caustics_filter_radius = 1.5
-shader_parameter/caustics_surface_fade_depth = 1.25
+shader_parameter/caustics_surface_fade_depth = 0.15
 shader_parameter/caustic_strength = 1.0
 shader_parameter/absorption_color = Color(0.012, 0.07, 0.12, 1)
 shader_parameter/absorption_density = 0.55
@@ -123,6 +141,7 @@ shader_parameter/per_pixel_normals = true
 shader_parameter/ripple_domain_size = Vector2(40, 40)
 shader_parameter/ocean_domain_size = Vector2(40, 40)
 shader_parameter/grid_center = Vector2(0, 0)
+shader_parameter/water_level = 0.0
 shader_parameter/water_color = Color(0.09, 0.32, 0.42, 0.65)
 shader_parameter/roughness_val = 0.04
 shader_parameter/foam_color = Color(0.92, 0.95, 0.97, 0.95)
@@ -132,7 +151,14 @@ shader_parameter/shore_foam_strength = 0.65
 shader_parameter/shore_foam_breakup = 0.85
 shader_parameter/shallow_color = Color(0.42, 0.66, 0.64, 0.55)
 shader_parameter/shallow_tint = 0.6
-shader_parameter/shore_edge_softness = 0.12
+shader_parameter/shore_edge_softness = 0.08
+shader_parameter/swash_reach = 0.25
+shader_parameter/swash_film_thickness = 0.0249999994412
+shader_parameter/swash_edge_breakup = 0.035
+shader_parameter/wet_sand_color = Color(0.16, 0.12, 0.07, 0.45)
+shader_parameter/wet_sand_roughness = 0.5
+shader_parameter/swash_wave_height = 0.3
+shader_parameter/shore_rim_strength = 0.4650000220875
 
 [sub_resource type="SphereShape3D" id="BallShape"]
 radius = 0.6
@@ -148,7 +174,7 @@ shader_parameter/caustics_light_up = Vector3(0, 0, 1)
 shader_parameter/caustics_sun_direction = Vector3(-0.35, -1, -0.25)
 shader_parameter/caustics_half_extent = 10.0
 shader_parameter/caustics_filter_radius = 1.5
-shader_parameter/caustics_surface_fade_depth = 1.25
+shader_parameter/caustics_surface_fade_depth = 0.15
 shader_parameter/caustic_strength = 1.0
 shader_parameter/absorption_color = Color(0.012, 0.07, 0.12, 1)
 shader_parameter/absorption_density = 0.55
@@ -171,7 +197,7 @@ shader_parameter/caustics_light_up = Vector3(0, 0, 1)
 shader_parameter/caustics_sun_direction = Vector3(-0.35, -1, -0.25)
 shader_parameter/caustics_half_extent = 10.0
 shader_parameter/caustics_filter_radius = 1.5
-shader_parameter/caustics_surface_fade_depth = 1.25
+shader_parameter/caustics_surface_fade_depth = 0.15
 shader_parameter/caustic_strength = 1.0
 shader_parameter/absorption_color = Color(0.012, 0.07, 0.12, 1)
 shader_parameter/absorption_density = 0.55
@@ -193,7 +219,7 @@ shader_parameter/caustics_light_up = Vector3(0, 0, 1)
 shader_parameter/caustics_sun_direction = Vector3(-0.35, -1, -0.25)
 shader_parameter/caustics_half_extent = 10.0
 shader_parameter/caustics_filter_radius = 1.5
-shader_parameter/caustics_surface_fade_depth = 1.25
+shader_parameter/caustics_surface_fade_depth = 0.15
 shader_parameter/caustic_strength = 1.0
 shader_parameter/absorption_color = Color(0.012, 0.07, 0.12, 1)
 shader_parameter/absorption_density = 0.55
@@ -234,15 +260,16 @@ grid_resolution = 160
 damping = 1.2
 ripple_amplitude = 0.69
 seabed_from_floor = true
-shallow_fade_depth = 2.07
-ocean_grid_resolution = 256
+shallow_fade_depth = 1.97
+ocean_grid_resolution = 128
 wind_speed = 15.0
 wind_direction = Vector2(-1, 0.3)
-render_extent = 2000.0
 choppiness = 1.2
 foam_threshold = 0.63
-shore_foam_band = 1.9
+shore_foam_band = 0.6
 shore_undertow = 0.47
+swash_drain_speed = 0.16
+render_extent = 2000.0
 water_material = SubResource("ShaderMaterial_j8ovg")
 
 [node name="Floaters" type="Node3D" parent="." unique_id=1793373968]

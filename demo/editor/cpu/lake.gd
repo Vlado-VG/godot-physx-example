@@ -215,6 +215,7 @@ func _bind_caustics_to_material(material: ShaderMaterial) -> void:
 	material.set_shader_parameter("caustics_light_up", _water.get_caustics_light_up())
 	material.set_shader_parameter("caustics_sun_direction", _water.get_caustics_sun_direction())
 	material.set_shader_parameter("caustics_half_extent", _water.get_caustics_half_extent())
+	material.set_shader_parameter("caustics_tile_size", _water.get_caustics_tile_size())
 
 func _update_receiver_absorption() -> void:
 	if not is_node_ready():
