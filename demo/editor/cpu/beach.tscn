@@ -240,7 +240,8 @@ damping = 1.2
 ripple_amplitude = 0.69
 ocean_grid_resolution = 128
 ocean_domain_size = Vector2(40, 40)
-wind_speed = 6.0
+wind_speed = 12.0
+choppiness = 1.2
 wind_direction = Vector2(1, 0.4)
 water_material = SubResource("ShaderMaterial_j8ovg")
 
