@@ -193,8 +193,14 @@ func _process(delta: float) -> void:
 						_bind_caustics_to_material(material)
 			_caustics_bound = true
 
-	_hud.text = "Sample-point buoyancy (demo/common/buoyant_body.gd)   SPACE drop   left-drag shove   WASD/hold-RMB fly   R reset   ESC\nfloaters: %d   FPS: %d" % [
-		_floaters.size(), Engine.get_frames_per_second()]
+	var cam := get_viewport().get_camera_3d()
+	var cam_text := ""
+	if cam:
+		var p := cam.global_position
+		var r := cam.global_rotation
+		cam_text = "   cam (%.1f, %.1f, %.1f) pitch %.2f yaw %.2f" % [p.x, p.y, p.z, r.x, r.y]
+	_hud.text = "Sample-point buoyancy (demo/common/buoyant_body.gd)   SPACE drop   left-drag shove   WASD/hold-RMB fly   R reset   ESC\nfloaters: %d   FPS: %d%s" % [
+		_floaters.size(), Engine.get_frames_per_second(), cam_text]
 
 	# The pool has real walls/floor (see the scene) -- this is just a deep
 	# safety net for anything that somehow escapes them.
