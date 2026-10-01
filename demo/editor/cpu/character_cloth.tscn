@@ -331,6 +331,7 @@ damping = 0.79
 thickness = 0.03
 body_mesh_path = NodePath("../Armature/GeneralSkeleton/Mannequin")
 backstop = -1.0
+self_collision = true
 
 [node name="CapeCloth" type="PhysXSkinnedCloth3D" parent="Mannequin" unique_id=914499306]
 mesh_instance_path = NodePath("../Cape")
