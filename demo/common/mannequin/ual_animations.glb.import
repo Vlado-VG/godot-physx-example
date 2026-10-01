@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://ink60p83osuw"
-path="res://.godot/imported/ual_animations.glb-ffe6ea173c89526d3dc2bb5d78dcd32c.scn"
+path="res://.godot/imported/ual_animations.glb-e1ca078c0b0a8c4586c4c502a7011d74.scn"
 
 [deps]
 
-source_file="res://demo/common/monk/ual_animations.glb"
-dest_files=["res://.godot/imported/ual_animations.glb-ffe6ea173c89526d3dc2bb5d78dcd32c.scn"]
+source_file="res://demo/common/mannequin/ual_animations.glb"
+dest_files=["res://.godot/imported/ual_animations.glb-e1ca078c0b0a8c4586c4c502a7011d74.scn"]
 
 [params]
 
@@ -42,7 +42,7 @@ materials/extract_path=""
 _subresources={
 "nodes": {
 "PATH:Armature/Skeleton3D": {
-"retarget/bone_map": Resource("res://demo/common/monk/ual_bonemap.tres"),
+"retarget/bone_map": Resource("res://demo/common/mannequin/ual_bonemap.tres"),
 "retarget/bone_renamer/rename_bones": true,
 "retarget/rest_fixer/fix_silhouette/enable": true,
 "retarget/rest_fixer/normalize_position_tracks": true
