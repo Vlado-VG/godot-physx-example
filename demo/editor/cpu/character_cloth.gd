@@ -51,7 +51,7 @@ func _ready() -> void:
 	_cloth = PhysXSkinnedCloth3D.new()
 	_monk.add_child(_cloth)
 	_cloth.pin_height = 1.15
-	_cloth.max_distance = 0.35
+	_cloth.max_distance = 0.25
 	_cloth.body_mesh_path = _cloth.get_path_to(_monk.get_node("Armature/GeneralSkeleton/Human"))
 	_cloth.mesh_instance_path = _cloth.get_path_to(_monk.get_node("Armature/GeneralSkeleton/Human_donitz_monk_robe"))
 
