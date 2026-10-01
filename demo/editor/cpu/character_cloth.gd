@@ -36,6 +36,7 @@ var _anim := 0
 var _moving := true
 var _follow := true
 var _angle := 0.0
+var _viewport_rid: RID
 
 func _ready() -> void:
 	_ap = character.find_children("*", "AnimationPlayer", true, false)[0]
@@ -43,6 +44,8 @@ func _ready() -> void:
 	# painted in the editor (select one, then Paint Cloth in the 3D toolbar).
 	for c in character.find_children("*", "PhysXSkinnedCloth3D", false, false):
 		_cloths.append(c)
+	_viewport_rid = get_viewport().get_viewport_rid()
+	RenderingServer.viewport_set_measure_render_time(_viewport_rid, true)
 	_fly = FlyCamera.new(_cam)
 	_play(start_animation)
 
@@ -75,8 +78,13 @@ func _process(delta: float) -> void:
 	var particles := 0
 	for c in _cloths:
 		particles += c.get_particle_count()
-	_hud.text = "Character cloth -- PhysXSkinnedCloth3D (compute shaders, any GPU)\n1-7 animation   C cloth on/off   M move/stay   F follow/fly (WASD + RMB)   R reset\n%s   cloth %s   %d particles   FPS %d" % [
-		ANIMS[_anim][0], "ON" if _cloth_on() else "OFF", particles, Engine.get_frames_per_second()]
+	var timing := "\nprocess %.2f ms   physics %.2f ms   render cpu %.2f ms   gpu %.2f ms" % [
+		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+		Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
+		RenderingServer.viewport_get_measured_render_time_cpu(_viewport_rid) + RenderingServer.get_frame_setup_time_cpu(),
+		RenderingServer.viewport_get_measured_render_time_gpu(_viewport_rid)]
+	_hud.text = "Character cloth -- PhysXSkinnedCloth3D (compute shaders, any GPU)\n1-7 animation   C cloth on/off   M move/stay   F follow/fly (WASD + RMB)   R reset\n%s   cloth %s   %d particles   FPS %d%s" % [
+		ANIMS[_anim][0], "ON" if _cloth_on() else "OFF", particles, Engine.get_frames_per_second(), timing]
 
 func _cloth_on() -> bool:
 	return not _cloths.is_empty() and _cloths[0].is_inside_tree()

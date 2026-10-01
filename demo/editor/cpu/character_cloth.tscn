@@ -332,6 +332,7 @@ thickness = 0.03
 body_mesh_path = NodePath("../Armature/GeneralSkeleton/Mannequin")
 backstop = -1.0
 self_collision = true
+self_collision_thickness = 0.034
 
 [node name="CapeCloth" type="PhysXSkinnedCloth3D" parent="Mannequin" unique_id=914499306]
 mesh_instance_path = NodePath("../Cape")
@@ -339,7 +340,7 @@ pin_height = 1.4
 max_distance = 0.71
 thickness = 0.04
 body_mesh_path = NodePath("../Armature/GeneralSkeleton/Mannequin")
-backstop = -1.0
+backstop = -0.001
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1206478602]
 transform = Transform3D(1, 0, 0, 0, 0.96, 0.28, 0, -0.28, 0.96, 0, 2, 9)
