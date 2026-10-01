@@ -36,8 +36,9 @@ void fragment() {
 render_priority = 0
 shader = SubResource("Floor_shader")
 
-[node name="CharacterCloth" type="Node3D" unique_id=1349364089]
+[node name="CharacterCloth" type="Node3D" unique_id=1349364089 node_paths=PackedStringArray("character")]
 script = ExtResource("1")
+character = NodePath("Monk")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=575107007]
 environment = SubResource("Env_1")

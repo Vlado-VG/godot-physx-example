@@ -1,11 +1,11 @@
 extends Node3D
-# Character cloth showcase: a MakeHuman monk whose robe is a PhysXSkinnedCloth3D
+# Character cloth showcase: a MakeHuman character whose garment is a PhysXSkinnedCloth3D
 # (compute shaders, any GPU), running the Quaternius animation library around a
-# circle so the robe reacts to real movement and turning, not just the
+# circle so the cloth reacts to real movement and turning, not just the
 # animation in place.
 #
 #   1-7   idle / walk / jog / sprint / roll / spell / dance
-#   C     cloth on/off (off = the plain skinned robe, for comparison)
+#   C     cloth on/off (off = the plain skinned garment, for comparison)
 #   M     move around the circle / stay in place
 #   F     follow camera / free fly (WASD + hold RMB)
 #   R     reset the cloth onto the animated pose
@@ -22,8 +22,8 @@ const ANIMS := [
 
 @export var circle_radius := 5.0
 @export var start_animation := 2
-
-@onready var _monk: Node3D = $Monk
+## The character (an imported MakeHuman glTF with a PhysXSkinnedCloth3D child).
+@export var character: Node3D
 @onready var _cam: Camera3D = $Camera3D
 @onready var _hud: Label = $HUD/Label
 
@@ -35,11 +35,14 @@ var _moving := true
 var _follow := true
 var _angle := 0.0
 
+var _character: Node3D
+
 func _ready() -> void:
-	# The monk and the animation library are both retargeted to Godot's
+	_character = character
+	# The characters and the animation library are all retargeted to Godot's
 	# humanoid profile on import (see demo/common/monk/*_bonemap.tres). The
-	# library's tracks address "Armature/GeneralSkeleton"; the monk's rig is
-	# "Human_rig", so point the tracks at it.
+	# library's tracks address "Armature/GeneralSkeleton"; the MakeHuman rig
+	# is "Human_rig", so point the tracks at it.
 	var ual := (load("res://demo/common/monk/ual_animations.glb") as PackedScene).instantiate()
 	var lib: AnimationLibrary = (ual.find_children("*", "AnimationPlayer", true, false)[0] as AnimationPlayer).get_animation_library("")
 	ual.free()
@@ -50,14 +53,14 @@ func _ready() -> void:
 			if path.begins_with("Armature/"):
 				anim.track_set_path(t, NodePath("Human_rig/" + path.trim_prefix("Armature/")))
 	_ap = AnimationPlayer.new()
-	_monk.add_child(_ap)
-	_ap.root_node = _ap.get_path_to(_monk)
+	_character.add_child(_ap)
+	_ap.root_node = _ap.get_path_to(_character)
 	_ap.add_animation_library("", lib)
 
 	# The cloth node is in the scene so its max distances can be painted in
 	# the editor (select Monk/Cloth, then Paint Cloth in the 3D toolbar): a
 	# height ramp for the skirt, plus loose cuffs so the sleeves hang.
-	_cloth = $Monk/Cloth
+	_cloth = _character.find_children("*", "PhysXSkinnedCloth3D", false, false)[0]
 
 	_fly = FlyCamera.new(_cam)
 	_play(start_animation)
@@ -72,15 +75,15 @@ func _process(delta: float) -> void:
 		_angle += speed * delta / circle_radius
 	var pos := Vector3(cos(_angle), 0.0, sin(_angle)) * circle_radius
 	var forward := Vector3(-sin(_angle), 0.0, cos(_angle)) # direction of travel (counter-clockwise from above)
-	_monk.global_position = pos if _moving else _monk.global_position
+	_character.global_position = pos if _moving else _character.global_position
 	if _moving:
 		# glTF characters face +Z.
-		_monk.global_basis = Basis.looking_at(-forward, Vector3.UP)
+		_character.global_basis = Basis.looking_at(-forward, Vector3.UP)
 
 	if _follow:
-		var side := _monk.global_basis.x
-		var target := _monk.global_position + Vector3(0, 1.0, 0)
-		var eye := target - _monk.global_basis.z * 2.2 + side * 2.0 + Vector3(0, 0.6, 0)
+		var side := _character.global_basis.x
+		var target := _character.global_position + Vector3(0, 1.0, 0)
+		var eye := target - _character.global_basis.z * 2.2 + side * 2.0 + Vector3(0, 0.6, 0)
 		_cam.global_position = _cam.global_position.lerp(eye, clampf(delta * 4.0, 0.0, 1.0))
 		_cam.look_at(target)
 		_fly.yaw = _cam.rotation.y
@@ -111,6 +114,6 @@ func _toggle_cloth() -> void:
 	# Off: take the cloth node out (the skinned robe shows again); on: put it
 	# back, which rebuilds it on the animated pose.
 	if _cloth.is_inside_tree():
-		_monk.remove_child(_cloth)
+		_character.remove_child(_cloth)
 	else:
-		_monk.add_child(_cloth)
+		_character.add_child(_cloth)
