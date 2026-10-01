@@ -37,23 +37,27 @@ var _angle := 0.0
 
 func _ready() -> void:
 	# The monk and the animation library are both retargeted to Godot's
-	# humanoid profile on import (see demo/common/monk/*_bonemap.tres); the
-	# library's tracks address "Armature/GeneralSkeleton".
-	_monk.get_node("Human_rig").name = "Armature"
+	# humanoid profile on import (see demo/common/monk/*_bonemap.tres). The
+	# library's tracks address "Armature/GeneralSkeleton"; the monk's rig is
+	# "Human_rig", so point the tracks at it.
 	var ual := (load("res://demo/common/monk/ual_animations.glb") as PackedScene).instantiate()
 	var lib: AnimationLibrary = (ual.find_children("*", "AnimationPlayer", true, false)[0] as AnimationPlayer).get_animation_library("")
 	ual.free()
+	for anim_name in lib.get_animation_list():
+		var anim := lib.get_animation(anim_name)
+		for t in anim.get_track_count():
+			var path := String(anim.track_get_path(t))
+			if path.begins_with("Armature/"):
+				anim.track_set_path(t, NodePath("Human_rig/" + path.trim_prefix("Armature/")))
 	_ap = AnimationPlayer.new()
 	_monk.add_child(_ap)
 	_ap.root_node = _ap.get_path_to(_monk)
 	_ap.add_animation_library("", lib)
 
-	_cloth = PhysXSkinnedCloth3D.new()
-	_monk.add_child(_cloth)
-	_cloth.pin_height = 1.15
-	_cloth.max_distance = 0.25
-	_cloth.body_mesh_path = _cloth.get_path_to(_monk.get_node("Armature/GeneralSkeleton/Human"))
-	_cloth.mesh_instance_path = _cloth.get_path_to(_monk.get_node("Armature/GeneralSkeleton/Human_donitz_monk_robe"))
+	# The cloth node is in the scene so its max distances can be painted in
+	# the editor (select Monk/Cloth, then Paint Cloth in the 3D toolbar): a
+	# height ramp for the skirt, plus loose cuffs so the sleeves hang.
+	_cloth = $Monk/Cloth
 
 	_fly = FlyCamera.new(_cam)
 	_play(start_animation)
