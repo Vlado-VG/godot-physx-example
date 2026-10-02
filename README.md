@@ -63,65 +63,88 @@ viewport gizmo and inspector, then press Play.
 | Scene | What it shows |
 | --- | --- |
 | `physx_fluid.tscn` | A faucet streaming GPU fluid into a glass tank, with foam/spray and script-side buoyancy on dropped balls. |
-| `physx_river.tscn` | A river born at a single source at ~100 m that flows down a graded hillside -- steep waterfall-fed cascades easing into fine-grained flat reaches -- past boulder fields, a heated checkpoint (Flow steam + evaporation loss), a split/merge, rapids, a constriction and a foam bed, into the one collecting basin at 0 m. Rigid bodies ride the river or stick by density. See [The river demo](#the-river-demo). |
+| `physx_river.tscn` | **Node-authored** water slide: one continuous flume from a spring at ~98 m to the basin at 0 m -- steep chute cascade easing into flat drift reaches, with boulder runs, a cascade staircase, a heated checkpoint (Flow steam + evaporation loss), a split/merge island, a constriction and a foam bed along the way. Static bodies overlap at every joint so the channel is unbroken; every segment is prefilled full. Rigid bodies ride the river or stick by density; stock `SoftBody3D` blobs are a separate deformable test. Edit the course in the editor; the script only runs behavior. See [The river demo](#the-river-demo). |
 
 ### The river demo
 
 `demo/gpu/physx_river.tscn` is a **PhysX GPU fluid technical demo / stress
-test**, not a scenery piece. Water is generated at a single source pool at
-~100 m and flows down a graded hillside to the one collection basin at 0 m:
-the first slopes are steep waterfall-fed cascades, then the course flattens
-into fine-grained (3.5 cm particles) channel reaches. In between, the
-checkpoints are obstacles, not basins:
+test**, not a scenery piece -- and it is **node-authored**: the whole course
+(StaticBody3D channel slabs with named parts, one PhysXParticleFluid3D faucet
+per segment, RigidBody3D floaters, SoftBody3D blobs, the PhysXFlow steam rig,
+camera, HUD) is ordinary nodes you can open and edit in the editor.
+`demo/gpu/physx_river.gd` holds only the simulation behavior (discharge
+coupling, sim LOD, buoyancy, steam gating, HUD); it discovers the course by
+the scene contract documented at the top of that file.
+`demo/gpu/author_river_tool.gd` is the one-shot generator that produced the
+scene (`redot --headless --path . -s res://demo/gpu/author_river_tool.gd`) --
+rerun it after heavy edits, or use it as the reference for the layout math.
+The scene was verified through the engine's built-in MCP server
+(`redot --editor --mcp-server`, tools `scene_action` / `code_intel`).
 
-| Section | What it does to the flow |
+**The course is one continuous water slide.** A spring tank at ~98 m drains
+down an unbroken flume to the collection basin at 0 m: the first slopes are
+steep (up to ~58 deg, 9.5 m chute segments), then the course eases through a
+cascade staircase, a heated checkpoint, a split/merge island, rapids, a
+constriction and a foam bed into flat slow drift reaches. There are no weirs,
+no plunge pools and no free falls: the floor and bank slabs span exactly
+head-to-tail and meet at shared creases sealed by average-pitch joint patches
+and overlapping neighbor walls, so the static bodies form one continuous
+channel. Every segment is prefilled full of water at spawn.
+
+| Along the way | What it does to the flow |
 | --- | --- |
-| Laminar run | smooth 24 deg channel -- the coherent-stream baseline |
-| Turn | a plunge pool in a tight bend; the whole pocket swirls |
-| Boulder field | rocks in the stream split the flow, wakes and spray |
-| Cascade steps | the marble-run staircase; the water free-falls step to step |
-| Heated checkpoint | hot plates boil the passing water: NVIDIA Flow steam, and the evaporation loss throttles the downstream discharge |
-| Split / Channels A+B / Merge | a wedge island divides the stream; wide-calm A vs narrow-rocky B; both reconverge at a confluence |
-| Rapids | a second steeper staircase, maximum foam |
-| Constriction | walls pinch the stream to half width |
-| Foam bed | a shallow pebble drift that whitewashes the stream |
-| Slow river | long flat drift reaches |
-| Basin | the one true basin at 0 m -- wide, walled, collects the course |
+| Boulder run (52 deg) | rocks split the stream at speed |
+| Cascade (48 deg) | ripple-crest staircase; the water cascades crest to crest |
+| Heated checkpoint (42 deg) | emissive plates flush in the floor: where the water pools over them it boils into a `PhysXGas3D` steam plume (the fire-under-roof tech), and the measured evaporation loss throttles the next segment's discharge |
+| Island split/merge (26 deg) | the channel widens around a wedge island -- the flow divides and recombines inside one continuous body |
+| Rapids / constriction / foam bed | rocks, a half-width pinch, a pebble drift |
+| Slow river (7-10 deg) | long flat drift; floaters ride the stream |
 
 Rigid bodies (light balls, logs, crates, a dense rock) start along the course
-and are re-assigned to whichever stage contains them: light bodies ride the
-stream, tumble over the spillways and travel the whole river like the marble
-run's balls; the dense rock stays put against the flow. Buoyancy/drag is
+and are re-assigned to whichever segment contains them: light bodies ride the
+stream and travel the whole slide; the dense rock stays put. Buoyancy/drag is
 script-side via `get_submersion()` (the same scheme as `physx_fluid.tscn`) on
-top of the MPM couple-pass reaction.
+top of the MPM couple-pass reaction. Two stock `SoftBody3D` blobs (sphere,
+subdivided box) sit near the slow river and the basin as a **separate
+deformable-body test**: this backend has no fluid/soft coupling, so they
+squash against geometry only.
 
 **Architecture notes.** The foam-capable fluid is the MPM compute backend,
-whose simulation is confined to `mpm_domain_size` (a box centered on the node
--- the faucet) with the grid capped at 96 cells along X. Measured on this
-build, grid cells above ~0.08 m leak particles through geometry or overflow
-their momentum accumulator, and at the working 0.07 m cells a closed water
-body spreads and stalls rather than flowing. So the river is a chain of short
-reaches at the proven scale, and water is injected only at the source in play
-terms: each reach's faucet sits hidden on the previous spillway lip and emits
-exactly the discharge the previous reach's outlet probe measures, so a surge
-upstream propagates down the course. Flow rate crosses each lip; the falling
-curtain masks the transfer. Thin films on geometry never become spillways --
-the reaches keep their water through through-flow, not through overflow.
+confined to `mpm_domain_size` (a world-aligned box centered on the fluid
+node) with the grid capped at 128 cells per axis -- so the slide is a chain
+of 23 fluid segments. Each segment's domain is sized to its footprint plus
+the joint overlap, laterally no wider than the channel, with the bottom
+exactly at the floor line: water handed off at a seam always sits inside a
+live domain (every fluid also couples its neighbors' floor and bank bodies),
+and a squeezed particle can only pop back on top of the floor. Water is
+generated at the top in play terms: each faucet emits the discharge the
+upstream segment's flow meter measures, so surges propagate down the course;
+flow rate crosses each seam, water mass cannot (the domains clamp particles).
+With the camera away, the sim LOD freezes whole segments -- their water waits
+as a static body and flows on when the camera reaches them.
 
-**Simulation LOD.** Every MPM fluid syncs its own GPU queue once per physics
-tick (~13 ms each on the test GPU), so stages near the camera run at full rate
-(the nearest three plus anything within 16 m) and the rest hold their water
-frozen, resuming as the camera reaches them: tens of fps while inspecting any
-section, `lod=off` for the all-on stress number.
+One engine fix went in for this demo: the MPM solver's prefill
+(`MPMFluidSolver::_seed_block`) seeded its grid axis-aligned in world space
+and ignored the fluid node's rotation, so a spawn region on a pitched channel
+ended up half inside the terrain. It now seeds in the node's local frame and
+places the block with the node's full transform -- the same thing the PBD
+path's `spawn()` always did (modules/physx/particles/mpm_fluid_solver.cpp).
 
 **Controls:** `WASD` + hold `RMB` fly · `1`-`7` section cameras (overview,
-laminar, turbulence, heated, split, rapids, basin) · `C` tour the whole river ·
+source, boulders, heated, island, rapids, basin) · `C` tour the whole slide ·
 `TAB` test mode (FULL / LAMINAR / TURBULENT / SPLIT-MERGE / STRESS -- toggles
-the obstacle bodies and the channel-B branch, STRESS also boosts emission) ·
-`[` `]` quality preset (LOW / MEDIUM / HIGH / STRESS -- per-reach capacity
-9k -> 36k particles; the GPU isosurface water mesh is a HIGH/STRESS luxury) ·
-`G` object burst · `P` pause · `R` reset · `F` HUD · `ESC` quit. Command-line
-knobs and benchmark (needs a window; the MPM solver needs a RenderingDevice):
+the obstacle bodies and the split island, STRESS also boosts emission) ·
+`M` **solver switch** -- MPM+foam/steam (default, the natural-looking river)
+vs pure PhysX CUDA water: the PBD path has no domain boxes, so the whole
+slide becomes ONE genuinely continuous body of PhysX water flowing top to
+bottom, crossing every seam as mass. Honest tradeoff: a shallow stream of
+0.1 m PBD particles on 55 deg chutes bounces and sprays like a ball pit --
+the isosurface mesh only renders where the water pools -- and the CUDA
+systems sync every frame, so PBD mode is a fluid-simulation experiment, not
+the pretty mode · `[` `]` quality preset (LOW / MEDIUM /
+HIGH / STRESS) · `G` object burst · `P` pause · `R` reset · `F` HUD ·
+`ESC` quit. Benchmark (needs a window; the
+MPM solver needs a RenderingDevice):
 
 ```
 godot --path . demo/gpu/physx_river.tscn -- bench frames=600 preset=HIGH lod=off
@@ -129,20 +152,28 @@ godot --path . demo/gpu/physx_river.tscn -- shots=shots_river
 ```
 
 The HUD reports total/foam particle counts, summed MPM GPU step time, how many
-reaches are simulating, outlet fill progress down the course, a stability
-tripwire (NaN scan + domain-escape scan, one reach per 1.5 s), the heated
+segments are simulating, flow-meter progress down the course, a stability
+tripwire (NaN scan + domain-escape scan, one segment per 1.5 s), the heated
 checkpoint's steam/evaporation state and the section under the camera.
+Measured on the test machine (RTX 4080 SUPER, MEDIUM): ~271k water particles
+across 23 segments plus diffuse foam at agitation points, ~56 fps at 720p
+with 3 segments simulating and the steam live; `lod=off` simulates all 23 at
+once and is the all-on stress number. Stability: multi-thousand-frame bench
+with zero NaN and zero domain escapes.
 
 **Limitations.** Needs a RenderingDevice (any GPU); inert under `--headless`.
 CUDA/PBD fluid cannot provide foam in the current SDK (diffuse allocation is
-disabled engine-side), which is why the river pins the MPM solver. The steam
-needs NVIDIA Flow (any NVIDIA GPU); elsewhere the checkpoint still heats and
-throttles but the plume is inert. Startup builds fifteen solver instances
-(shader pipeline compile each) -- first load takes a while. The MPM backend
-has no phase change, so evaporation is a measured discharge loss plus a Flow
-smoke plume, not solver-level mass transfer. Soft-body / deformable coupling
-with the GPU fluid does not exist in this backend, so the scene contains none
--- deformable surfaces are covered by the cloth demos.
+disabled engine-side), which is why the river pins the MPM solver. The fluid is the MPM compute backend on purpose: the CUDA/PBD fluid path
+cannot provide foam in the current PhysX SDK (its diffuse allocation is
+disabled engine-side), and CUDA GPU dynamics still runs the rigid bodies.
+The steam needs NVIDIA Flow (any NVIDIA GPU); elsewhere the checkpoint still
+heats and throttles but the plume is inert. Startup builds 23 solver instances (shader
+pipeline compile each) -- first load takes a while. The MPM backend has no
+phase change, so evaporation is a measured discharge loss plus a Flow smoke
+plume, not solver-level mass transfer. Occasional stray droplets can linger
+at a joint until their segment next simulates (the frozen hand-off piles
+described above). Soft-body / deformable coupling with the GPU fluid does not
+exist in this backend -- the cloth demos cover deformables.
 
 ## Tests
 
