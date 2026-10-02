@@ -1,0 +1,653 @@
+[gd_scene format=3 uid="uid://65h143o5p7p1"]
+
+[ext_resource type="Script" uid="uid://ccjeodbmnmb0i" path="res://demo/common/vehicle_rig.gd" id="1_rig"]
+[ext_resource type="Script" uid="uid://bm7xdpv63vo8c" path="res://demo/common/vehicle_chase_camera.gd" id="2_chase_cam"]
+[ext_resource type="Script" uid="uid://do613d8qiqent" path="res://demo/common/physx_vehicle_rig.gd" id="3_physx_rig"]
+[ext_resource type="PhysXBlastAsset" uid="uid://dwn8dgbdhwhb0" path="res://demo/common/blast/MeshInstance3D3_blast.tres" id="4_d5aud"]
+[ext_resource type="Script" uid="uid://dpweuxojcewh6" path="res://demo/common/vehicle_swap.gd" id="4_swap"]
+[ext_resource type="Script" uid="uid://c8vk3sv4i1ytq" path="res://demo/common/vehicle_motorcycle_rig.gd" id="5_moto_rig"]
+[ext_resource type="Material" uid="uid://dnkik6seneu72" path="res://demo/common/materials/m_physx_vehicle.tres" id="6_42fnc"]
+[ext_resource type="Script" uid="uid://dv8je2geiisb2" path="res://demo/common/physx_motorcycle_rig.gd" id="6_physx_moto_rig"]
+[ext_resource type="Script" uid="uid://day646v48a3u7" path="res://demo/common/physx_tank_rig.gd" id="7_physx_tank_rig"]
+[ext_resource type="ArrayMesh" uid="uid://b5newvi7ftphg" path="res://demo/common/meshes/tankbody_Cube_001.res" id="8_61xs6"]
+[ext_resource type="Script" uid="uid://b7jvhjbn005v5" path="res://demo/common/tank_turret_rig.gd" id="9_tank_turret_rig"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+ambient_light_source = 2
+ambient_light_color = Color(0.26, 0.26, 0.26, 1)
+ambient_light_energy = 2.2
+tonemap_mode = 3
+ssr_enabled = true
+ssil_enabled = true
+sdfgi_enabled = true
+glow_enabled = true
+glow_bloom = 0.08
+fog_sun_scatter = 0.6
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.004
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(80, 0.5, 80)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ground"]
+albedo_color = Color(0.2, 0.22, 0.2, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_07i22"]
+size = Vector3(80, 0.5, 80)
+
+[sub_resource type="PrismMesh" id="PrismMesh_s2fja"]
+left_to_right = 0.1
+size = Vector3(1, 2.9, 1)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_07i22"]
+data = PackedVector3Array(-0.39999998, 1.4499999, 0.5, 0.5, -1.4499999, 0.5, -0.5, -1.4499999, 0.5, -0.39999998, 1.4499999, -0.5, -0.5, -1.4499999, -0.5, 0.5, -1.4499999, -0.5, -0.39999998, 1.4499999, 0.5, -0.39999998, 1.4499999, -0.5, 0.5, -1.4499999, 0.5, -0.39999998, 1.4499999, -0.5, 0.5, -1.4499999, -0.5, 0.5, -1.4499999, 0.5, -0.39999998, 1.4499999, -0.5, -0.39999998, 1.4499999, 0.5, -0.5, -1.4499999, -0.5, -0.39999998, 1.4499999, 0.5, -0.5, -1.4499999, 0.5, -0.5, -1.4499999, -0.5, -0.5, -1.4499999, 0.5, 0.5, -1.4499999, 0.5, -0.5, -1.4499999, -0.5, 0.5, -1.4499999, 0.5, 0.5, -1.4499999, -0.5, -0.5, -1.4499999, -0.5)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_bump_sm"]
+height = 6.0
+radial_segments = 24
+
+[sub_resource type="StandardMaterial3D" id="Mat_bump"]
+albedo_color = Color(0.85, 0.7, 0.1, 1)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_bump_sm"]
+height = 6.0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_bump_md"]
+top_radius = 0.65
+bottom_radius = 0.65
+height = 6.0
+radial_segments = 24
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_bump_md"]
+height = 6.0
+radius = 0.65
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_bump_lg"]
+top_radius = 0.8
+bottom_radius = 0.8
+height = 6.0
+radial_segments = 24
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_bump_lg"]
+height = 6.0
+radius = 0.8
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_chassis"]
+size = Vector3(1.8, 0.6, 4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_chassis"]
+size = Vector3(1.8, 0.6, 3.9960938)
+
+[sub_resource type="StandardMaterial3D" id="Mat_chassis"]
+albedo_color = Color(0.75, 0.15, 0.1, 1)
+metallic = 0.3
+roughness = 0.35
+
+[sub_resource type="PrismMesh" id="PrismMesh_wh2v7"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_wheel"]
+top_radius = 0.4
+bottom_radius = 0.4
+height = 0.3
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="BoxMesh_7vq3i"]
+size = Vector3(1.2970581, 0.60046387, 1.1694336)
+
+[sub_resource type="StandardMaterial3D" id="Mat_physx_chassis"]
+albedo_color = Color(0.1, 0.35, 0.8, 1)
+metallic = 0.3
+roughness = 0.35
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_physx_chassis"]
+size = Vector3(1.4, 0.8, 3.7)
+
+[sub_resource type="BoxMesh" id="BoxMesh_physx_chassis"]
+size = Vector3(1.4, 0.8, 3.7)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_physx_wheel"]
+top_radius = 0.4
+bottom_radius = 0.4
+height = 0.3
+radial_segments = 16
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_moto_chassis"]
+size = Vector3(0.3, 0.4, 0.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_moto_chassis"]
+size = Vector3(0.3, 0.4, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="Mat_moto_chassis"]
+albedo_color = Color(0.75, 0.15, 0.1, 1)
+metallic = 0.3
+roughness = 0.35
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_moto_wheel"]
+top_radius = 0.3
+bottom_radius = 0.3
+height = 0.15
+radial_segments = 16
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_physx_moto_chassis"]
+size = Vector3(0.3, 0.4, 0.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_physx_moto_chassis"]
+size = Vector3(0.3, 0.4, 0.8)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_physx_moto_wheel"]
+top_radius = 0.3
+bottom_radius = 0.3
+height = 0.15
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="BoxMesh_wh2v7"]
+size = Vector3(1, 0.45214844, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_s2fja"]
+size = Vector3(0.25, 0.25, 2.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7yygr"]
+size = Vector3(1.4525146, 0.6741028, 1.9719543)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_tank_wheel"]
+top_radius = 0.35
+bottom_radius = 0.35
+height = 0.24
+radial_segments = 16
+
+[node name="VehicleDemo" type="Node3D" unique_id=767780711]
+script = ExtResource("4_swap")
+godot_car_path = NodePath("Car")
+physx_car_path = NodePath("PhysXCar")
+godot_motorcycle_path = NodePath("Motorcycle")
+physx_motorcycle_path = NodePath("PhysXMotorcycle")
+physx_tank_path = NodePath("PhysXTank")
+camera_path = NodePath("ChaseCamera")
+hud_label_path = NodePath("HUD/Hint")
+wall_path = NodePath("Wall")
+screenshot_cam_path = NodePath("Wall/screenshotcam")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1487640454]
+transform = Transform3D(1, 0, 0, 0, 0.6, 0.8, 0, -0.8, 0.6, 0, 0, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1735568326]
+environment = SubResource("Environment_1")
+
+[node name="Ground" type="StaticBody3D" parent="." unique_id=753209707]
+collision_layer = 3
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground" unique_id=1296927818]
+transform = Transform3D(2.2752461, 0, 0, 0, 1, 0, 0, 0, 3.0222995, 0, -0.25, 0)
+mesh = SubResource("BoxMesh_ground")
+surface_material_override/0 = SubResource("Mat_ground")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground" unique_id=691413254]
+transform = Transform3D(2.2752461, 0, 0, 0, 1, 0, 0, 0, 3.0222993, 0, -0.25, 0)
+shape = SubResource("BoxShape3D_07i22")
+
+[node name="Ramp" type="StaticBody3D" parent="." unique_id=1464060678]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.7196727, 0.42191422, 12.359951)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ramp" unique_id=765412716]
+transform = Transform3D(-0.0052301483, 0.00030757987, -3.214119, 0.9988763, -0.05873251, -0.016829237, -0.0471064, -1.2454385, -1.404936e-07, 0.6558926, 0, 4.018673)
+mesh = SubResource("PrismMesh_s2fja")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ramp" unique_id=1220901371]
+transform = Transform3D(-0.0052301483, 0.00030757987, -3.214119, 0.9988763, -0.05873251, -0.016829237, -0.0471064, -1.2454385, -1.404936e-07, 0.6558926, 0, 4.018673)
+shape = SubResource("ConcavePolygonShape3D_07i22")
+
+[node name="BumpSmall" type="StaticBody3D" parent="." unique_id=100000001]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 12.429467, -0.2, 15)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="BumpSmall" unique_id=100000002]
+mesh = SubResource("CylinderMesh_bump_sm")
+surface_material_override/0 = SubResource("Mat_bump")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BumpSmall" unique_id=100000003]
+shape = SubResource("CylinderShape3D_bump_sm")
+
+[node name="BumpMedium" type="StaticBody3D" parent="." unique_id=100000004]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 12.429467, -0.25, 30)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="BumpMedium" unique_id=100000005]
+mesh = SubResource("CylinderMesh_bump_md")
+surface_material_override/0 = SubResource("Mat_bump")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BumpMedium" unique_id=100000006]
+shape = SubResource("CylinderShape3D_bump_md")
+
+[node name="BumpLarge" type="StaticBody3D" parent="." unique_id=100000007]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 12.429467, -0.3, 45)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="BumpLarge" unique_id=100000008]
+mesh = SubResource("CylinderMesh_bump_lg")
+surface_material_override/0 = SubResource("Mat_bump")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BumpLarge" unique_id=100000009]
+shape = SubResource("CylinderShape3D_bump_lg")
+
+[node name="Car" type="VehicleBody3D" parent="." unique_id=856442346 groups=["car"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5397406, 0.6, -24.651382)
+center_of_mass_mode = 1
+center_of_mass = Vector3(0, -0.5, 0)
+script = ExtResource("1_rig")
+steer_speed = 3.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Car" unique_id=1724573862]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12071514, 0)
+shape = SubResource("BoxShape3D_chassis")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Car" unique_id=766157620]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12048137, 0.001953125)
+mesh = SubResource("BoxMesh_chassis")
+surface_material_override/0 = SubResource("Mat_chassis")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Car/MeshInstance3D" unique_id=846091427]
+transform = Transform3D(-4.371139e-08, 0, -1.560359, 0, 1, 0, 1, 0, -6.820546e-08, 0, 0.41642034, -1.587362)
+mesh = SubResource("PrismMesh_wh2v7")
+
+[node name="WheelFL" type="VehicleWheel3D" parent="Car" unique_id=243683471]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9, -0.2, 1.4)
+use_as_traction = true
+use_as_steering = true
+wheel_radius = 0.4
+wheel_friction_slip = 2.0
+suspension_stiffness = 60.0
+damping_compression = 2.0
+damping_relaxation = 2.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Car/WheelFL" unique_id=781574053]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_wheel")
+
+[node name="WheelFR" type="VehicleWheel3D" parent="Car" unique_id=178946621]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9, -0.2, 1.4)
+use_as_traction = true
+use_as_steering = true
+wheel_radius = 0.4
+wheel_friction_slip = 2.0
+suspension_stiffness = 60.0
+damping_compression = 2.0
+damping_relaxation = 2.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Car/WheelFR" unique_id=1699777099]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_wheel")
+
+[node name="WheelBL" type="VehicleWheel3D" parent="Car" unique_id=224082981]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9, -0.2, -1.4)
+use_as_traction = true
+wheel_radius = 0.4
+wheel_friction_slip = 2.0
+suspension_stiffness = 60.0
+damping_compression = 2.0
+damping_relaxation = 2.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Car/WheelBL" unique_id=1162457826]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_wheel")
+
+[node name="WheelBR" type="VehicleWheel3D" parent="Car" unique_id=436473886]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9, -0.2, -1.4)
+use_as_traction = true
+wheel_radius = 0.4
+wheel_friction_slip = 2.0
+suspension_stiffness = 60.0
+damping_compression = 2.0
+damping_relaxation = 2.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Car/WheelBR" unique_id=1767675902]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_wheel")
+
+[node name="PhysXCar" type="PhysXVehicle3D" parent="." unique_id=100000010 groups=["car"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4602594, 0.40732563, -24.651382)
+moment_of_inertia = Vector3(2000, 2000, 1000)
+script = ExtResource("3_physx_rig")
+steer_speed = 5.0
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="PhysXCar" unique_id=272459946]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.001739502, 1.3449407, 1.2301985)
+mesh = SubResource("BoxMesh_7vq3i")
+surface_material_override/0 = SubResource("Mat_physx_chassis")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysXCar" unique_id=100000016]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6497346, 0)
+shape = SubResource("BoxShape3D_physx_chassis")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXCar" unique_id=100000011]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6497346, 0)
+mesh = SubResource("BoxMesh_physx_chassis")
+surface_material_override/0 = SubResource("Mat_physx_chassis")
+
+[node name="WheelFL" type="PhysXVehicleWheel3D" parent="PhysXCar" unique_id=100000012]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 0, 1.35)
+radius = 0.4
+suspension_travel = 0.55
+suspension_stiffness = 37400.0
+tire_lateral_stiffness = 68800.0
+tire_friction = 1.87
+use_as_steering = true
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXCar/WheelFL" unique_id=100000017]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_physx_wheel")
+
+[node name="WheelFR" type="PhysXVehicleWheel3D" parent="PhysXCar" unique_id=100000013]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 0, 1.35)
+radius = 0.4
+suspension_travel = 0.55
+suspension_stiffness = 37400.0
+tire_lateral_stiffness = 68800.0
+tire_friction = 1.87
+use_as_steering = true
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXCar/WheelFR" unique_id=100000018]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_physx_wheel")
+
+[node name="WheelRL" type="PhysXVehicleWheel3D" parent="PhysXCar" unique_id=100000014]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 0, -1.35)
+radius = 0.4
+suspension_travel = 0.55
+suspension_stiffness = 37400.0
+tire_lateral_stiffness = 68800.0
+tire_friction = 1.87
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXCar/WheelRL" unique_id=100000019]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_physx_wheel")
+
+[node name="WheelRR" type="PhysXVehicleWheel3D" parent="PhysXCar" unique_id=100000015]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 0, -1.35)
+radius = 0.4
+suspension_travel = 0.55
+suspension_stiffness = 37400.0
+tire_lateral_stiffness = 68800.0
+tire_friction = 1.87
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXCar/WheelRR" unique_id=100000020]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_physx_wheel")
+
+[node name="Motorcycle" type="VehicleBody3D" parent="." unique_id=100000021 groups=["car"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.033285, 0.46279025, -24.651382)
+center_of_mass_mode = 1
+script = ExtResource("5_moto_rig")
+max_engine_force = 200.0
+max_brake_force = 5.0
+steer_speed = 3.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Motorcycle" unique_id=100000022]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+shape = SubResource("BoxShape3D_moto_chassis")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Motorcycle" unique_id=100000023]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+mesh = SubResource("BoxMesh_moto_chassis")
+surface_material_override/0 = SubResource("Mat_moto_chassis")
+
+[node name="WheelFront" type="VehicleWheel3D" parent="Motorcycle" unique_id=100000024]
+transform = Transform3D(1, 0, 0, 0, 0.9396926, -0.3420201, 0, 0.3420201, 0.9396926, 0, -0.15, 0.7)
+use_as_steering = true
+wheel_radius = 0.35
+wheel_friction_slip = 2.0
+suspension_stiffness = 70.0
+damping_compression = 2.0
+damping_relaxation = 2.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Motorcycle/WheelFront" unique_id=100000025]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_moto_wheel")
+
+[node name="WheelRear" type="VehicleWheel3D" parent="Motorcycle" unique_id=100000026]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, -0.7)
+use_as_traction = true
+wheel_radius = 0.33
+wheel_friction_slip = 2.0
+suspension_stiffness = 70.0
+damping_compression = 2.0
+damping_relaxation = 2.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Motorcycle/WheelRear" unique_id=100000027]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_moto_wheel")
+
+[node name="PhysXMotorcycle" type="PhysXMotorcycle3D" parent="." unique_id=100000028 groups=["car"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.24892348, -24.651382)
+script = ExtResource("6_physx_moto_rig")
+steer_speed = 5.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysXMotorcycle" unique_id=100000029]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.43726122, 0)
+shape = SubResource("BoxShape3D_physx_moto_chassis")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXMotorcycle" unique_id=100000030]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.43726122, 0)
+mesh = SubResource("BoxMesh_physx_moto_chassis")
+surface_material_override/0 = ExtResource("6_42fnc")
+
+[node name="WheelFront" type="PhysXVehicleWheel3D" parent="PhysXMotorcycle" unique_id=100000031]
+transform = Transform3D(1, 0, 0, 0, 0.9396926, -0.3420201, 0, 0.3420201, 0.9396926, 0, 0.05, 0.7)
+radius = 0.3
+half_width = 0.08
+wheel_mass = 8.0
+wheel_moment_of_inertia = 0.4
+damping_rate = 0.15
+suspension_travel = 0.23
+suspension_stiffness = 9800.0
+suspension_damping = 2200.0
+tire_lateral_stiffness = 12000.0
+tire_longitudinal_stiffness = 12000.0
+tire_camber_stiffness = 500.0
+use_as_steering = true
+use_as_traction = false
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXMotorcycle/WheelFront" unique_id=100000032]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_physx_moto_wheel")
+
+[node name="WheelRear" type="PhysXVehicleWheel3D" parent="PhysXMotorcycle" unique_id=100000033]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -0.7)
+radius = 0.3
+half_width = 0.08
+wheel_mass = 8.0
+wheel_moment_of_inertia = 0.4
+damping_rate = 0.15
+suspension_travel = 0.23
+suspension_stiffness = 9800.0
+suspension_damping = 2200.0
+tire_lateral_stiffness = 12000.0
+tire_longitudinal_stiffness = 12000.0
+tire_camber_stiffness = 500.0
+tire_friction = 1.5
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXMotorcycle/WheelRear" unique_id=100000034]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_physx_moto_wheel")
+
+[node name="PhysXTank" type="PhysXTank3D" parent="." unique_id=100000040 groups=["car"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.24120498, -24.651382)
+script = ExtResource("7_physx_tank_rig")
+
+[node name="Turret" type="Node3D" parent="PhysXTank" unique_id=1172400001]
+script = ExtResource("9_tank_turret_rig")
+
+[node name="GunBox" type="MeshInstance3D" parent="PhysXTank/Turret" unique_id=1164315280]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1715183, 0)
+mesh = SubResource("BoxMesh_wh2v7")
+
+[node name="Gun" type="MeshInstance3D" parent="PhysXTank/Turret" unique_id=1168366759]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.262, 1.595)
+mesh = SubResource("BoxMesh_s2fja")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXTank" unique_id=100000042]
+transform = Transform3D(1.5251405, 0, 0, 0, 1, 0, 0, 0, 2.0072768, 0, 0.19291997, 0)
+material_override = ExtResource("6_42fnc")
+mesh = ExtResource("8_61xs6")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysXTank" unique_id=2090634730]
+transform = Transform3D(1.5251405, 0, 0, 0, 1, 0, 0, 0, 2.0072768, 0.019640923, 0.61185, -0.017242432)
+shape = SubResource("BoxShape3D_7yygr")
+
+[node name="WheelL0" type="PhysXVehicleWheel3D" parent="PhysXTank" unique_id=100000043]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.1, 1.5)
+half_width = 0.12
+wheel_mass = 15.0
+damping_rate = 0.15
+suspension_travel = 0.5
+suspension_stiffness = 55000.0
+suspension_damping = 5000.0
+tire_lateral_stiffness = 30000.0
+tire_longitudinal_stiffness = 40000.0
+tire_friction = 1.4
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXTank/WheelL0" unique_id=100000044]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_tank_wheel")
+
+[node name="WheelL1" type="PhysXVehicleWheel3D" parent="PhysXTank" unique_id=100000045]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.1, 0.5)
+half_width = 0.12
+wheel_mass = 15.0
+damping_rate = 0.15
+suspension_travel = 0.5
+suspension_stiffness = 55000.0
+suspension_damping = 5000.0
+tire_lateral_stiffness = 30000.0
+tire_longitudinal_stiffness = 40000.0
+tire_friction = 1.4
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXTank/WheelL1" unique_id=100000046]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_tank_wheel")
+
+[node name="WheelL2" type="PhysXVehicleWheel3D" parent="PhysXTank" unique_id=100000047]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.1, -0.5)
+half_width = 0.12
+wheel_mass = 15.0
+damping_rate = 0.15
+suspension_travel = 0.5
+suspension_stiffness = 55000.0
+suspension_damping = 5000.0
+tire_lateral_stiffness = 30000.0
+tire_longitudinal_stiffness = 40000.0
+tire_friction = 1.4
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXTank/WheelL2" unique_id=100000048]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_tank_wheel")
+
+[node name="WheelL3" type="PhysXVehicleWheel3D" parent="PhysXTank" unique_id=100000049]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.1, -1.5)
+half_width = 0.12
+wheel_mass = 15.0
+damping_rate = 0.15
+suspension_travel = 0.5
+suspension_stiffness = 55000.0
+suspension_damping = 5000.0
+tire_lateral_stiffness = 30000.0
+tire_longitudinal_stiffness = 40000.0
+tire_friction = 1.4
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXTank/WheelL3" unique_id=100000050]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_tank_wheel")
+
+[node name="WheelR0" type="PhysXVehicleWheel3D" parent="PhysXTank" unique_id=100000051]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.1, 1.5)
+half_width = 0.12
+wheel_mass = 15.0
+damping_rate = 0.15
+suspension_travel = 0.5
+suspension_stiffness = 55000.0
+suspension_damping = 5000.0
+tire_lateral_stiffness = 30000.0
+tire_longitudinal_stiffness = 40000.0
+tire_friction = 1.4
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXTank/WheelR0" unique_id=100000052]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_tank_wheel")
+
+[node name="WheelR1" type="PhysXVehicleWheel3D" parent="PhysXTank" unique_id=100000053]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.1, 0.5)
+half_width = 0.12
+wheel_mass = 15.0
+damping_rate = 0.15
+suspension_travel = 0.5
+suspension_stiffness = 55000.0
+suspension_damping = 5000.0
+tire_lateral_stiffness = 30000.0
+tire_longitudinal_stiffness = 40000.0
+tire_friction = 1.4
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXTank/WheelR1" unique_id=100000054]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_tank_wheel")
+
+[node name="WheelR2" type="PhysXVehicleWheel3D" parent="PhysXTank" unique_id=100000055]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.1, -0.5)
+half_width = 0.12
+wheel_mass = 15.0
+damping_rate = 0.15
+suspension_travel = 0.5
+suspension_stiffness = 55000.0
+suspension_damping = 5000.0
+tire_lateral_stiffness = 30000.0
+tire_longitudinal_stiffness = 40000.0
+tire_friction = 1.4
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXTank/WheelR2" unique_id=100000056]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_tank_wheel")
+
+[node name="WheelR3" type="PhysXVehicleWheel3D" parent="PhysXTank" unique_id=100000057]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.1, -1.5)
+half_width = 0.12
+wheel_mass = 15.0
+damping_rate = 0.15
+suspension_travel = 0.5
+suspension_stiffness = 55000.0
+suspension_damping = 5000.0
+tire_lateral_stiffness = 30000.0
+tire_longitudinal_stiffness = 40000.0
+tire_friction = 1.4
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysXTank/WheelR3" unique_id=100000058]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_tank_wheel")
+
+[node name="Wall" type="PhysXDestructible3D" parent="." unique_id=111584850]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.831232, 5.7871094, 35.047466)
+blast_asset = ExtResource("4_d5aud")
+auto_mass = false
+mass = 1.317
+dynamic = true
+
+[node name="screenshotcam" type="Camera3D" parent="Wall" unique_id=1332322632]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 17.965233)
+
+[node name="ChaseCamera" type="Node3D" parent="." unique_id=598304933]
+physics_interpolation_mode = 2
+script = ExtResource("2_chase_cam")
+target_path = NodePath("../Car")
+
+[node name="SpringArm3D" type="SpringArm3D" parent="ChaseCamera" unique_id=452673909]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
+collision_mask = 0
+spring_length = 7.0
+
+[node name="Camera3D" type="Camera3D" parent="ChaseCamera/SpringArm3D" unique_id=1025744104]
+current = true
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=818266758]
+
+[node name="Hint" type="Label" parent="HUD" unique_id=850253854]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 500.0
+offset_bottom = 46.0
+text = "Driving: Godot VehicleBody3D (stock)  |  W/S throttle-reverse, A/D steer, Space brake, Tab swap car, Mouse look (Esc to release)"
