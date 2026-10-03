@@ -2,9 +2,15 @@
 
 [ext_resource type="Script" path="res://demo/common/boat/boat_controller.gd" id="1_controller"]
 [ext_resource type="PackedScene" uid="uid://bug767u5b6nan" path="res://demo/common/boat/low_poly_skiff.glb" id="2_skiff"]
+[ext_resource type="ArrayMesh" path="res://demo/common/boat/skiff_water_mask.tres" id="3_mask"]
+[ext_resource type="Shader" path="res://demo/common/materials/water_mask.gdshader" id="4_mask_shader"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_hull"]
 size = Vector3(1.3, 0.75, 4.1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_mask"]
+render_priority = -1
+shader = ExtResource("4_mask_shader")
 
 [node name="Boat" type="RigidBody3D"]
 mass = 150.0
@@ -18,6 +24,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, -0.05)
 shape = SubResource("BoxShape3D_hull")
 
 [node name="Skiff" parent="." instance=ExtResource("2_skiff")]
+
+[node name="WaterMask" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+mesh = ExtResource("3_mask")
+material_override = SubResource("ShaderMaterial_mask")
 
 [node name="Buoyancy" type="PhysXBuoyancy3D" parent="."]
 hull_area = 1.6

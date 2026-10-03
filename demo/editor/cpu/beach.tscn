@@ -363,7 +363,7 @@ mesh = SubResource("LogMesh")
 [node name="Boat" parent="." instance=ExtResource("boat")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 1.2, 0)
 
-[node name="Buoyancy" parent="Boat" index="2"]
+[node name="Buoyancy" parent="Boat" index="3"]
 water_surface_path = NodePath("../../Water")
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=1907713885]
