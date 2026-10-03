@@ -207,8 +207,12 @@ func _process(delta: float) -> void:
 		Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
 		RenderingServer.viewport_get_measured_render_time_cpu(vp_rid) + RenderingServer.get_frame_setup_time_cpu(),
 		RenderingServer.viewport_get_measured_render_time_gpu(vp_rid)]
-	_hud.text = "Sample-point buoyancy (demo/common/buoyant_body.gd)   SPACE drop   left-drag shove   WASD/hold-RMB fly   R reset   ESC\nfloaters: %d   FPS: %d%s%s" % [
-		_floaters.size(), Engine.get_frames_per_second(), cam_text, timing]
+	# Anything in the "hud_info" group adds its own lines (the boat).
+	var extra := ""
+	for n in get_tree().get_nodes_in_group("hud_info"):
+		extra += "\n" + n.get_hud_text()
+	_hud.text = "Sample-point buoyancy (demo/common/buoyant_body.gd)   SPACE drop   left-drag shove   WASD/hold-RMB fly   R reset   ESC\nfloaters: %d   FPS: %d%s%s%s" % [
+		_floaters.size(), Engine.get_frames_per_second(), cam_text, timing, extra]
 
 	# The pool has real walls/floor (see the scene) -- this is just a deep
 	# safety net for anything that somehow escapes them.
