@@ -112,7 +112,8 @@ var _flow_emitters: Array[Node3D] = []
 var _steam_level := 0.0
 var _steam_available := -1 # -1 unknown, 0 unavailable, 1 running
 var _evap_loss := 0.0
-var _solver_pbd := false # false: staged MPM+foam/steam; true: pure PhysX PBD water
+var _solver_pbd := true # default: ONE PBD water body for the whole course
+var _river_water: PhysXParticleFluid3D
 var _overview_xf := Transform3D() # the authored $Camera view
 
 var _preset := "MEDIUM"
@@ -238,18 +239,25 @@ func _discover_scene() -> void:
 					_reaches[i].statics.append(body)
 	# bind the merged PBD group fluids (pure PhysX water for the M toggle):
 	# each reach carries meta pbd_group naming the group fluid that covers it
+	_river_water = get_node_or_null("RiverWater") as PhysXParticleFluid3D
 	var pbd_groups := {}
 	for child in get_children():
 		if String(child.name).begins_with("PBDGroup"):
 			pbd_groups[String(child.name)] = child
 	for info in _reaches:
 		info.pbd = pbd_groups.get("PBDGroup%d" % int(info.node.get_meta("pbd_group", 0)), null)
-	# MPM is the default: park the PBD groups out of the tree until toggled
-	if not _solver_pbd:
-		for g in pbd_groups:
-			var node: Node = pbd_groups[g]
-			if node.get_parent() != null:
-				node.get_parent().remove_child(node)
+	# default mode is the single PBD river water: park EVERY other fluid out
+	# of the tree -- the 23 staged MPM fluids AND the six old PBDGroup boxes
+	# (they spawn_on_ready huge AABBs of water = the "curtains"). Only the
+	# RiverWater source stays. M re-attaches the staged set.
+	if _solver_pbd:
+		for info in _reaches:
+			var mpm := info.node.get_node_or_null("Fluid")
+			if mpm != null and mpm.get_parent() != null:
+				info.node.remove_child(mpm)
+		for child in get_children():
+			if String(child.name).begins_with("PBDGroup") and child.get_parent() != null:
+				remove_child(child)
 
 # All StaticBody3D under `from`; with skip_obstacles, any subtree named
 # Obstacles is left out (those are mode-toggled, listed separately).
@@ -454,7 +462,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_4: _goto_named("Heated")
 			KEY_5: _goto_named("IslandSplit")
 			KEY_6: _goto_named("Rapids")
-			KEY_7: _goto_named("Basin")
+			KEY_7: _goto_named(_reaches[_reaches.size() - 1].name())
 
 # M key: switch the whole river between staged MPM water (foam + steam, one
 # fluid per segment) and pure PhysX CUDA water (PBD, no foam -- PBD collides
@@ -481,6 +489,7 @@ func _set_solver(pbd: bool) -> void:
 				info.pbd.get_parent().remove_child(info.pbd)
 			if mpm.get_parent() == null:
 				info.node.add_child(mpm)
+				mpm.call("spawn") # spawn_on_ready is off for the staged set
 			info.fluid = mpm
 		info.filled_at = -1.0
 		_rebuild_colliders(info)
@@ -580,10 +589,13 @@ func _physics_process(delta: float) -> void:
 			continue
 		if _floater_reach.get(body, -1) != ridx:
 			_move_floater_reach(body, ridx)
+		var fluid := _reach_fluid(_reaches[ridx])
+		if not is_instance_valid(fluid):
+			continue
 		var vol: float = body.get_meta("volume", 1.0)
 		var side := pow(maxf(vol, 0.001), 1.0 / 3.0)
 		var aabb := AABB(body.global_position - Vector3.ONE * side * 0.5, Vector3.ONE * side)
-		var submerged := clampf(_reaches[ridx].fluid.get_submersion(aabb), 0.0, 1.0)
+		var submerged := clampf(fluid.get_submersion(aabb), 0.0, 1.0)
 		body.linear_damp = lerpf(0.05, 2.2, submerged)
 		if submerged > 0.0:
 			var buoy: float = WATER_DENSITY * submerged * vol * 9.8
@@ -605,8 +617,23 @@ func _physics_process(delta: float) -> void:
 		else:
 			_floater_stranded[body] = -1.0
 
+# The active fluid for a reach: the shared river water in PBD mode, the
+# reach's own MPM fluid in staged mode.
+func _reach_fluid(reach: ReachInfo) -> PhysXParticleFluid3D:
+	return _river_water if _solver_pbd else reach.fluid
+
 # Which stage's domain currently contains this body?
 func _reach_index_of(body: RigidBody3D) -> int:
+	if _solver_pbd:
+		# one water body: bind by the nearest reach anchor
+		var best := 0
+		var best_d := 1e18
+		for i in range(_reaches.size()):
+			var d := body.global_position.distance_squared_to(_reaches[i].node.global_position)
+			if d < best_d:
+				best_d = d
+				best = i
+		return best
 	for i in range(_reaches.size()):
 		var info := _reaches[i]
 		var rel := (body.global_position - info.fluid.global_position).abs()
@@ -662,9 +689,9 @@ func _update_steam(dt: float) -> void:
 	if _heat_idx < 0:
 		return
 	var heat := _reaches[_heat_idx]
-	if not is_instance_valid(heat.fluid):
+	if not is_instance_valid(_reach_fluid(heat)):
 		return
-	var contact := clampf(heat.fluid.get_submersion(_heat_probe) * 3.0, 0.0, 1.0)
+	var contact := clampf(_reach_fluid(heat).get_submersion(_heat_probe) * 3.0, 0.0, 1.0)
 	# fast attack, slow release: steam lingers briefly after the water passes
 	var rate := 3.0 if contact > _steam_level else 0.7
 	_steam_level = lerpf(_steam_level, contact, clampf(dt * rate, 0.0, 1.0))
@@ -676,7 +703,7 @@ func _update_steam(dt: float) -> void:
 # Simulation LOD: stages near the camera simulate; the rest hold their water.
 func _update_sim_lod() -> void:
 	if _lod_off or _solver_pbd:
-		_sim_active = _reaches.size()
+		_sim_active = 1 if _solver_pbd else _reaches.size()
 		return
 	var dists := {}
 	for i in range(_reaches.size()):
@@ -704,9 +731,12 @@ func _validate_next_reach() -> void:
 		return
 	var info := _reaches[_scan_reach % _reaches.size()]
 	_scan_reach += 1
-	if not is_instance_valid(info.fluid):
+	var scan_fluid := _reach_fluid(info)
+	if not is_instance_valid(scan_fluid) or (_solver_pbd and info.stage != 1):
+		return # one shared body: scan it once from the source reach
+	if info.stage != 1:
 		return
-	var pts := info.fluid.get_particle_positions()
+	var pts := scan_fluid.get_particle_positions()
 	if pts.is_empty():
 		return
 	var center := info.fluid.global_position # the domain centers on the node
@@ -728,6 +758,13 @@ func _validate_next_reach() -> void:
 
 func _fluid_totals() -> Array:
 	var totals := [0, 0, 0.0, 0] # particles, foam, step ms, reaches
+	if _solver_pbd and is_instance_valid(_river_water):
+		# one shared body: report it directly (the per-reach MPM fluids are
+		# detached in this mode and would read zero)
+		totals[0] = _river_water.get_live_particle_count()
+		totals[1] = _river_water.get_live_foam_count()
+		totals[3] = 1
+		return totals
 	for info in _reaches:
 		if is_instance_valid(info.fluid):
 			totals[0] += info.fluid.get_live_particle_count()

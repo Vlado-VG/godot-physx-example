@@ -39,7 +39,3 @@ jolt_physics_3d/limits/max_bodies=120000
 jolt_physics_3d/limits/max_body_pairs=2000000
 jolt_physics_3d/limits/max_contact_constraints=1000000
 common/physics_interpolation=true
-
-[rendering]
-
-rendering_device/driver.windows="vulkan"

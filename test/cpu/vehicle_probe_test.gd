@@ -5,7 +5,7 @@ extends SceneTree
 # PxScene, end to end, before any real PhysXVehicle3D node exists. Mirrors
 # vehicle_body_test.gd's structure/thresholds so the two are easy to compare.
 
-var _probe: GodotPhysXVehicleProbe
+var _probe: PhysXVehicleProbe
 var _t := 0
 var _start_pos: Vector3
 
@@ -23,7 +23,7 @@ func _initialize() -> void:
 	floor_body.position = Vector3(0, -0.5, 0)
 	root.add_child(floor_body)
 
-	_probe = GodotPhysXVehicleProbe.new()
+	_probe = PhysXVehicleProbe.new()
 	_start_pos = Vector3(0, 0.6, 0)
 	var ok := _probe.initialize(get_root().world_3d.space, _start_pos)
 	if not ok:

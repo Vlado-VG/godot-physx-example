@@ -31,9 +31,11 @@ var floaters: Node3D
 var soft_bodies: Node3D
 
 var mat_bed: StandardMaterial3D
+var mat_water: StandardMaterial3D
 var mat_bank: StandardMaterial3D
 var mat_rock: StandardMaterial3D
 var mat_wall: StandardMaterial3D
+var mat_ground: StandardMaterial3D
 var mat_hot: StandardMaterial3D
 
 var cursor := Vector3(0, 98.5, 0) # floor-line path point (world)
@@ -95,8 +97,6 @@ func _initialize() -> void:
 		if i == PROFILE.size() - 1:
 			forced = cursor.y
 		_chute(entry[0], entry[1], entry[2], String(entry[3]).split(":", false), forced, entry[4])
-	# the basin tank (flat, wide, deep) continues that floor at y = 0
-	_basin()
 
 	_bake_pbd_groups()
 	_build_floaters()
@@ -124,6 +124,8 @@ func _make_materials() -> void:
 	mat_bank = _mat(Color(0.44, 0.39, 0.33), 0.95)
 	mat_rock = _mat(Color(0.32, 0.31, 0.3), 0.9)
 	mat_wall = _mat(Color(0.5, 0.48, 0.45), 0.85)
+	mat_ground = _mat(Color(0.30, 0.35, 0.24), 1.0)
+	mat_ground = _mat(Color(0.30, 0.35, 0.24), 1.0)
 	mat_hot = _mat(Color(0.25, 0.08, 0.03), 0.6)
 	mat_hot.emission_enabled = true
 	mat_hot.emission = Color(1.0, 0.35, 0.08)
@@ -220,6 +222,19 @@ func _marker(parent: Node3D, name: String, pos: Vector3, scale := Vector3.ONE) -
 	n.scale = scale
 	parent.add_child(n)
 	return n
+
+# Mountainside base: a wide slab hugging a floor line segment from below
+# (top face 5 cm under the channel floor's underside), far wider than the
+# channel -- per segment, so the stepped base follows the graded profile and
+# the flume reads as carved into the mountain, never floating.
+func _hill_base(reach: Node3D, from: Vector3, to: Vector3, under: float) -> void:
+	var seg := Node3D.new()
+	var dir := to - from
+	var flat := Vector2(dir.x, dir.z).length()
+	seg.position = (from + to) * 0.5
+	seg.rotation = Vector3(0, atan2(-dir.z, dir.x), atan2(dir.y, flat))
+	reach.add_child(seg)
+	_slab(seg, Vector3(0, -under - 3.0, 0), Vector3(dir.length() + 1.2, 6.0, 30.0), mat_ground, Vector3.ZERO, "Hillside")
 
 # ------------------------------------------------------------------ reaches
 
@@ -345,6 +360,7 @@ func _head_tank() -> void:
 	river.add_child(reach)
 	var t := 0.4
 	_slab(reach, Vector3(0, -t * 0.5, 0), Vector3(len + 0.04, t, width + 0.8), mat_bed, Vector3.ZERO, "Floor")
+	_hill_base(reach, Vector3(-len * 0.5, water_y, 0), Vector3(len * 0.5, water_y, 0), 0.55)
 	for side in [-1.0, 1.0]:
 		_slab(reach, Vector3(0, 0.5, side * (width * 0.5 + 0.22)),
 				Vector3(len + 1.8, 1.8, 0.4), mat_bank, Vector3.ZERO, "BankL" if side < 0 else "BankR")
@@ -397,7 +413,7 @@ func _chute(name: String, slope_deg: float, kink_deg: float, flags: Array, force
 			Vector3(0, 0, -avg_slope), "JointPatch")
 	# continuous floor + banks, spanning exactly head..tail; steep
 	# chutes get taller banks so fast splash stays in the channel
-	var bank_h := 1.5 # full-height flume walls; steep dump-ins overflow low banks
+	var bank_h := 2.0 if slope_deg > 45.0 else 1.2 # tall walls on the fast chutes
 	var seg3 := sqrt(run * run + drop * drop) # exact head-to-tail length
 	_slab(reach, Vector3(0, -0.175, 0), Vector3(seg3 - 0.06, 0.35, W + 0.6), mat_bed, Vector3(0, 0, pitch), "Floor")
 	for side in [-1.0, 1.0]:
@@ -478,46 +494,6 @@ func _chute(name: String, slope_deg: float, kink_deg: float, flags: Array, force
 	cursor = tail
 	cur_yaw += deg_to_rad(kink_deg)
 
-# The collection basin: a flat, wide, deep tank continuous with the final
-# chute; its floor lands on world y = 0 and nothing drains out.
-func _basin() -> void:
-	var len := 7.0
-	var width := 5.0
-	var depth := 1.2
-	var floor_y := cursor.y # continuous with the final chute's floor
-	var head := cursor + _dir() * (len * 0.5)
-	var reach := Node3D.new()
-	reach.name = "Basin"
-	reach.position = head
-	reach.rotation = Vector3(0, cur_yaw, 0)
-	if reach_count > 0:
-		reach.set_meta("upstream", String(river.get_child(reach_count - 1).name))
-	river.add_child(reach)
-	reach_count += 1
-
-	var t := 0.5
-	_slab(reach, Vector3(-len * 0.5 - 0.3, -t * 0.5, 0), Vector3(len + 2.4, t, width + 1.0), mat_bed, Vector3.ZERO, "Floor")
-	for side in [-1.0, 1.0]:
-		_slab(reach, Vector3(0, 0.9, side * (width * 0.5 + 0.25)),
-				Vector3(len + 1.6, 2.6, 0.5), mat_bank, Vector3.ZERO, "BankL" if side < 0 else "BankR")
-	_slab(reach, Vector3(len * 0.5 + 0.25, 1.3, 0), Vector3(0.5, 4.0, width + 1.0), mat_bank, Vector3.ZERO, "EndWall")
-	# entry funnels widen the channel mouth into the basin
-	for side in [-1.0, 1.0]:
-		_slab(reach, Vector3(-len * 0.5 + 0.4, 0.5, side * (W * 0.5 + 0.55)),
-				Vector3(2.0, 1.4, 0.4), mat_bank, Vector3(0, side * -0.6, 0), "FunnelL" if side < 0 else "FunnelR")
-	_marker(reach, "Outlet", Vector3(-len * 0.5 + 0.6, 0.3, 0), Vector3(0.9, 0.5, width * 0.9))
-	_add_pbd(reach, Vector3(0, depth * 0.6, 0), 0.0, Vector3(len * 0.8, depth * 0.6, width * 0.8), 4500.0)
-	_finish_reach(reach, Vector3(-6.5, 6.5, 11.0), Vector3(0.5, 0.4, 0))
-	var dom := _domain_for(cursor, cursor + _dir() * len, head, width, "Basin")
-	_add_fluid(reach, Vector3(0, 0.3, 0), 0.0, dom[0], Vector3(len * 0.8, 0.6, width * 0.7),
-			2400.0, Vector3(1.2, -1.6, 0), dom[1], 12000.0)
-	reach.get_node("Fluid").particle_count = 70000
-	reach.set_meta("always_surface", true) # the basin always draws its water surface
-	_add_pbd(reach, Vector3(0, depth * 0.6, 0), 0.0, Vector3(len * 0.8, depth * 0.6, width * 0.8), 4500.0)
-	reach.get_node("Fluid").particle_count = 24000
-	cursor = head + _dir() * len
-	cursor.y = floor_y
-
 # The heated checkpoint: emissive plates lying flush IN the channel floor, a
 # hot light, the contact probe just above them. Water flowing down the chute
 # passes over the plates -- the runtime measures the contact, drives the Flow
@@ -569,6 +545,34 @@ func _build_heat(reach: Node3D, run: float, tan_s: float) -> void:
 	e.set("divergence", 0.6)
 	steam.set("emitters", [steam.get_path_to(e)])
 
+# THE river water: ONE PhysX PBD fluid for the entire course. PBD has no
+# domain boxes and collides with the whole space, so water emitted at the
+# spring genuinely flows down every segment, fills the basin at the bottom,
+# and never freezes or vanishes -- a single continuous body, the way real
+# water behaves. This is the default mode; the per-reach MPM fluids are the
+# M-key stress alternative (foam + steam, staged).
+func _build_river_water() -> void:
+	var f := PhysXParticleFluid3D.new()
+	f.name = "RiverWater"
+	f.solver = PhysXParticleFluid3D.SOLVER_PBD
+	f.foam_enabled = false # pure water: the PBD diffuse layer is engine-disabled
+	f.particle_size = 0.05
+	f.particle_count = 20000 # capacity: the basin collects what arrives
+	f.spawn_region_size = Vector3(0.5, 0.06, 0.5) # nothing pre-spawned: the source IS the only water
+	f.spawn_on_ready = false
+	f.emitting = true
+	f.emission_rate = 20.0 # your 100-particles-per-5-seconds trickle
+	f.emission_radius = 0.1
+	f.emission_velocity = Vector3(1.2, -1.0, 0)
+	f.viscosity = 0.035
+	f.cohesion = 0.04 # keeps the stream coherent down the chutes
+	f.surface_tension = 0.02
+	f.surface_mesh = true # isosurface: one continuous water body, not beads
+	f.material_override = mat_water
+	f.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	scene_root.add_child(f)
+	f.position = Vector3(1.5, 99.6, 0) # at the spring, pitched flow comes from velocity
+
 # ----------------------------------------------------------------- floaters
 
 const FLOATER_TABLE := [
@@ -587,8 +591,6 @@ const FLOATER_TABLE := [
 	["SlowRiver1", "ball", Vector3(-1.0, 1.0, 0.0), 0.1, 300.0],
 	["SlowRiver1", "log", Vector3(0.5, 1.0, 0.15), 0.42, 420.0],
 	["SlowRiver2", "buoy", Vector3(-0.5, 1.2, -0.2), 0.11, 240.0],
-	["Basin", "crate", Vector3(0.5, 2.2, 0.6), 0.14, 700.0],
-	["Basin", "ball", Vector3(-0.8, 2.2, -0.5), 0.1, 300.0],
 ]
 
 func _reach_by_name(name: String) -> Node3D:
@@ -665,7 +667,6 @@ func _build_floaters() -> void:
 # Soft bodies: a separate deformable-body test -- the PhysX backend has no
 # fluid/soft coupling, so these ride no water; they deform against geometry.
 func _build_soft_bodies() -> void:
-	var basin := _reach_by_name("Basin")
 	var slow := _reach_by_name("SlowRiver2")
 
 	var blob_a := SoftBody3D.new()
@@ -686,7 +687,7 @@ func _build_soft_bodies() -> void:
 	mat_a.roughness = 0.5
 	mat_a.cull_mode = BaseMaterial3D.CULL_DISABLED
 	blob_a.material_override = mat_a
-	blob_a.position = _reach_xform(basin) * Vector3(-0.8, 2.6, 0.5)
+	blob_a.position = _reach_xform(slow) * Vector3(2.6, 1.5, 0.5)
 	soft_bodies.add_child(blob_a)
 
 	var blob_b := SoftBody3D.new()

@@ -18,7 +18,7 @@ extends SceneTree
 # 8 road wheels (4 per side), spread across a 3m wheelbase -- a modest,
 # plausible tank layout, well under VehicleTrack::MAX_WHEELS (16).
 
-var _probe: GodotPhysXTankProbe
+var _probe: PhysXTankProbe
 var _t := 0
 var _start_pos: Vector3
 var _start_yaw: float
@@ -46,7 +46,7 @@ func _initialize() -> void:
 	for z in wheel_zs:
 		wheel_positions.append(Vector3(TRACK_HALF_WIDTH, WHEEL_Y, z)) # right track
 
-	_probe = GodotPhysXTankProbe.new()
+	_probe = PhysXTankProbe.new()
 	_start_pos = Vector3(0, 0.6, 0)
 	var ok := _probe.initialize(get_root().world_3d.space, _start_pos, wheel_positions)
 	if not ok:

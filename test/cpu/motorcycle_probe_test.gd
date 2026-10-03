@@ -14,7 +14,7 @@ extends SceneTree
 # still promise: it drives forward and turning changes its path, without
 # ever claiming it stays upright (it won't, on its own).
 
-var _probe: GodotPhysXMotorcycleProbe
+var _probe: PhysXMotorcycleProbe
 var _t := 0
 var _start_pos: Vector3
 
@@ -32,7 +32,7 @@ func _initialize() -> void:
 	floor_body.position = Vector3(0, -0.5, 0)
 	root.add_child(floor_body)
 
-	_probe = GodotPhysXMotorcycleProbe.new()
+	_probe = PhysXMotorcycleProbe.new()
 	_start_pos = Vector3(0, 0.6, 0)
 	var ok := _probe.initialize(get_root().world_3d.space, _start_pos)
 	if not ok:
