@@ -63,7 +63,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion and captured:
 		_orbit_yaw -= event.relative.x * mouse_sensitivity
-		_orbit_pitch = clampf(_orbit_pitch - event.relative.y * mouse_sensitivity, -0.3, 1.2)
+		_orbit_pitch = clampf(_orbit_pitch + event.relative.y * mouse_sensitivity, -0.3, 1.2) # mouse up looks up (camera drops lower)
 		_idle = 0.0
 		get_viewport().set_input_as_handled()
 
