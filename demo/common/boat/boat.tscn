@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://be1f4f7bvq105"]
 
-[ext_resource type="Script" path="res://demo/common/boat/boat_controller.gd" id="1_controller"]
+[ext_resource type="Script" uid="uid://bisdxy8ah3ssk" path="res://demo/common/boat/boat_controller.gd" id="1_controller"]
 [ext_resource type="PackedScene" uid="uid://bug767u5b6nan" path="res://demo/common/boat/low_poly_skiff.glb" id="2_skiff"]
 [ext_resource type="ArrayMesh" path="res://demo/common/boat/skiff_water_mask.tres" id="3_mask"]
-[ext_resource type="Shader" path="res://demo/common/materials/water_mask.gdshader" id="4_mask_shader"]
+[ext_resource type="Shader" uid="uid://xw6em50t2lcy" path="res://demo/common/materials/water_mask.gdshader" id="4_mask_shader"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_hull"]
 size = Vector3(1.3, 0.75, 4.1)
@@ -12,31 +12,34 @@ size = Vector3(1.3, 0.75, 4.1)
 render_priority = -1
 shader = ExtResource("4_mask_shader")
 
-[node name="Boat" type="RigidBody3D"]
+[node name="Boat" type="RigidBody3D" unique_id=1627293752]
 mass = 150.0
 center_of_mass_mode = 1
 center_of_mass = Vector3(0, 0.12, -0.3)
 can_sleep = false
 script = ExtResource("1_controller")
 
-[node name="HullCollision" type="CollisionShape3D" parent="."]
+[node name="HullCollision" type="CollisionShape3D" parent="." unique_id=1510870143]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, -0.05)
 shape = SubResource("BoxShape3D_hull")
 
-[node name="Skiff" parent="." instance=ExtResource("2_skiff")]
+[node name="Skiff" parent="." unique_id=1037151729 instance=ExtResource("2_skiff")]
 
-[node name="WaterMask" type="MeshInstance3D" parent="."]
+[node name="WaterMask" type="MeshInstance3D" parent="." unique_id=703544857]
+material_override = SubResource("ShaderMaterial_mask")
 cast_shadow = 0
 mesh = ExtResource("3_mask")
-material_override = SubResource("ShaderMaterial_mask")
 
-[node name="Buoyancy" type="PhysXBuoyancy3D" parent="."]
+[node name="Buoyancy" type="PhysXBuoyancy3D" parent="." unique_id=1115209]
 hull_area = 1.6
+disturb_water = false
 
-[node name="Motor" type="PhysXBoat3D" parent="."]
+[node name="Motor" type="PhysXBoat3D" parent="." unique_id=233879065]
 propeller_position = Vector3(0, -0.2, -2.35)
 angular_damping = Vector3(300, 500, 600)
 
-[node name="ChaseCamera" type="Camera3D" parent="."]
+[node name="Wake" type="PhysXWaterWake3D" parent="." unique_id=12448688]
+
+[node name="ChaseCamera" type="Camera3D" parent="." unique_id=548532429]
 fov = 65.0
 far = 3000.0
