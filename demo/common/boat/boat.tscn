@@ -8,6 +8,8 @@ size = Vector3(1.3, 0.75, 4.1)
 
 [node name="Boat" type="RigidBody3D"]
 mass = 150.0
+center_of_mass_mode = 1
+center_of_mass = Vector3(0, 0.12, -0.3)
 can_sleep = false
 script = ExtResource("1_controller")
 
@@ -18,9 +20,11 @@ shape = SubResource("BoxShape3D_hull")
 [node name="Skiff" parent="." instance=ExtResource("2_skiff")]
 
 [node name="Buoyancy" type="PhysXBuoyancy3D" parent="."]
+hull_area = 1.6
 
 [node name="Motor" type="PhysXBoat3D" parent="."]
 propeller_position = Vector3(0, -0.2, -2.35)
+angular_damping = Vector3(300, 500, 600)
 
 [node name="ChaseCamera" type="Camera3D" parent="."]
 fov = 65.0
