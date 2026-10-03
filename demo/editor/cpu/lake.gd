@@ -54,8 +54,9 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	# FlyCamera only claims RMB (look toggle) and mouse-motion-while-captured
-	# -- left-click drag and every key below are untouched either way.
-	if _fly.handle_input(event):
+	# -- left-click drag and every key below are untouched either way. Only
+	# while it's the active camera (the boat has its own).
+	if _camera.current and _fly.handle_input(event):
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
@@ -180,7 +181,8 @@ func _drop_random() -> void:
 	_floaters.append(rb)
 
 func _process(delta: float) -> void:
-	_fly.process(delta)
+	if _camera.current:
+		_fly.process(delta)
 
 	if not _caustics_bound:
 		_caustics_texture = _water.get_caustics_texture()
