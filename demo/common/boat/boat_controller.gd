@@ -4,7 +4,7 @@ extends RigidBody3D
 #
 #   W / S    throttle ahead / astern
 #   A / D    steer left / right
-#   B        boat camera on/off (back to the scene's own camera)
+#   Tab      swap between the boat camera and the scene's fly camera
 
 @export var throttle_rate := 1.5 # throttle change per second
 @export var steering_rate := 3.0 # steering change per second
@@ -26,7 +26,7 @@ func _ready() -> void:
 	_camera.look_at(global_position + Vector3.UP * 0.5)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_B:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_TAB:
 		if _camera.current:
 			if _scene_camera:
 				_scene_camera.make_current()
@@ -57,5 +57,5 @@ func _process(delta: float) -> void:
 	_camera.look_at(global_position + Vector3.UP * 0.5)
 
 func get_hud_text() -> String:
-	return "Boat: W/S throttle  A/D steer  B boat camera\nspeed %.1f m/s (%.0f km/h)  throttle %+.2f  thrust %.0f N" % [
+	return "Boat: W/S throttle  A/D steer  Tab swap camera\nspeed %.1f m/s (%.0f km/h)  throttle %+.2f  thrust %.0f N" % [
 		_boat.get_forward_speed(), _boat.get_forward_speed() * 3.6, _throttle, _boat.get_applied_thrust()]
