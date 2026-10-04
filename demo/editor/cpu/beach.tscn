@@ -5,6 +5,7 @@
 [ext_resource type="ArrayMesh" path="res://demo/common/meshes/beach_floor_mesh.res" id="beach_mesh"]
 [ext_resource type="Shape3D" path="res://demo/common/meshes/beach_floor_shape.res" id="beach_shape"]
 [ext_resource type="Shader" uid="uid://v3k718kk64l6" path="res://demo/common/materials/water_surface.gdshader" id="water_shader"]
+[ext_resource type="PackedScene" uid="uid://be1f4f7bvq105" path="res://demo/common/boat/boat.tscn" id="boat"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_1"]
 
@@ -358,6 +359,12 @@ shape = SubResource("LogShape")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Floaters/Log" unique_id=409771952]
 material_override = SubResource("LogMat")
 mesh = SubResource("LogMesh")
+
+[node name="Boat" parent="." instance=ExtResource("boat")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 1.2, 0)
+
+[node name="Buoyancy" parent="Boat" index="3"]
+water_surface_path = NodePath("../../Water")
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=1907713885]
 

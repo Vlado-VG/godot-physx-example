@@ -23,6 +23,20 @@ uniform bool per_pixel_normals = true;
 uniform vec2 ripple_domain_size = vec2(20.0, 20.0);
 uniform vec2 ocean_domain_size = vec2(40.0, 40.0);
 uniform vec2 grid_center = vec2(0.0);
+// World xz the whole open-water mesh is moved by, so its dense core stays
+// under the camera; set by the node every frame.
+uniform vec2 mesh_offset = vec2(0.0);
+// Moving wake grids (PhysXWaterWake3D), up to four: height textures and
+// their rects (xy world xz of the corner, z side length -- 0 = unused, w how
+// much the wake fades out over the shore ripple grid, 0..1).
+uniform sampler2D wake_height_0 : hint_default_black, filter_linear, repeat_disable;
+uniform sampler2D wake_height_1 : hint_default_black, filter_linear, repeat_disable;
+uniform sampler2D wake_height_2 : hint_default_black, filter_linear, repeat_disable;
+uniform sampler2D wake_height_3 : hint_default_black, filter_linear, repeat_disable;
+uniform vec4 wake_rect_0 = vec4(0.0);
+uniform vec4 wake_rect_1 = vec4(0.0);
+uniform vec4 wake_rect_2 = vec4(0.0);
+uniform vec4 wake_rect_3 = vec4(0.0);
 // Mean surface height (node-relative), what the ripple layer settles back to
 // past the edge of its domain when the surface is rendered further out.
 uniform float water_level = 0.0;
@@ -97,6 +111,42 @@ varying float v_foam;
 varying vec2 v_rest_xz;
 
 // Offset of the surface point that rests at world_xz: (dx, height, dz).
+// One wake grid's height (x) and foam (y) at world_xz, faded out toward its edges.
+vec2 wake_one(sampler2D tex, vec4 rect, vec2 world_xz) {
+	if (rect.z <= 0.0) {
+		return vec2(0.0);
+	}
+	vec2 uv = (world_xz - rect.xy) / rect.z;
+	float edge = min(min(uv.x, uv.y), min(1.0 - uv.x, 1.0 - uv.y));
+	if (edge <= 0.0) {
+		return vec2(0.0);
+	}
+	// Optionally fade out over the shore ripple grid (where a floater's own
+	// ripples can take over).
+	vec2 from_center = abs((world_xz - grid_center) / ripple_domain_size);
+	float outside = smoothstep(0.46, 0.5, max(from_center.x, from_center.y));
+	vec4 t = texture(tex, uv); // height, hull foam, propeller foam
+	return vec2(t.r, t.g + t.b) * smoothstep(0.0, 0.1, edge) * mix(1.0, outside, rect.w);
+}
+
+// All wakes at world_xz, everywhere (inside the shore ripple grid too).
+vec2 wake_sample(vec2 world_xz) {
+	vec2 w = wake_one(wake_height_0, wake_rect_0, world_xz) + wake_one(wake_height_1, wake_rect_1, world_xz)
+			+ wake_one(wake_height_2, wake_rect_2, world_xz) + wake_one(wake_height_3, wake_rect_3, world_xz);
+	// Not over dry sand: the wake dies out over the last 30 cm of depth.
+	vec2 cuv_r = clamp((world_xz - grid_center) / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
+	return w * smoothstep(0.0, 0.3, texture(shore_depth_tex, cuv_r).r);
+}
+
+float wake_height(vec2 world_xz) {
+	return wake_sample(world_xz).x;
+}
+
+// Foam the wakes churned in (bow wave, propeller wash, breaking wake waves).
+float wake_foam(vec2 world_xz) {
+	return min(wake_sample(world_xz).y, 1.0);
+}
+
 vec3 surface_offset(vec2 world_xz) {
 	vec2 rel = world_xz - grid_center;
 	vec2 cuv_r = clamp(rel / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
@@ -110,6 +160,10 @@ vec3 surface_offset(vec2 world_xz) {
 	float inside = 1.0 - smoothstep(0.46, 0.5, max(from_center.x, from_center.y));
 	float ripple = mix(water_level, texture(ripple_height_tex, cuv_r).r, inside);
 	float h = ripple + texture(ocean_height_tex, cuv_o).r * fade;
+	// The wake grid is laid out where the water is now, not where it rests
+	// (its sources sit under the hull, and sample_height() reads it there):
+	// read it at this point's displaced position.
+	h += wake_height(world_xz + d);
 	// Never below the ground: over dry sand (and in the deepest troughs over
 	// shallows) the surface lies on the sand as a thin film, which is where
 	// the swash shows.
@@ -139,6 +193,12 @@ vec3 surface_normal_pixel(vec2 world_xz) {
 	float wet_w = smoothstep(0.0, 0.15, texture(shore_depth_tex, cuv_r).r);
 	rx *= wet_w;
 	rz *= wet_w;
+	// Wake slopes (zero over the shore grid), at the displaced position as
+	// surface_offset() reads the wake.
+	const float ew = 0.12;
+	vec2 wake_xz = world_xz + s * texture(ocean_disp_tex, cuv_o).rg;
+	rx += (wake_height(wake_xz + vec2(ew, 0.0)) - wake_height(wake_xz - vec2(ew, 0.0))) / (2.0 * ew);
+	rz += (wake_height(wake_xz + vec2(0.0, ew)) - wake_height(wake_xz - vec2(0.0, ew))) / (2.0 * ew);
 	vec3 tx = vec3(1.0 + s * der.z, der.x * fade + rx, s * dxz);
 	vec3 tz = vec3(s * dxz, der.y * fade + rz, 1.0 + s * der.w);
 	return normalize(cross(tz, tx));
@@ -164,7 +224,10 @@ float foam_at(vec2 world_xz) {
 	vec2 rel = world_xz - grid_center;
 	vec2 cuv_r = clamp(rel / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
 	vec2 cuv_o = rel / ocean_domain_size + 0.5; // wraps: the FFT ocean is periodic
-	float amount = texture(ocean_foam_tex, cuv_o).r * texture(ocean_fade_tex, cuv_r).r;
+	float fade = texture(ocean_fade_tex, cuv_r).r;
+	float amount = texture(ocean_foam_tex, cuv_o).r * fade;
+	// Wake foam at the displaced position, as surface_offset() reads the wake.
+	amount = max(amount, wake_foam(world_xz - choppiness * fade * texture(ocean_disp_tex, cuv_o).rg));
 	vec2 p = world_xz * foam_detail_scale;
 	float n = 0.5 * foam_value_noise(p) + 0.3 * foam_value_noise(p * 2.7 + 17.0) + 0.2 * foam_value_noise(p * 7.3 - 5.0);
 	// Gentle ramp: fresh foam is solid, thinning foam turns translucent and
@@ -225,6 +288,7 @@ float shore_signal(vec2 world_xz, float time) {
 }
 
 void vertex() {
+	VERTEX += (inverse(MODEL_MATRIX) * vec4(mesh_offset.x, 0.0, mesh_offset.y, 0.0)).xyz;
 	vec3 world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	v_rest_xz = world_pos.xz;
 	VERTEX += surface_offset(world_pos.xz);
