@@ -23,8 +23,8 @@ uniform bool per_pixel_normals = true;
 uniform vec2 ripple_domain_size = vec2(20.0, 20.0);
 uniform vec2 ocean_domain_size = vec2(40.0, 40.0);
 uniform vec2 grid_center = vec2(0.0);
-// World xz the whole open-water mesh is moved by (whole ocean tiles), so its
-// dense core stays under the camera; set by the node.
+// World xz the whole open-water mesh is moved by, so its dense core stays
+// under the camera; set by the node every frame.
 uniform vec2 mesh_offset = vec2(0.0);
 // Moving wake grids (PhysXWaterWake3D), up to four: height textures and
 // their rects (xy world xz of the corner, z side length -- 0 = unused, w how
