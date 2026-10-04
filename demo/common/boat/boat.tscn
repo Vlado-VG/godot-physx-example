@@ -144,7 +144,9 @@ hull_area = 1.6
 disturb_water = false
 
 [node name="Motor" type="PhysXBoat3D" parent="." unique_id=233879065]
+max_thrust = 1400.0
 propeller_position = Vector3(0, -0.2, -2.35)
+hull_drag = Vector3(250, 400, 7.2)
 angular_damping = Vector3(300, 500, 600)
 
 [node name="Wake" type="PhysXWaterWake3D" parent="." unique_id=12448688]

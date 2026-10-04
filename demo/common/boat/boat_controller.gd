@@ -101,5 +101,5 @@ func _process(delta: float) -> void:
 	_camera.look_at(global_position + Vector3.UP * 0.5)
 
 func get_hud_text() -> String:
-	return "Boat: W/S throttle  A/D steer  mouse look (Esc release)  wheel zoom  Tab swap camera\nspeed %.1f m/s (%.0f km/h)  throttle %+.2f  thrust %.0f N" % [
-		_boat.get_forward_speed(), _boat.get_forward_speed() * 3.6, _throttle, _boat.get_applied_thrust()]
+	return "Boat: W/S throttle  A/D steer  mouse look (Esc release)  wheel zoom  Tab swap camera\nspeed %.1f m/s (%.0f km/h, %.0f mph)  throttle %+.2f  thrust %.0f N" % [
+		_boat.get_forward_speed(), _boat.get_forward_speed() * 3.6, _boat.get_forward_speed() * 2.237, _throttle, _boat.get_applied_thrust()]
