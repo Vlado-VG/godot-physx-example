@@ -23,8 +23,12 @@ uniform bool per_pixel_normals = true;
 uniform vec2 ripple_domain_size = vec2(20.0, 20.0);
 uniform vec2 ocean_domain_size = vec2(40.0, 40.0);
 uniform vec2 grid_center = vec2(0.0);
+// World xz the whole open-water mesh is moved by (whole ocean tiles), so its
+// dense core stays under the camera; set by the node.
+uniform vec2 mesh_offset = vec2(0.0);
 // Moving wake grids (PhysXWaterWake3D), up to four: height textures and
-// their rects (xy world xz of the corner, zw size; size 0 = unused).
+// their rects (xy world xz of the corner, z side length -- 0 = unused, w how
+// much the wake fades out over the shore ripple grid, 0..1).
 uniform sampler2D wake_height_0 : hint_default_black, filter_linear, repeat_disable;
 uniform sampler2D wake_height_1 : hint_default_black, filter_linear, repeat_disable;
 uniform sampler2D wake_height_2 : hint_default_black, filter_linear, repeat_disable;
@@ -112,18 +116,25 @@ float wake_one(sampler2D tex, vec4 rect, vec2 world_xz) {
 	if (rect.z <= 0.0) {
 		return 0.0;
 	}
-	vec2 uv = (world_xz - rect.xy) / rect.zw;
+	vec2 uv = (world_xz - rect.xy) / rect.z;
 	float edge = min(min(uv.x, uv.y), min(1.0 - uv.x, 1.0 - uv.y));
 	if (edge <= 0.0) {
 		return 0.0;
 	}
-	return texture(tex, uv).r * smoothstep(0.0, 0.1, edge);
+	// Optionally fade out over the shore ripple grid (where a floater's own
+	// ripples can take over).
+	vec2 from_center = abs((world_xz - grid_center) / ripple_domain_size);
+	float outside = smoothstep(0.46, 0.5, max(from_center.x, from_center.y));
+	return texture(tex, uv).r * smoothstep(0.0, 0.1, edge) * mix(1.0, outside, rect.w);
 }
 
 // All wakes at world_xz, everywhere (inside the shore ripple grid too).
 float wake_height(vec2 world_xz) {
-	return wake_one(wake_height_0, wake_rect_0, world_xz) + wake_one(wake_height_1, wake_rect_1, world_xz)
+	float w = wake_one(wake_height_0, wake_rect_0, world_xz) + wake_one(wake_height_1, wake_rect_1, world_xz)
 			+ wake_one(wake_height_2, wake_rect_2, world_xz) + wake_one(wake_height_3, wake_rect_3, world_xz);
+	// Not over dry sand: the wake dies out over the last 30 cm of depth.
+	vec2 cuv_r = clamp((world_xz - grid_center) / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
+	return w * smoothstep(0.0, 0.3, texture(shore_depth_tex, cuv_r).r);
 }
 
 vec3 surface_offset(vec2 world_xz) {
@@ -259,6 +270,7 @@ float shore_signal(vec2 world_xz, float time) {
 }
 
 void vertex() {
+	VERTEX += (inverse(MODEL_MATRIX) * vec4(mesh_offset.x, 0.0, mesh_offset.y, 0.0)).xyz;
 	vec3 world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	v_rest_xz = world_pos.xz;
 	VERTEX += surface_offset(world_pos.xz);
