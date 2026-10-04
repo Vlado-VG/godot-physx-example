@@ -4,6 +4,10 @@
 [ext_resource type="PackedScene" uid="uid://bug767u5b6nan" path="res://demo/common/boat/low_poly_skiff.glb" id="2_skiff"]
 [ext_resource type="ArrayMesh" path="res://demo/common/boat/skiff_water_mask.tres" id="3_mask"]
 [ext_resource type="Shader" uid="uid://xw6em50t2lcy" path="res://demo/common/materials/water_mask.gdshader" id="4_mask_shader"]
+[ext_resource type="Texture2D" path="res://demo/common/boat/bow_spray_starboard_points.res" id="5_sb_points"]
+[ext_resource type="Texture2D" path="res://demo/common/boat/bow_spray_starboard_normals.res" id="6_sb_normals"]
+[ext_resource type="Texture2D" path="res://demo/common/boat/bow_spray_port_points.res" id="7_port_points"]
+[ext_resource type="Texture2D" path="res://demo/common/boat/bow_spray_port_normals.res" id="8_port_normals"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_hull"]
 size = Vector3(1.3, 0.75, 4.1)
@@ -58,10 +62,12 @@ colors = PackedColorArray(1, 1, 1, 0.5, 0.96, 0.98, 1, 0.4, 0.96, 0.98, 1, 0)
 gradient = SubResource("Gradient_jet_fade")
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_bow_starboard"]
-emission_shape = 3
-emission_box_extents = Vector3(0.02, 0.02, 0.45)
-direction = Vector3(1, 0.35, -0.1)
-spread = 7.0
+emission_shape = 5
+emission_point_texture = ExtResource("5_sb_points")
+emission_normal_texture = ExtResource("6_sb_normals")
+emission_point_count = 64
+direction = Vector3(0, 0, 1)
+spread = 8.0
 initial_velocity_min = 3.5
 initial_velocity_max = 5.5
 inherit_velocity_ratio = 0.3
@@ -76,10 +82,12 @@ collision_bounce = 0.08
 collision_use_scale = true
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_bow_port"]
-emission_shape = 3
-emission_box_extents = Vector3(0.02, 0.02, 0.45)
-direction = Vector3(-1, 0.35, -0.1)
-spread = 7.0
+emission_shape = 5
+emission_point_texture = ExtResource("7_port_points")
+emission_normal_texture = ExtResource("8_port_normals")
+emission_point_count = 64
+direction = Vector3(0, 0, 1)
+spread = 8.0
 initial_velocity_min = 3.5
 initial_velocity_max = 5.5
 inherit_velocity_ratio = 0.3
@@ -142,7 +150,7 @@ angular_damping = Vector3(300, 500, 600)
 [node name="Wake" type="PhysXWaterWake3D" parent="." unique_id=12448688]
 
 [node name="BowSprayStarboard" type="GPUParticles3D" parent="." unique_id=581203377]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 0.15, 1.3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.15, 1.2)
 amount = 2100
 lifetime = 0.75
 fixed_fps = 0
@@ -153,7 +161,7 @@ process_material = SubResource("ParticleProcessMaterial_bow_starboard")
 draw_pass_1 = SubResource("QuadMesh_droplet")
 
 [node name="BowSprayPort" type="GPUParticles3D" parent="." unique_id=1876520991]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 0.15, 1.3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 0.15, 1.2)
 amount = 2100
 lifetime = 0.75
 fixed_fps = 0
