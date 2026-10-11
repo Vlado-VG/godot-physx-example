@@ -3,8 +3,7 @@
 [resource]
 resource_name = "Fluid Water (Red)"
 transparency = 1
-cull_mode = 2
-albedo_color = Color(0.043137256, 0.8392157, 0.12156863, 0.6)
+albedo_color = Color(0.043137256, 0.40392157, 0.12156863, 0.47058824)
 metallic = 0.1
 roughness = 0.06
 refraction_enabled = true
