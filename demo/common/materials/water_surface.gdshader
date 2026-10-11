@@ -150,7 +150,7 @@ float wake_foam(vec2 world_xz) {
 vec3 surface_offset(vec2 world_xz) {
 	vec2 rel = world_xz - grid_center;
 	vec2 cuv_r = clamp(rel / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
-	vec2 cuv_o = rel / ocean_domain_size + 0.5; // wraps: the FFT ocean is periodic
+	vec2 cuv_o = world_xz / ocean_domain_size + 0.5; // wraps: the FFT ocean is periodic -- anchored to the WORLD, so a re-centre of the ripple square never slides the waves
 	float fade = texture(ocean_fade_tex, cuv_r).r;
 	// Negative: moving against the displacement gathers points into the
 	// crests (same convention as the node's built-in material).
@@ -178,7 +178,7 @@ vec3 surface_offset(vec2 world_xz) {
 vec3 surface_normal_pixel(vec2 world_xz) {
 	vec2 rel = world_xz - grid_center;
 	vec2 cuv_r = clamp(rel / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
-	vec2 cuv_o = rel / ocean_domain_size + 0.5; // wraps: the FFT ocean is periodic
+	vec2 cuv_o = world_xz / ocean_domain_size + 0.5; // wraps: the FFT ocean is periodic -- anchored to the WORLD, so a re-centre of the ripple square never slides the waves
 	float fade = texture(ocean_fade_tex, cuv_r).r;
 	float s = -choppiness * fade;
 	vec4 der = texture(ocean_deriv_tex, cuv_o);
@@ -223,7 +223,7 @@ float foam_value_noise(vec2 p) {
 float foam_at(vec2 world_xz) {
 	vec2 rel = world_xz - grid_center;
 	vec2 cuv_r = clamp(rel / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
-	vec2 cuv_o = rel / ocean_domain_size + 0.5; // wraps: the FFT ocean is periodic
+	vec2 cuv_o = world_xz / ocean_domain_size + 0.5; // wraps: the FFT ocean is periodic -- anchored to the WORLD, so a re-centre of the ripple square never slides the waves
 	float fade = texture(ocean_fade_tex, cuv_r).r;
 	float amount = texture(ocean_foam_tex, cuv_o).r * fade;
 	// Wake foam at the displaced position, as surface_offset() reads the wake.
@@ -263,7 +263,7 @@ float shore_foam_at(vec2 world_xz) {
 float shore_signal(vec2 world_xz, float time) {
 	vec2 rel = world_xz - grid_center;
 	vec2 cuv_r = clamp(rel / ripple_domain_size + 0.5, vec2(0.0), vec2(1.0));
-	vec2 cuv_o = rel / ocean_domain_size + 0.5; // wraps: the FFT ocean is periodic
+	vec2 cuv_o = world_xz / ocean_domain_size + 0.5; // wraps: the FFT ocean is periodic -- anchored to the WORLD, so a re-centre of the ripple square never slides the waves
 	float depth = texture(shore_depth_tex, cuv_r).r;
 	float eta = texture(ocean_height_tex, cuv_o).r; // unfaded: the waves arriving here
 	// Lobes a few metres across (like real swash), drifting, with the waves
