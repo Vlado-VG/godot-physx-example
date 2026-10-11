@@ -48,7 +48,9 @@ func _initialize() -> void:
 		var w := PhysXVehicleWheel3D.new()
 		w.use_as_steering = is_front
 		w.use_as_traction = not is_front
-		w.position = Vector3(0, 0.05, 0.7 if is_front else -0.7)
+		# Redot's vehicles drive toward local -Z, so the front (steering)
+		# wheel sits on the -Z side.
+		w.position = Vector3(0, 0.05, -0.7 if is_front else 0.7)
 		w.radius = 0.3
 		w.half_width = 0.08
 		w.wheel_mass = 8.0
@@ -71,6 +73,8 @@ func _apply_lean_control(_steer: float) -> void:
 	# Correct around the HEADING-projected forward (flattened to the
 	# horizontal plane) -- see motorcycle_probe_test.gd's identical fix for
 	# why (rotating around a pitched forward axis leaks into world-frame yaw).
+	# (Redot's get_forward() already returns the local -Z the controller was
+	# tuned around; upstream's +Z needs the negation this comment replaced.)
 	var raw_forward := _bike.get_forward()
 	var flat_forward := Vector3(raw_forward.x, 0.0, raw_forward.z)
 	if flat_forward.length() < 0.001:

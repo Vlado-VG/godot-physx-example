@@ -1,17 +1,21 @@
 extends Node3D
-# Root script for vehicle_demo.tscn: five vehicles -- stock VehicleBody3D car,
+# Root script for vehicle_demo.tscn: seven vehicles -- stock VehicleBody3D car,
 # PhysXVehicle3D car, stock VehicleBody3D motorcycle, PhysXMotorcycle3D
-# motorcycle, PhysXTank3D -- all sit on the same track so they're directly
-# comparable, and one control set + camera cycles between them with a single
-# key.
+# motorcycle, PhysXTank3D, a stock VehicleBody3D prop plane on its own runway,
+# and a stock RigidBody3D helicopter on a pad -- with one control set + camera
+# cycling between them on a single key. Both aircraft can fly the ring course.
 #
-#   Tab   cycle control/camera focus between the five vehicles
+#   Tab   cycle control/camera focus between the vehicles
+#   R     (plane / helicopter) back to the runway or pad, rings reset
 
 @export var godot_car_path: NodePath
 @export var physx_car_path: NodePath
 @export var godot_motorcycle_path: NodePath
 @export var physx_motorcycle_path: NodePath
 @export var physx_tank_path: NodePath
+@export var plane_path: NodePath
+@export var heli_path: NodePath
+@export var plane_stats_path: NodePath
 @export var camera_path: NodePath
 @export var hud_label_path: NodePath
 @export var wall_path: NodePath
@@ -35,10 +39,27 @@ const HINT_PHYSX_CAR := "Driving: PhysX PhysXVehicle3D car  |  W/S throttle-brak
 const HINT_GODOT_MOTO := "Driving: Godot VehicleBody3D motorcycle (stock, script-side lean balance)  |  W/S throttle-reverse, A/D steer+lean, Space brake, Tab cycle vehicle"
 const HINT_PHYSX_MOTO := "Driving: PhysX PhysXMotorcycle3D  |  W/S throttle-brake, A/D steer+lean, Space brake, Tab cycle vehicle"
 const HINT_PHYSX_TANK := "Driving: PhysX PhysXTank3D  |  W/S drive, A/D pivot (skid-steer), Space brake, Left click fire, Tab cycle vehicle"
+const HINT_PLANE := "Flying: Godot VehicleBody3D stunt plane (stock)  |  W/S throttle, Mouse aim (arcade) or arrows (manual), Q/E roll, A/D yaw, C switch mode, Space brake, R runway, Tab cycle vehicle"
+
+const HINT_HELI := "Flying: Godot RigidBody3D helicopter (stock)  |  Mouse aim, W/S forward/back, Space/Ctrl climb/descend, A/D yaw, Q/E strafe, R pad, Tab cycle vehicle"
+
+var _plane: Node3D
+var _heli: Node3D
+var _plane_stats: Label
 
 func _ready() -> void:
 	_vehicles = [get_node(godot_car_path), get_node(physx_car_path), get_node(godot_motorcycle_path), get_node(physx_motorcycle_path), get_node(physx_tank_path)]
 	_hints = [HINT_GODOT_CAR, HINT_PHYSX_CAR, HINT_GODOT_MOTO, HINT_PHYSX_MOTO, HINT_PHYSX_TANK]
+	if not plane_path.is_empty():
+		_plane = get_node(plane_path)
+		_vehicles.append(_plane)
+		_hints.append(HINT_PLANE)
+	if not heli_path.is_empty():
+		_heli = get_node(heli_path)
+		_vehicles.append(_heli)
+		_hints.append(HINT_HELI)
+	if not plane_stats_path.is_empty():
+		_plane_stats = get_node(plane_stats_path)
 	_camera = get_node(camera_path)
 	_hud_label = get_node(hud_label_path)
 	_apply_active()
@@ -70,6 +91,36 @@ func _unhandled_input(event: InputEvent) -> void:
 			_apply_active()
 		elif event.keycode == KEY_P:
 			_capture_impact_screenshot()
+		elif event.keycode == KEY_R and _plane and _vehicles[_active_index] == _plane:
+			_plane.reset_to_runway()
+			_camera.set_target(_plane) # aim straight down the runway again
+			for ring in get_tree().get_nodes_in_group("flight_rings"):
+				ring.reset()
+		elif event.keycode == KEY_R and _heli and _vehicles[_active_index] == _heli:
+			_heli.reset_to_pad()
+			_camera.set_target(_heli)
+			for ring in get_tree().get_nodes_in_group("flight_rings"):
+				ring.reset()
+
+
+func _process(_delta: float) -> void:
+	if not _plane_stats:
+		return
+	var active_vehicle: Node3D = _vehicles[_active_index]
+	var flying := (_plane and active_vehicle == _plane) or (_heli and active_vehicle == _heli)
+	_plane_stats.visible = flying
+	if not flying:
+		return
+	var rings := get_tree().get_nodes_in_group("flight_rings")
+	var passed := 0
+	for ring in rings:
+		passed += 1 if ring.is_passed else 0
+	if active_vehicle == _heli:
+		_plane_stats.text = "HELICOPTER   speed %3.0f km/h   altitude %4.0f m   rings %d / %d" % [_heli.airspeed() * 3.6, _heli.global_position.y, passed, rings.size()]
+	else:
+		_plane_stats.text = "%s   airspeed %3.0f km/h   altitude %4.0f m   throttle %3.0f%%   rings %d / %d" % [
+			"ARCADE (C: manual)" if _plane.control_mode == _plane.ControlMode.ARCADE else "MANUAL (C: arcade)",
+			_plane.airspeed() * 3.6, _plane.global_position.y, _plane.throttle * 100.0, passed, rings.size()]
 
 func _apply_active() -> void:
 	for i in _vehicles.size():

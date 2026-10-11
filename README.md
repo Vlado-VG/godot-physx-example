@@ -14,12 +14,23 @@ editor binary. `project.godot` already selects the PhysX backend:
 3d/physics_engine="PhysX"
 ```
 
+The engine module itself lives in
+[uno1982/godot](https://github.com/uno1982/godot), `modules/godot_physx`, on
+the `feature/physx5-module` branch.
+
 Scenes and tests are grouped by what they need:
 
 - **`cpu/`** — rigid bodies, joints, characters, areas, queries. Works with any
   `godot_physx` build.
 - **`gpu/`** — GPU particle fluids (`PhysXParticleFluid3D`). Needs an engine
   built with `physx_gpu=yes` and a CUDA device; inert otherwise.
+- **`flow/`** — NVIDIA Flow smoke, fire and dust (`PhysXFlow3D`). Needs an
+  engine built with `flow_sdk=<path to the Flow SDK>` (the `flow` folder of the
+  PhysX repo, built with its `build.bat`), `nvflow.dll` and `nvflowext.dll`
+  next to the editor binary (the build copies them), and the Forward+ or
+  Mobile renderer. Any GPU works -- Flow runs on Godot's own Vulkan or
+  Direct3D 12 device, not CUDA. Without Flow in the build its scenes still
+  open, with the Flow nodes as placeholders.
 
 `PhysXCloth3D` runs on the GPU (a PhysX deformable surface) when CUDA is present
 and falls back to a built-in CPU solver otherwise, like GPU rigid dynamics — so
@@ -40,10 +51,35 @@ viewport gizmo and inspector, then press Play.
 | `gpu/cloth.tscn` | A 48×48 `PhysXCloth3D` sheet draping over a sphere plus a wind-blown flag — the resolution and drape the GPU deformable surface allows. SPACE drops a ball. Falls back to the CPU solver without CUDA. |
 | `gpu/fluid.tscn` | `PhysXParticleFluid3D` as a scene node: gizmo and inspector for the emitter, plus the GPU isosurface + foam surface. Needs a `physx_gpu=yes` build. |
 | `cpu/bridge.tscn` | A rope bridge built entirely from stock nodes — `RigidBody3D` planks joined by `Generic6DOFJoint3D` (linear axes locked, angular Z a spring). Select a `Deck/J*` joint to see the spring config and its limit gizmo. Play and it settles under the crates; `C` drops more. |
+| `cpu/ragdoll.tscn` | Ragdolls with Godot's own workflow: the mannequin's physical skeleton from **Create Physical Skeleton** (`PhysicalBoneSimulator3D` + `PhysicalBone3D`), with cone joints at the spine, shoulders, hips and ankles and one-way hinges at the knees and elbows (`demo/common/mannequin/mannequin_ragdoll.tscn` — select a bone to see its joint and limits). The mannequins animate until left-click shoots one over; `SPACE` drops one down the steps. Runs on PhysX and Jolt alike. |
 | `cpu/debris.tscn` | `PhysXChunkEmitter3D` as a scene node: select it to tune chunk size, impulse, spread and budget in the inspector. A small shooting range — walk in, left-click a wall or the floor and real rigid-body chunks fly out, bounce and settle. |
 | `cpu/soft_body.tscn` | Stock `SoftBody3D` blobs (sphere, subdivided box) on the PhysX backend — select one to paint pinned vertices with its gizmo and tune `pressure_coefficient` / `linear_stiffness` / `total_mass` in the inspector. Press Play, `SPACE` drops a heavy ball on them. |
 | `cpu/heightmap.tscn` | Stock `HeightMapShape3D` terrain — a `@tool` script generates the collision and the matching visible mesh from noise, so selecting `Terrain/CollisionShape3D` shows the real height-field gizmo in the editor; the exported noise params rebuild it live. Play to walk the terrain (`WASD`, `SPACE` jump) and `B` rolls a row of balls down a slope. |
 | `cpu/shape_scale.tscn` | Walk a capsule character over collision shapes with non-uniform node scale baked into the geometry — stretched box platforms, a chamfered-box convex ramp, a trimesh hump, a scaled sphere dome and a scaled height-field mound. Select a piece and stretch its transform in the inspector, then press Play. |
+| `cpu/body_features.tscn` | Rigid-body settings you set in the Inspector, one station each: a carousel and an elevator built from `MovingPlatform` (an `AnimatableBody3D` with spin / travel / period, `demo/common/moving_platform.gd`) that the character and loose crates ride; crates that float on a **constant force** equal to their weight and a pinwheel turned by **constant torque**; two flywheels, one with 5x **inertia** (`F` kicks both); and two roly-poly toys, the green one with a low **custom center of mass** that rights itself (`G` knocks them over). Walk with `WASD`. Runs on PhysX and Jolt alike. |
+| `cpu/back_faces.tscn` | `ConcavePolygonShape3D.backface_collision`: two identical floating trimesh platforms, one one-sided (off) and one solid (on). Step on a glowing pad to be launched up -- you pass through the one-way platform and land on top, and bump your head on the solid one; `F` fires balls up from underneath both. Select a platform's `CollisionShape3D` to see the setting. |
+| `cpu/picking.tscn` | Mouse picking and area queries, set in the Inspector: hover lights objects up and clicks react (`input_event`), Area3D zones included. A glass pane with `input_ray_pickable` off lets you click the zone behind it; one with it on blocks. Click the crate to kick it. A `RayCast3D` laser sweeps the zones -- `T` toggles its `collide_with_areas`. |
+| `cpu/stairs.tscn` | `SeparationRayShape3D`: two bots walk up identical 0.3 m stairs -- the one standing on a ray climbs, the capsule-only one stops at the first step. Walk them yourself on the same setup. A hover sled (a `RigidBody3D` on four corner rays) floats over bumps when you walk into it. Select a ray's `CollisionShape3D` to see it. |
+| `cpu/vehicle_demo.tscn` | Seven vehicles on one track, `Tab` to switch: a stock `VehicleBody3D` car and motorcycle and their `PhysXVehicle3D` / `PhysXMotorcycle3D` counterparts, a `PhysXTank3D` (left click fires), and a stock `VehicleBody3D` arcade stunt plane on its own runway with eight rings to fly through (`demo/common/plane.tscn`: tricycle gear for the runway; in the air it flies where its nose points and turns toward the mouse aim, banking into turns -- `C` switches to manual stick controls; moving control surfaces and prop), and a stock `RigidBody3D` helicopter on a pad (`demo/common/heli.tscn`: hovers when you let go; it turns toward the mouse aim, W/S forward/back, Space/Ctrl climb/descend, A/D yaw, Q/E strafe; spinning main and tail rotors) that can fly the same rings. Red vehicles are stock nodes and run on any engine; blue ones are PhysX nodes. |
+
+### `demo/editor/flow/` — NVIDIA Flow
+
+Each flow is a `PhysXFlow3D` (the simulation, how it looks) fed by
+`PhysXFlowEmitter3D` nodes (where gas comes from); an emitter's `flow` path
+picks which flow it feeds, or with it empty, the scene's only one -- so an
+emitter can live inside a vehicle scene. Physics bodies near the gas are solids
+it flows around. `demo/flow/presets/` holds ready-made looks (fire, black smoke,
+steam, dust, signal smoke) to instance or copy.
+
+| Scene | What it shows |
+| --- | --- |
+| `smoke_plume.tscn` | A fire plume rolling over a tilted box: select the flow or the emitter to tune them while it runs in the editor. |
+| `presets.tscn` | The five presets side by side -- five independent flows at once. |
+| `dust_trail.tscn` | A cart circling on a `MovingPlatform` hub kicks dust up from its rear wheels; the emitters ride along inside the cart, the flow sits at the scene root. |
+| `moving_collider.tscn` | A slab sweeping back and forth through a fire plume, pushing the smoke aside as it passes. |
+| `flame_thrower.tscn` | A burning fuel jet fired at a wall, rolling into fire across it. Nozzle-like emitters need a high `couple_rate` (Flow's default 2 only nudges the gas) and low `buoyancy` so the burning jet holds its line. |
+| `jet_flame.tscn` | A jet engine's exhaust at night: a sharp white-hot core cone (`demo/flow/jet_core_solid.gdshader`) with the Flow plume carrying on past it. The core is an opaque glowing mesh, so Flow -- drawn after transparent geometry as usual -- composites around it; `divergence` below zero on the nozzle keeps the plume a tight stream. |
+| `torch.tscn` | A blowtorch drawn entirely by `demo/flow/jet_cone.gdshader`: a crisp, additive blue cone with a white-hot inner cone. A fluid grid can't resolve a flame front that thin, so the sharp part is a mesh. |
 
 ### `demo/cpu/`
 
@@ -87,7 +123,15 @@ godot --headless --path . --script res://test/cpu/physics_smoke.gd
   `soft_body_spawn_test`, `soft_body_cascade_test`, `determinism_test`,
   `ragdoll_skeletal_test` (a rigged humanoid `Skeleton3D` +
   `PhysicalBoneSimulator3D` ragdoll: shove it, it must fall, keep its joints
-  connected and never NaN).
+  connected and never NaN), `body_parity_test` (constant force/torque,
+  custom inertia and center of mass, direct-state torque/force/mass queries,
+  axis velocity, a character riding a spinning platform -- the same numbers
+  as on Jolt), `backface_collision_test` (a one-sided trimesh met from behind
+  by rays, shape casts, bodies and a character, back faces off and on),
+  `query_filter_test` (`collide_with_bodies` / `collide_with_areas` across
+  rays, point/shape overlaps, casts, rest info and a `RayCast3D`),
+  `separation_ray_test` (a character standing on a ray: rest height, up and
+  down a step; a ray-only character; a rigid body on a ray).
   `physics_bench.gd` is a step-time benchmark across body counts (run once per
   engine, flipping `physics/3d/physics_engine`). `heightmap_runtime_probe.tscn`
   is a **windowed** run (not `--script`) — the GPU boundary crash only faults
@@ -97,6 +141,12 @@ godot --headless --path . --script res://test/cpu/physics_smoke.gd
   variants), `particle_granular_*`, `soft_body_gpu_test` (`PxDeformableVolume` —
   fall, collide, deform, impulse, pin). These `SKIP` (exit 0) without a CUDA device (the MPM
   ones without a RenderingDevice).
+- **`test/flow/`** — `flow_smoke_test` (gas rises, `sample_smoke`),
+  `flow_targets_test` (emitters feed the flow their `flow` path names),
+  `flow_render_test` (the render effect draws), `flow_compositor_test` (user
+  compositors are left as they were, no compositors left behind). Flow needs a
+  RenderingDevice, so these run **windowed** (drop `--headless`); they `SKIP`
+  in a build without Flow.
 
 Both `physx_showcase` and `physx_rid_showcase` also take a headless benchmark
 mode — no window, no rendering — that prints physics step time and rate:

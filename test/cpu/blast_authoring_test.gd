@@ -9,14 +9,19 @@ extends SceneTree
 #     the expected chunk count (9 = 1 root + 8 leaves, same params the
 #     standalone tool used to produce test/data/blast_cube.asset), and that
 #     it survives a real Resource save/load round-trip.
-#  2. Feed the SAME in-memory result through GodotPhysXBlastProbe (dumping it
-#     to temp files in the exact format that class already parses) and run
-#     the identical damage -> fracture -> split -> 8-bodies check
-#     blast_probe_test.gd already proves against the pre-authored asset --
-#     confirming the in-engine authoring path produces genuinely valid data,
-#     not just plausible-looking bytes.
+#  2. Feed the SAME in-memory result through this engine's own
+#     PhysXDestructible3D: the dump below is its native asset_path/chunks_path
+#     format, so reloading it proves the authored bytes are genuinely valid,
+#     and the damage -> fracture -> split -> 8-bodies check runs the module's
+#     real spawn path (the same check blast_probe_test.gd proves against the
+#     pre-authored asset on upstream's GodotPhysXBlastProbe harness).
 #
-# SKIPs (not FAILs) on a build without blast_sdk= configured.
+# The destructible loads on world entry, which lands after _initialize() in a
+# --script run -- so the damage check runs from _physics_process, the same
+# pattern destructible_test.gd uses.
+
+var _destructible: PhysXDestructible3D
+var _tick := 0
 
 func _initialize() -> void:
 	print("[blast_authoring] engine = ", ProjectSettings.get_setting("physics/3d/physics_engine", "?"))
@@ -59,11 +64,10 @@ func _initialize() -> void:
 		return
 	print("[blast_authoring] resource round-trip OK (chunk_count=", reloaded.get_chunk_count(), ")")
 
-	# Full end-to-end proof: dump this in-engine-authored asset into the same
-	# two-file format GodotPhysXBlastProbe already parses, and run the exact
-	# same damage/split/spawn check blast_probe_test.gd proves against the
-	# pre-authored blast_cube.asset -- confirms the DATA is really valid, not
-	# just correctly-shaped.
+	# Full end-to-end proof: dump this in-engine-authored asset into
+	# PhysXDestructible3D's two-file format and run the exact same
+	# damage/split/spawn check on this engine's real spawn path -- confirms
+	# the DATA is really valid, not just correctly-shaped.
 	var asset_path := "user://blast_authoring_test.asset"
 	var af := FileAccess.open(asset_path, FileAccess.WRITE)
 	af.store_buffer(reloaded.asset_bytes)
@@ -86,24 +90,30 @@ func _initialize() -> void:
 
 	var root := Node3D.new()
 	get_root().add_child(root)
-	var probe = ClassDB.instantiate("GodotPhysXBlastProbe")
-	probe.set_space(get_root().get_world_3d().space)
-	probe.set_base_transform(Transform3D(Basis(), Vector3(0, 5, 0)))
-	var globalized_asset := ProjectSettings.globalize_path(asset_path)
-	var globalized_chunks := ProjectSettings.globalize_path(chunks_path)
-	print("[blast_authoring] loading probe from: ", globalized_asset, " / ", globalized_chunks)
-	if not probe.load(globalized_asset, globalized_chunks):
-		print("[blast_authoring] probe.load() of the in-engine-authored dump failed -> FAIL")
-		quit(1)
-		return
-	print("[blast_authoring] probe loaded, live_actor_count=", probe.get_live_actor_count())
-	# GodotPhysXBlastProbe's damage position is LOCAL-space (unlike
-	# PhysXDestructible3D's, which converts world->local internally) --
-	# base_transform only places spawned bodies in world space. Vector3.ZERO
-	# here, same as blast_probe_test.gd, not the world spawn position.
-	var spawned: int = probe.apply_radial_damage(Vector3.ZERO, 5.0, 0.1, 3.0)
-	print("[blast_authoring] end-to-end probe test: spawned=", spawned, " body_count=", probe.get_body_count())
+	var destructible := PhysXDestructible3D.new()
+	destructible.asset_path = ProjectSettings.globalize_path(asset_path)
+	destructible.chunks_path = ProjectSettings.globalize_path(chunks_path)
+	# PhysXDestructible3D converts the world damage point to local space
+	# internally -- the node sits at (0, 5, 0), so the damage at world
+	# (0, 5, 0) lands on the same center-of-cube point upstream's probe hit
+	# with local Vector3.ZERO.
+	destructible.position = Vector3(0, 5, 0)
+	root.add_child(destructible)
+	_destructible = destructible
 
-	var ok: bool = spawned == 8 and probe.get_body_count() == 8
+func _physics_process(_d: float) -> bool:
+	_tick += 1
+	if _tick < 2:
+		return false
+	if not _destructible.is_loaded():
+		print("[blast_authoring] destructible failed to load the authored dump -> FAIL")
+		quit(1)
+		return false
+	var spawned: int = _destructible.apply_radial_damage(Vector3(0, 5, 0), 5.0, 0.1, 3.0)
+	var body_count: int = _destructible.get_piece_count()
+	print("[blast_authoring] end-to-end: spawned=", spawned, " body_count=", body_count)
+
+	var ok: bool = spawned == 8 and body_count == 8
 	print("[blast_authoring] overall -> %s" % ("PASS" if ok else "FAIL"))
 	quit(0 if ok else 1)
+	return false

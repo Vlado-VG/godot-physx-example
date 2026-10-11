@@ -19,6 +19,7 @@ func _initialize() -> void:
 		quit(0)
 		return
 
+
 	var box := BoxMesh.new()
 	box.size = Vector3(2, 2, 2)
 
@@ -64,20 +65,37 @@ func _initialize() -> void:
 
 	var root := Node3D.new()
 	get_root().add_child(root)
-	var probe = ClassDB.instantiate("GodotPhysXBlastProbe")
-	probe.set_space(get_root().get_world_3d().space)
-	probe.set_base_transform(Transform3D(Basis(), Vector3(0, 5, 0)))
-	var globalized_asset := ProjectSettings.globalize_path(asset_path)
-	var globalized_chunks := ProjectSettings.globalize_path(chunks_path)
-	if not probe.load(globalized_asset, globalized_chunks):
-		print("[blast_authoring_slicing] probe.load() of the slicing-authored dump failed -> FAIL")
-		quit(1)
-		return
-	print("[blast_authoring_slicing] probe loaded, live_actor_count=", probe.get_live_actor_count())
-	var spawned: int = probe.apply_radial_damage(Vector3.ZERO, 5.0, 0.1, 3.0)
-	var expected := chunk_count - 1
-	print("[blast_authoring_slicing] end-to-end probe test: spawned=", spawned, " (expect ", expected, ") body_count=", probe.get_body_count())
+	# Same redot-native end-to-end check as blast_authoring_test.gd: reload
+	# the two-file dump through PhysXDestructible3D (the dump is its native
+	# asset_path/chunks_path format) and run the real damage/split/spawn path.
+	# The destructible loads on world entry, which lands after _initialize()
+	# in a --script run -- the check runs from _physics_process, the same
+	# pattern destructible_test.gd uses.
+	var destructible := PhysXDestructible3D.new()
+	destructible.asset_path = ProjectSettings.globalize_path(asset_path)
+	destructible.chunks_path = ProjectSettings.globalize_path(chunks_path)
+	destructible.position = Vector3(0, 5, 0)
+	root.add_child(destructible)
+	_destructible = destructible
+	_expected = chunk_count - 1
 
-	var ok: bool = spawned == expected and probe.get_body_count() == expected
+var _destructible: PhysXDestructible3D
+var _expected := 0
+var _tick := 0
+
+func _physics_process(_d: float) -> bool:
+	_tick += 1
+	if _tick < 2:
+		return false
+	if not _destructible.is_loaded():
+		print("[blast_authoring_slicing] destructible failed to load the authored dump -> FAIL")
+		quit(1)
+		return false
+	var spawned: int = _destructible.apply_radial_damage(Vector3(0, 5, 0), 5.0, 0.1, 3.0)
+	var body_count: int = _destructible.get_piece_count()
+	print("[blast_authoring_slicing] end-to-end: spawned=", spawned, " (expect ", _expected, ") body_count=", body_count)
+
+	var ok: bool = spawned == _expected and body_count == _expected
 	print("[blast_authoring_slicing] overall -> %s" % ("PASS" if ok else "FAIL"))
 	quit(0 if ok else 1)
+	return false
