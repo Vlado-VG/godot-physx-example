@@ -1,14 +1,13 @@
 [gd_scene format=3]
 
-[node name="Steam" type="PhysXFlow3D"]
+[node name="Steam" type="PhysXFlowSimulation3D"]
 smoke_fade = 0.6
-smoke_density = 4.0
-smoke_color = Color(0.95, 0.95, 0.95, 1)
-emission_strength = 0.0
+smoke_albedo = Color(0.95, 0.95, 0.95, 1)
 vorticity = 1.0
 
+emitters = [NodePath("Emitter")]
+
 [node name="Emitter" type="PhysXFlowEmitter3D" parent="."]
-flow = NodePath("..")
 radius = 0.4
 velocity = Vector3(0, 3, 0)
 temperature = 3.0

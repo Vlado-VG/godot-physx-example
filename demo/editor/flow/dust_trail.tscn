@@ -61,14 +61,14 @@ mesh = SubResource("Mesh_ground")
 transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 3, 13)
 script = ExtResource("1_cam")
 
-[node name="PhysXFlow3D" type="PhysXFlow3D" parent="."]
-buoyancy = 2.5
+[node name="PhysXFlow3D" type="PhysXFlowSimulation3D" parent="."]
+buoyancy_per_temp = 2.5
 cooling_rate = 0.6
 smoke_fade = 0.15
 vorticity = 1.5
-smoke_density = 5.0
-smoke_color = Color(0.8, 0.7, 0.56, 1)
-emission_strength = 0.0
+smoke_albedo = Color(0.8, 0.7, 0.56, 1)
+
+emitters = [NodePath("../Hub/Cart/DustLeft"), NodePath("../Hub/Cart/DustRight")]
 
 [node name="Hub" type="AnimatableBody3D" parent="."]
 script = ExtResource("2_mover")

@@ -64,18 +64,17 @@ mesh = SubResource("Mesh_ground")
 transform = Transform3D(1, 0, 0, 0, 0.984808, -0.173648, 0, 0.173648, 0.984808, 0, 2.5, 9)
 script = ExtResource("1_cam")
 
-[node name="PhysXFlow3D" type="PhysXFlow3D" parent="." unique_id=1721675625]
+[node name="PhysXFlow3D" type="PhysXFlowSimulation3D" parent="." unique_id=1721675625]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5923686, 4, 0)
 smoke_fade = 0.25
-smoke_density = 10.0
-heat_ramp = SubResource("Gradient_jbpqf")
-temperature_range = 1.04
-emission_strength = 20.98
+fire_emission = true
+fire_emission_strength = 20.98
 shadow_steps = 24
+
+emitters = [NodePath("Emitter")]
 
 [node name="Emitter" type="PhysXFlowEmitter3D" parent="." unique_id=853009511]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3086038, 0.5, 0.5116048)
-flow = NodePath("../PhysXFlow3D")
 velocity = Vector3(0, 8, 0)
 temperature = 7.97
 smoke = 9.41

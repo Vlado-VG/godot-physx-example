@@ -115,18 +115,17 @@ mesh = SubResource("Mesh_ground")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.25, 1.52, 0.9)
 script = ExtResource("1_cam")
 
-[node name="PhysXFlow3D" type="PhysXFlow3D" parent="." unique_id=341955897]
+[node name="PhysXFlow3D" type="PhysXFlowSimulation3D" parent="." unique_id=341955897]
 cell_size = 0.015
-buoyancy = 0.5
+buoyancy_per_temp = 0.5
 cooling_rate = 5.16
 smoke_fade = 5.72
 vorticity = 0.2
-combustion = false
-ignition_temperature = 0.0
-smoke_density = 5.81
-heat_ramp = SubResource("HeatRamp")
-temperature_range = 1.04
-emission_strength = 1.52
+combustion_enabled = false
+fire_emission = true
+fire_emission_strength = 1.52
+
+emitters = [NodePath("../Torch/TipWisp")]
 
 [node name="Torch" type="Node3D" parent="." unique_id=103164676]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
