@@ -284,11 +284,16 @@ func _spawn_wave(n: int, reset: bool = true) -> void:
 		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 		sb.material_override = mat
 		# Compact 3D block in the hopper so the batch tumbles down as a mass.
+		# The grid is clamped to the hopper's rail containment (rails sit at
+		# x = +-3.35 with their inner faces at +-3.05; a blob is ~0.42 wide):
+		# a wide batch's outer columns used to land ON the rail tops and slide
+		# off the outside of the course.
 		var per_layer := side
 		var layer := i / (per_layer * per_layer)
 		var rem := i % (per_layer * per_layer)
+		var spawn_x := clampf((rem % per_layer - per_layer * 0.5) * 1.0 + randf_range(-0.06, 0.06), -2.4, 2.4)
 		sb.position = Vector3(
-			(rem % per_layer - per_layer * 0.5) * 1.0 + randf_range(-0.06, 0.06),
+			spawn_x,
 			_spawn_y + layer * 1.0,
 			_spawn_z - (rem / per_layer) * 1.0 + randf_range(-0.15, 0.15))
 		_stage.add_child(sb)
