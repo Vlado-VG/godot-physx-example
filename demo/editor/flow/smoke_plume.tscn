@@ -20,6 +20,9 @@ ssao_enabled = true
 sdfgi_enabled = true
 sdfgi_min_cell_size = 0.25
 glow_enabled = true
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.001
+volumetric_fog_ambient_inject = 0.0
 
 [sub_resource type="BoxShape3D" id="Shape_ground"]
 size = Vector3(60, 1, 60)

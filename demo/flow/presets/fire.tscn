@@ -4,13 +4,29 @@
 offsets = PackedFloat32Array(0, 1)
 colors = PackedColorArray(0.6, 0.6, 0.6, 1, 0.1, 0.1, 0.1, 1)
 
+[sub_resource type="Environment" id="FlowEnv"]
+background_mode = 1
+background_color = Color(0.12, 0.13, 0.15, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.3, 0.32, 0.36, 1)
+ambient_light_energy = 0.5
+tonemap_mode = 3
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.001
+volumetric_fog_ambient_inject = 0.0
+volumetric_fog_length = 32.0
 [node name="Fire" type="PhysXFlowSimulation3D"]
 smoke_fade = 0.4
 smoke_albedo = Color(0.4, 0.4, 0.4, 1)
 fire_emission = true
 fire_emission_strength = 8.0
 
+cell_size = 0.25 # v1 render bridge: finer cells cost a full-field GPU->CPU readback per frame (0.05 = ~150 ms/frame)
+buoyancy_per_temp = 1
 emitters = [NodePath("Emitter")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("FlowEnv")
 
 [node name="Emitter" type="PhysXFlowEmitter3D" parent="."]
 radius = 0.4
