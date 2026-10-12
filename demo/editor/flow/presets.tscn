@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://demo/common/fly_camera_node.gd" id="1_cam"]
+[ext_resource type="Script" path="res://demo/common/flow_hud.gd" id="2_hud"]
 [ext_resource type="PackedScene" path="res://demo/flow/presets/fire.tscn" id="p0"]
 [ext_resource type="PackedScene" path="res://demo/flow/presets/black_smoke.tscn" id="p1"]
 [ext_resource type="PackedScene" path="res://demo/flow/presets/steam.tscn" id="p2"]
@@ -36,6 +37,10 @@ material = SubResource("Mat_ground")
 size = Vector3(60, 1, 60)
 
 [node name="FlowPresets" type="Node3D"]
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("2_hud")
+
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Env_1")
