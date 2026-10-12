@@ -45,11 +45,12 @@ func _update_label() -> void:
 	lines.append("FPS: %d" % Engine.get_frames_per_second())
 	for sim in _sims:
 		var d: Dictionary = sim.get_diagnostics()
-		lines.append("%s: %s  blocks %s/%s  step %.1f flush %.1f decode %.1f ms  composites %s" % [
+		lines.append("%s: %s  blocks %s/%s  step %.1f flush %.1f decode %.1f ms  composites %s  maxR %.2f" % [
 				sim.name, d.get("backend", "?"),
 				d.get("active_blocks", "?"), d.get("max_blocks", "?"),
 				int(d.get("last_submit_usec", 0)) / 1000.0,
 				int(d.get("last_flush_usec", 0)) / 1000.0,
 				int(d.get("last_decode_usec", 0)) / 1000.0,
-				d.get("render_outputs", 0)])
+				d.get("render_outputs", 0),
+				sim.get_last_max_temperature()])
 	_label.text = "\n".join(lines)
