@@ -20,13 +20,13 @@ const COLORS := [
 	Color(0.9, 0.7, 0.3), Color(0.7, 0.45, 0.85), Color(0.4, 0.8, 0.78),
 ]
 
-const FlyCamera = preload("res://demo/common/fly_camera.gd")
+const FlyCameraScript = preload("res://demo/common/fly_camera.gd")
 
 var _count := 24
 var _batch := 24 # blobs per F / per number-key drop
 var _blobs: Array[SoftBody3D] = []
 var _stage: Node3D
-var _fly: FlyCamera
+var _fly: FlyCameraScript
 var _mouse_captured := true
 var _spawn_z := 3.0
 var _spawn_y := 10.0
@@ -162,7 +162,7 @@ func _build_world() -> void:
 	# Free-fly camera; start well back and above the basin looking up the run.
 	_cam.position = Vector3(6.0, cy + 16.0, cz - 20.0)
 	_cam.look_at(Vector3(0.0, s_my, s_mz))
-	_fly = FlyCamera.new(_cam, FLY_SPEED)
+	_fly = FlyCameraScript.new(_cam, FLY_SPEED)
 
 	_ball = RigidBody3D.new()
 	_ball.mass = 1200.0

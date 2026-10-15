@@ -8,7 +8,7 @@ extends Camera3D
 # mesh and updates an on-screen label so the trigger is visually obvious
 # without reading the console.
 
-const FlyCamera = preload("res://demo/common/fly_camera.gd")
+const FlyCameraScript = preload("res://demo/common/fly_camera.gd")
 
 @export var fly_speed := 8.0
 @export var probe_path: NodePath
@@ -17,13 +17,13 @@ const FlyCamera = preload("res://demo/common/fly_camera.gd")
 const COLOR_IDLE := Color(0.25, 0.8, 1.0, 0.35)
 const COLOR_TRIGGERED := Color(1.0, 0.25, 0.25, 0.6)
 
-var _fly: FlyCamera
+var _fly: FlyCameraScript
 var _probe: Area3D
 var _label: Label
 var _inside: Array[Area3D] = []
 
 func _ready() -> void:
-	_fly = FlyCamera.new(self, fly_speed)
+	_fly = FlyCameraScript.new(self, fly_speed)
 	_probe = get_node(probe_path)
 	_label = get_node_or_null(status_label_path)
 	_probe.area_entered.connect(_on_zone_entered)

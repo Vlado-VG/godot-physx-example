@@ -18,9 +18,6 @@ ambient_light_energy = 0.6
 tonemap_mode = 4
 glow_enabled = true
 glow_normalized = true
-volumetric_fog_enabled = true
-volumetric_fog_density = 0.001
-volumetric_fog_ambient_inject = 0.0
 
 [sub_resource type="BoxShape3D" id="Shape_ground"]
 size = Vector3(60, 1, 60)
@@ -79,8 +76,13 @@ buoyancy_per_temp = 0.15
 smoke_fade = 1.5
 fire_emission = true
 fire_emission_strength = 18.47
+temperature_range = 1.31
+shadow_steps = 48
+fog_density = 4.0
+smoke_albedo = Color(0.55, 0.55, 0.55, 1)
+colliders = [NodePath("../Wall")]
 
-emitters = [NodePath("Nozzle")]
+emitters = [NodePath("../Nozzle")]
 
 [node name="Nozzle" type="PhysXFlowEmitter3D" parent="." unique_id=2136984351]
 transform = Transform3D(1, 0, 0, 0, 0.97366256, -0.22799395, 0, 0.22799395, 0.97366256, -3.097044, 1.9094355, 0)

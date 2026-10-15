@@ -107,24 +107,25 @@ shape = SubResource("Shape_ground")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Ground" unique_id=181370145]
 mesh = SubResource("Mesh_ground")
 
-[node name="PhysXFlow3D" type="PhysXFlow3D" parent="." unique_id=1791379233]
+[node name="PhysXFlow3D" type="PhysXFlowSimulation3D" parent="." unique_id=1791379233]
 cell_size = 0.04
 max_blocks = 4096
 cooling_rate = 0.15
 smoke_fade = 0.015
 vorticity = 1.5
-combustion = false
-collision_range = 14.0
-floor_enabled = true
-smoke_density = 2.0
-smoke_color = Color(0.55, 0.62, 0.75, 1)
-emission_strength = 0.0
+combustion_enabled = false
+smoke_albedo = Color(0.55, 0.62, 0.75, 1)
+fog_density = 2.0
+fire_emission = false
+temperature_range = 1.31
+shadow_steps = 48
 light_scattering = true
-scattering_anisotropy = 0.2
+scattering_receive_shadows = 3
+colliders = [NodePath("../Ground"), NodePath("../Pillar1"), NodePath("../Pillar2"), NodePath("../Pillar3"), NodePath("../Pillar4"), NodePath("../Pillar5"), NodePath("../Pillar6"), NodePath("../Slab"), NodePath("../Hub")]
+emitters = [NodePath("../GroundFog"), NodePath("../Vortex/Stirrer1"), NodePath("../Vortex/Stirrer2"), NodePath("../Vortex/Stirrer3"), NodePath("../Vortex/Stirrer4"), NodePath("../Vortex/Stirrer5"), NodePath("../Vortex/Stirrer6"), NodePath("../Vortex/Stirrer7"), NodePath("../Vortex/Stirrer8"), NodePath("../Vortex/Stirrer9"), NodePath("../Vortex/Stirrer10"), NodePath("../Vortex/Stirrer11"), NodePath("../Vortex/Stirrer12"), NodePath("../Vortex/Stirrer13")]
 
 [node name="GroundFog" type="PhysXFlowEmitter3D" parent="." unique_id=397615809]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
-flow = NodePath("../PhysXFlow3D")
 shape = 1
 size = Vector3(14, 0.3, 14)
 temperature = -1.0
@@ -135,7 +136,6 @@ couple_rate = 0.12
 
 [node name="Stirrer1" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=273171650]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.6, 0.2, 0)
-flow = NodePath("../../PhysXFlow3D")
 radius = 0.7
 velocity = Vector3(0, 0, -1.5)
 temperature = -1.0
@@ -144,7 +144,6 @@ couple_rate = 0.8
 
 [node name="Stirrer2" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=806698700]
 transform = Transform3D(-0.5, 0, 0.866025, 0, 1, 0, -0.866025, 0, -0.5, 1.3, 0.2, 2.25167)
-flow = NodePath("../../PhysXFlow3D")
 radius = 0.7
 velocity = Vector3(0, 0, -1.5)
 temperature = -1.0
@@ -153,7 +152,6 @@ couple_rate = 0.8
 
 [node name="Stirrer3" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=1287749993]
 transform = Transform3D(0.5, 0, 0.866025, 0, 1, 0, -0.866025, 0, 0.5, -1.3, 0.2, 2.25167)
-flow = NodePath("../../PhysXFlow3D")
 radius = 0.7
 velocity = Vector3(0, 0, -1.5)
 temperature = -1.0
@@ -162,7 +160,6 @@ couple_rate = 0.8
 
 [node name="Stirrer4" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=1089878750]
 transform = Transform3D(1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, 1, -2.6, 0.2, 3.18408e-16)
-flow = NodePath("../../PhysXFlow3D")
 radius = 0.7
 velocity = Vector3(0, 0, -1.5)
 temperature = -1.0
@@ -171,7 +168,6 @@ couple_rate = 0.8
 
 [node name="Stirrer5" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=455097266]
 transform = Transform3D(0.5, 0, -0.866025, 0, 1, 0, 0.866025, 0, 0.5, -1.3, 0.2, -2.25167)
-flow = NodePath("../../PhysXFlow3D")
 radius = 0.7
 velocity = Vector3(0, 0, -1.5)
 temperature = -1.0
@@ -180,7 +176,6 @@ couple_rate = 0.8
 
 [node name="Stirrer6" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=757757698]
 transform = Transform3D(-0.5, 0, -0.866025, 0, 1, 0, 0.866025, 0, -0.5, 1.3, 0.2, -2.25167)
-flow = NodePath("../../PhysXFlow3D")
 radius = 0.7
 velocity = Vector3(0, 0, -1.5)
 temperature = -1.0
@@ -189,7 +184,6 @@ couple_rate = 0.8
 
 [node name="Stirrer7" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=1978118807]
 transform = Transform3D(-0.92388, 0, 0.382683, 0, 1, 0, -0.382683, 0, -0.92388, 4.15746, 0.2, 1.72208)
-flow = NodePath("../../PhysXFlow3D")
 radius = 0.7
 velocity = Vector3(0, 0, -1.5)
 temperature = -1.0
@@ -198,7 +192,6 @@ couple_rate = 0.8
 
 [node name="Stirrer8" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=2123801391]
 transform = Transform3D(-0.382683, 0, 0.92388, 0, 1, 0, -0.92388, 0, -0.382683, 1.72208, 0.2, 4.15746)
-flow = NodePath("../../PhysXFlow3D")
 radius = 0.7
 velocity = Vector3(0, 0, -1.5)
 temperature = -1.0
@@ -207,7 +200,6 @@ couple_rate = 0.8
 
 [node name="Stirrer9" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=1770138352]
 transform = Transform3D(0.382683, 0, 0.92388, 0, 1, 0, -0.92388, 0, 0.382683, -1.72208, 0.2, 4.15746)
-flow = NodePath("../../PhysXFlow3D")
 radius = 0.7
 velocity = Vector3(0, 0, -1.5)
 temperature = -1.0
@@ -216,7 +208,6 @@ couple_rate = 0.8
 
 [node name="Stirrer10" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=1189589471]
 transform = Transform3D(0.92388, 0, 0.382683, 0, 1, 0, -0.382683, 0, 0.92388, -4.15746, 0.2, 1.72208)
-flow = NodePath("../../PhysXFlow3D")
 radius = 0.7
 velocity = Vector3(0, 0, -1.5)
 temperature = -1.0
@@ -225,7 +216,6 @@ couple_rate = 0.8
 
 [node name="Stirrer11" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=1924950450]
 transform = Transform3D(0.92388, 0, -0.382683, 0, 1, 0, 0.382683, 0, 0.92388, -4.15746, 0.2, -1.72208)
-flow = NodePath("../../PhysXFlow3D")
 radius = 0.7
 velocity = Vector3(0, 0, -1.5)
 temperature = -1.0
@@ -234,7 +224,6 @@ couple_rate = 0.8
 
 [node name="Stirrer12" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=1929179328]
 transform = Transform3D(0.382683, 0, -0.92388, 0, 1, 0, 0.92388, 0, 0.382683, -1.72208, 0.2, -4.15746)
-flow = NodePath("../../PhysXFlow3D")
 radius = 0.7
 velocity = Vector3(0, 0, -1.5)
 temperature = -1.0
@@ -243,7 +232,6 @@ couple_rate = 0.8
 
 [node name="Stirrer13" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=1034810212]
 transform = Transform3D(-0.382683, 0, -0.92388, 0, 1, 0, 0.92388, 0, -0.382683, 1.72208, 0.2, -4.15746)
-flow = NodePath("../../PhysXFlow3D")
 radius = 0.7
 velocity = Vector3(0, 0, -1.5)
 temperature = -1.0
@@ -252,7 +240,6 @@ couple_rate = 0.8
 
 [node name="Stirrer14" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=309805260]
 transform = Transform3D(-0.92388, 0, -0.382683, 0, 1, 0, 0.382683, 0, -0.92388, 4.15746, 0.2, -1.72208)
-flow = NodePath("../../PhysXFlow3D")
 radius = 0.7
 velocity = Vector3(0, 0, -1.5)
 temperature = -1.0
