@@ -37,6 +37,10 @@ func _process(_delta: float) -> void:
 		return
 	_refresh = 15
 	_update_label()
+	if _frames == 330:
+		var img := _label.get_viewport().get_texture().get_image()
+		img.save_png("user://flow_presets_shot.png")
+		print("[flow-hud] screenshot saved")
 	if _frames % 60 == 0:
 		print("[flow-hud] frame=", _frames, " ", _label.text.replace("\n", " | "))
 
