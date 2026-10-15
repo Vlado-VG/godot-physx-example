@@ -162,9 +162,9 @@ func _fire_mg_round() -> void:
 	var from := muzzle_pos
 	var to := muzzle_pos + fwd * MG_RANGE
 	var query := PhysicsRayQueryParameters3D.create(from, to)
-	# PhysXTank3D is a plain Node3D (no body of its own); the ray is cast
-	# from the muzzle outward, so nothing of the tank can be hit anyway --
-	# no exclusion needed.
+	# Rays hit the tank's own hull too; the muzzle is outside it, but
+	# exclude it anyway.
+	query.exclude = [get_rid()]
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 
 	var end := to

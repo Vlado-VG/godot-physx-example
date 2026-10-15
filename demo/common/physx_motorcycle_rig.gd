@@ -94,6 +94,7 @@ func _apply_rear_braking_step_out() -> void:
 	var cast_origin: Vector3 = rear_wheel.global_position + Vector3.UP * 0.1
 	var cast_length: float = rear_wheel.radius + rear_wheel.get_suspension_travel() + 0.2
 	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(cast_origin, cast_origin + Vector3.DOWN * cast_length)
+	query.exclude = [get_rid()] # the bike's own chassis is hit by rays too
 	if not get_world_3d().direct_space_state.intersect_ray(query):
 		return
 	var rear_brake_force := max_brake_torque / maxf(rear_wheel.radius, 0.01)
@@ -238,4 +239,5 @@ func _has_wheel_ground_contact(wheel_index: int) -> bool:
 		cast_origin,
 		cast_origin + Vector3.DOWN * cast_length
 	)
+	query.exclude = [get_rid()]
 	return not get_world_3d().direct_space_state.intersect_ray(query).is_empty()

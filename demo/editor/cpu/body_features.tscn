@@ -167,6 +167,59 @@ material = SubResource("Mat_red")
 radius = 0.3
 height = 1.0
 
+[sub_resource type="BoxShape3D" id="Shape_blade"]
+size = Vector3(2.4, 0.08, 0.3)
+
+[sub_resource type="BoxMesh" id="Mesh_blade"]
+material = SubResource("Mat_wheel")
+size = Vector3(2.4, 0.08, 0.3)
+
+[sub_resource type="BoxMesh" id="Mesh_blade_gold"]
+material = SubResource("Mat_gold")
+size = Vector3(2.4, 0.08, 0.3)
+
+[sub_resource type="CylinderShape3D" id="Shape_fan_post"]
+height = 1.3
+radius = 0.12
+
+[sub_resource type="CylinderMesh" id="Mesh_fan_post"]
+material = SubResource("Mat_platform")
+top_radius = 0.12
+bottom_radius = 0.12
+height = 1.3
+
+[sub_resource type="BoxShape3D" id="Shape_rail"]
+size = Vector3(5.6, 0.1, 0.7)
+
+[sub_resource type="BoxMesh" id="Mesh_rail"]
+material = SubResource("Mat_platform")
+size = Vector3(5.6, 0.1, 0.7)
+
+[sub_resource type="BoxShape3D" id="Shape_shuttle"]
+size = Vector3(0.8, 0.8, 0.8)
+
+[sub_resource type="BoxMesh" id="Mesh_shuttle"]
+material = SubResource("Mat_crate")
+size = Vector3(0.8, 0.8, 0.8)
+
+[sub_resource type="BoxShape3D" id="Shape_crossbar"]
+size = Vector3(0.2, 0.2, 1.8)
+
+[sub_resource type="BoxMesh" id="Mesh_crossbar"]
+material = SubResource("Mat_platform")
+size = Vector3(0.2, 0.2, 1.8)
+
+[sub_resource type="BoxMesh" id="Mesh_frame_post"]
+material = SubResource("Mat_platform")
+size = Vector3(0.15, 2.3, 0.15)
+
+[sub_resource type="BoxShape3D" id="Shape_flap"]
+size = Vector3(0.08, 1.4, 1.3)
+
+[sub_resource type="BoxMesh" id="Mesh_flap"]
+material = SubResource("Mat_float")
+size = Vector3(0.08, 1.4, 1.3)
+
 [node name="BodyFeatures" type="Node3D"]
 script = ExtResource("1_script")
 
@@ -464,3 +517,170 @@ offset_left = 12.0
 offset_top = 10.0
 offset_right = 900.0
 offset_bottom = 90.0
+
+[node name="Joints6DOF" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 2)
+
+[node name="Label" type="Label3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.4, 1.5)
+pixel_size = 0.01
+billboard = 1
+text = "Generic6DOFJoint3D  (M: fans on/off, H: knock the flap)
+motors and springs, per axis"
+font_size = 48
+outline_size = 12
+
+[node name="FanPost" type="StaticBody3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, -7.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Joints6DOF/FanPost"]
+shape = SubResource("Shape_fan_post")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Joints6DOF/FanPost"]
+mesh = SubResource("Mesh_fan_post")
+
+[node name="Fan" type="RigidBody3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, -7.5)
+mass = 5.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Joints6DOF/Fan"]
+shape = SubResource("Shape_blade")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Joints6DOF/Fan"]
+mesh = SubResource("Mesh_blade")
+
+[node name="FanJoint" type="Generic6DOFJoint3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, -7.5)
+node_a = NodePath("../FanPost")
+node_b = NodePath("../Fan")
+angular_limit_y/enabled = false
+angular_motor_y/enabled = true
+angular_motor_y/target_velocity = 3.0
+angular_motor_y/force_limit = 60.0
+
+[node name="FanLabel" type="Label3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, -7.5)
+pixel_size = 0.01
+billboard = 1
+text = "Angular motor Y, 3 rad/s\nforce limit 60 N m (walk into it)"
+font_size = 36
+outline_size = 10
+
+[node name="WeakFanPost" type="StaticBody3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, -2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Joints6DOF/WeakFanPost"]
+shape = SubResource("Shape_fan_post")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Joints6DOF/WeakFanPost"]
+mesh = SubResource("Mesh_fan_post")
+
+[node name="WeakFan" type="RigidBody3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, -2)
+mass = 5.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Joints6DOF/WeakFan"]
+shape = SubResource("Shape_blade")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Joints6DOF/WeakFan"]
+mesh = SubResource("Mesh_blade_gold")
+
+[node name="WeakFanJoint" type="Generic6DOFJoint3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, -2)
+node_a = NodePath("../WeakFanPost")
+node_b = NodePath("../WeakFan")
+angular_limit_y/enabled = false
+angular_motor_y/enabled = true
+angular_motor_y/target_velocity = 3.0
+angular_motor_y/force_limit = 1.5
+
+[node name="WeakFanLabel" type="Label3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, -2)
+pixel_size = 0.01
+billboard = 1
+text = "Same motor, force limit 1.5 N m\nspins up slowly, easy to stop"
+font_size = 36
+outline_size = 10
+
+[node name="Rail" type="StaticBody3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 3)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Joints6DOF/Rail"]
+shape = SubResource("Shape_rail")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Joints6DOF/Rail"]
+mesh = SubResource("Mesh_rail")
+
+[node name="Shuttle" type="RigidBody3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.56, 3)
+mass = 20.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Joints6DOF/Shuttle"]
+shape = SubResource("Shape_shuttle")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Joints6DOF/Shuttle"]
+mesh = SubResource("Mesh_shuttle")
+
+[node name="ShuttleJoint" type="Generic6DOFJoint3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.56, 3)
+node_a = NodePath("../Rail")
+node_b = NodePath("../Shuttle")
+linear_limit_x/upper_distance = 2.2
+linear_limit_x/lower_distance = -2.2
+linear_motor_x/enabled = true
+linear_motor_x/target_velocity = 1.5
+linear_motor_x/force_limit = 300.0
+
+[node name="ShuttleLabel" type="Label3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 3)
+pixel_size = 0.01
+billboard = 1
+text = "Linear motor X between limits +-2.2 m
+(script flips the target at each end)"
+font_size = 36
+outline_size = 10
+
+[node name="FlapFrame" type="StaticBody3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 8)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Joints6DOF/FlapFrame"]
+shape = SubResource("Shape_crossbar")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Joints6DOF/FlapFrame"]
+mesh = SubResource("Mesh_crossbar")
+
+[node name="PostA" type="MeshInstance3D" parent="Joints6DOF/FlapFrame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.15, -0.9)
+mesh = SubResource("Mesh_frame_post")
+
+[node name="PostB" type="MeshInstance3D" parent="Joints6DOF/FlapFrame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.15, 0.9)
+mesh = SubResource("Mesh_frame_post")
+
+[node name="Flap" type="RigidBody3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 8)
+mass = 4.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Joints6DOF/Flap"]
+shape = SubResource("Shape_flap")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Joints6DOF/Flap"]
+mesh = SubResource("Mesh_flap")
+
+[node name="FlapJoint" type="Generic6DOFJoint3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 8)
+node_a = NodePath("../FlapFrame")
+node_b = NodePath("../Flap")
+angular_limit_z/enabled = false
+angular_spring_z/enabled = true
+angular_spring_z/stiffness = 60.0
+angular_spring_z/damping = 4.0
+
+[node name="FlapLabel" type="Label3D" parent="Joints6DOF"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, 9.4)
+pixel_size = 0.01
+billboard = 1
+text = "Angular spring Z: swings back to rest
+(H: knock it, or walk through it)"
+font_size = 36
+outline_size = 10

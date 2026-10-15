@@ -288,6 +288,7 @@ mesh = ExtResource("beach_mesh")
 
 [node name="Water" type="PhysXWaterSurface3D" parent="." unique_id=1306440232]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85737467, 0)
+caustics_enabled = true
 domain_size = Vector2(40, 40)
 grid_resolution = 160
 damping = 1.2

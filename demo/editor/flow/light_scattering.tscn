@@ -1,0 +1,355 @@
+[gd_scene format=3 uid="uid://cmkler2ovqpsb"]
+
+[ext_resource type="Script" uid="uid://dy3ph81t2g6fg" path="res://demo/common/fly_camera_node.gd" id="1_cam"]
+[ext_resource type="Script" uid="uid://dbkbb7xugjkeq" path="res://demo/common/moving_platform.gd" id="2_mover"]
+[ext_resource type="Script" uid="uid://2ky36yu6j31a" path="res://demo/editor/flow/light_scattering.gd" id="3_demo"]
+
+[sub_resource type="Environment" id="Env_1"]
+background_mode = 1
+background_color = Color(0.03, 0.035, 0.055, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.1, 0.12, 0.18, 1)
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="BoxShape3D" id="Shape_ground"]
+size = Vector3(60, 1, 60)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ground"]
+albedo_color = Color(0.09, 0.1, 0.13, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_ground"]
+material = SubResource("Mat_ground")
+size = Vector3(60, 1, 60)
+
+[sub_resource type="BoxShape3D" id="Shape_Pillar1"]
+size = Vector3(0.22, 1.1, 0.22)
+
+[sub_resource type="StandardMaterial3D" id="Mat_stone"]
+albedo_color = Color(0.16, 0.2, 0.32, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_Pillar1"]
+material = SubResource("Mat_stone")
+size = Vector3(0.22, 1.1, 0.22)
+
+[sub_resource type="BoxShape3D" id="Shape_Pillar2"]
+size = Vector3(0.22, 0.8, 0.22)
+
+[sub_resource type="BoxMesh" id="Mesh_Pillar2"]
+material = SubResource("Mat_stone")
+size = Vector3(0.22, 0.8, 0.22)
+
+[sub_resource type="BoxShape3D" id="Shape_Pillar3"]
+size = Vector3(0.22, 1.4, 0.22)
+
+[sub_resource type="BoxMesh" id="Mesh_Pillar3"]
+material = SubResource("Mat_stone")
+size = Vector3(0.22, 1.4, 0.22)
+
+[sub_resource type="BoxShape3D" id="Shape_Pillar4"]
+size = Vector3(0.22, 0.9, 0.22)
+
+[sub_resource type="BoxMesh" id="Mesh_Pillar4"]
+material = SubResource("Mat_stone")
+size = Vector3(0.22, 0.9, 0.22)
+
+[sub_resource type="BoxShape3D" id="Shape_Pillar5"]
+size = Vector3(0.22, 1.2, 0.22)
+
+[sub_resource type="BoxMesh" id="Mesh_Pillar5"]
+material = SubResource("Mat_stone")
+size = Vector3(0.22, 1.2, 0.22)
+
+[sub_resource type="BoxShape3D" id="Shape_Pillar6"]
+size = Vector3(0.22, 0.7, 0.22)
+
+[sub_resource type="BoxMesh" id="Mesh_Pillar6"]
+material = SubResource("Mat_stone")
+size = Vector3(0.22, 0.7, 0.22)
+
+[sub_resource type="BoxShape3D" id="Shape_Slab"]
+size = Vector3(0.9, 2.8, 0.9)
+
+[sub_resource type="BoxMesh" id="Mesh_Slab"]
+material = SubResource("Mat_stone")
+size = Vector3(0.9, 2.8, 0.9)
+
+[sub_resource type="CapsuleShape3D" id="Shape_walker"]
+radius = 0.28
+height = 1.7
+
+[sub_resource type="StandardMaterial3D" id="Mat_walker"]
+albedo_color = Color(0.5, 0.55, 0.7, 1)
+
+[sub_resource type="CapsuleMesh" id="Mesh_walker"]
+material = SubResource("Mat_walker")
+radius = 0.28
+height = 1.7
+
+[node name="FlowLightScattering" type="Node3D" unique_id=1344138464]
+script = ExtResource("3_demo")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=863341805]
+environment = SubResource("Env_1")
+
+[node name="Moon" type="DirectionalLight3D" parent="." unique_id=1997446859]
+transform = Transform3D(-0.581238, 0.74752, -0.321521, 0, 0.395118, 0.91863, 0.813733, 0.533943, -0.229658, 0, 10, 0)
+light_color = Color(0.55, 0.65, 1, 1)
+light_energy = 0.15
+shadow_enabled = true
+
+[node name="Ground" type="StaticBody3D" parent="." unique_id=2061259025]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground" unique_id=665165022]
+shape = SubResource("Shape_ground")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground" unique_id=181370145]
+mesh = SubResource("Mesh_ground")
+
+[node name="PhysXFlow3D" type="PhysXFlow3D" parent="." unique_id=1791379233]
+cell_size = 0.04
+max_blocks = 4096
+cooling_rate = 0.15
+smoke_fade = 0.015
+vorticity = 1.5
+combustion = false
+collision_range = 14.0
+floor_enabled = true
+smoke_density = 2.0
+smoke_color = Color(0.55, 0.62, 0.75, 1)
+emission_strength = 0.0
+light_scattering = true
+scattering_anisotropy = 0.2
+
+[node name="GroundFog" type="PhysXFlowEmitter3D" parent="." unique_id=397615809]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+flow = NodePath("../PhysXFlow3D")
+shape = 1
+size = Vector3(14, 0.3, 14)
+temperature = -1.0
+smoke = 1.5
+couple_rate = 0.12
+
+[node name="Vortex" type="Node3D" parent="." unique_id=1951189875]
+
+[node name="Stirrer1" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=273171650]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.6, 0.2, 0)
+flow = NodePath("../../PhysXFlow3D")
+radius = 0.7
+velocity = Vector3(0, 0, -1.5)
+temperature = -1.0
+smoke = 0.0
+couple_rate = 0.8
+
+[node name="Stirrer2" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=806698700]
+transform = Transform3D(-0.5, 0, 0.866025, 0, 1, 0, -0.866025, 0, -0.5, 1.3, 0.2, 2.25167)
+flow = NodePath("../../PhysXFlow3D")
+radius = 0.7
+velocity = Vector3(0, 0, -1.5)
+temperature = -1.0
+smoke = 0.0
+couple_rate = 0.8
+
+[node name="Stirrer3" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=1287749993]
+transform = Transform3D(0.5, 0, 0.866025, 0, 1, 0, -0.866025, 0, 0.5, -1.3, 0.2, 2.25167)
+flow = NodePath("../../PhysXFlow3D")
+radius = 0.7
+velocity = Vector3(0, 0, -1.5)
+temperature = -1.0
+smoke = 0.0
+couple_rate = 0.8
+
+[node name="Stirrer4" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=1089878750]
+transform = Transform3D(1, 0, 1.22465e-16, 0, 1, 0, -1.22465e-16, 0, 1, -2.6, 0.2, 3.18408e-16)
+flow = NodePath("../../PhysXFlow3D")
+radius = 0.7
+velocity = Vector3(0, 0, -1.5)
+temperature = -1.0
+smoke = 0.0
+couple_rate = 0.8
+
+[node name="Stirrer5" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=455097266]
+transform = Transform3D(0.5, 0, -0.866025, 0, 1, 0, 0.866025, 0, 0.5, -1.3, 0.2, -2.25167)
+flow = NodePath("../../PhysXFlow3D")
+radius = 0.7
+velocity = Vector3(0, 0, -1.5)
+temperature = -1.0
+smoke = 0.0
+couple_rate = 0.8
+
+[node name="Stirrer6" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=757757698]
+transform = Transform3D(-0.5, 0, -0.866025, 0, 1, 0, 0.866025, 0, -0.5, 1.3, 0.2, -2.25167)
+flow = NodePath("../../PhysXFlow3D")
+radius = 0.7
+velocity = Vector3(0, 0, -1.5)
+temperature = -1.0
+smoke = 0.0
+couple_rate = 0.8
+
+[node name="Stirrer7" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=1978118807]
+transform = Transform3D(-0.92388, 0, 0.382683, 0, 1, 0, -0.382683, 0, -0.92388, 4.15746, 0.2, 1.72208)
+flow = NodePath("../../PhysXFlow3D")
+radius = 0.7
+velocity = Vector3(0, 0, -1.5)
+temperature = -1.0
+smoke = 0.0
+couple_rate = 0.8
+
+[node name="Stirrer8" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=2123801391]
+transform = Transform3D(-0.382683, 0, 0.92388, 0, 1, 0, -0.92388, 0, -0.382683, 1.72208, 0.2, 4.15746)
+flow = NodePath("../../PhysXFlow3D")
+radius = 0.7
+velocity = Vector3(0, 0, -1.5)
+temperature = -1.0
+smoke = 0.0
+couple_rate = 0.8
+
+[node name="Stirrer9" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=1770138352]
+transform = Transform3D(0.382683, 0, 0.92388, 0, 1, 0, -0.92388, 0, 0.382683, -1.72208, 0.2, 4.15746)
+flow = NodePath("../../PhysXFlow3D")
+radius = 0.7
+velocity = Vector3(0, 0, -1.5)
+temperature = -1.0
+smoke = 0.0
+couple_rate = 0.8
+
+[node name="Stirrer10" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=1189589471]
+transform = Transform3D(0.92388, 0, 0.382683, 0, 1, 0, -0.382683, 0, 0.92388, -4.15746, 0.2, 1.72208)
+flow = NodePath("../../PhysXFlow3D")
+radius = 0.7
+velocity = Vector3(0, 0, -1.5)
+temperature = -1.0
+smoke = 0.0
+couple_rate = 0.8
+
+[node name="Stirrer11" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=1924950450]
+transform = Transform3D(0.92388, 0, -0.382683, 0, 1, 0, 0.382683, 0, 0.92388, -4.15746, 0.2, -1.72208)
+flow = NodePath("../../PhysXFlow3D")
+radius = 0.7
+velocity = Vector3(0, 0, -1.5)
+temperature = -1.0
+smoke = 0.0
+couple_rate = 0.8
+
+[node name="Stirrer12" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=1929179328]
+transform = Transform3D(0.382683, 0, -0.92388, 0, 1, 0, 0.92388, 0, 0.382683, -1.72208, 0.2, -4.15746)
+flow = NodePath("../../PhysXFlow3D")
+radius = 0.7
+velocity = Vector3(0, 0, -1.5)
+temperature = -1.0
+smoke = 0.0
+couple_rate = 0.8
+
+[node name="Stirrer13" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=1034810212]
+transform = Transform3D(-0.382683, 0, -0.92388, 0, 1, 0, 0.92388, 0, -0.382683, 1.72208, 0.2, -4.15746)
+flow = NodePath("../../PhysXFlow3D")
+radius = 0.7
+velocity = Vector3(0, 0, -1.5)
+temperature = -1.0
+smoke = 0.0
+couple_rate = 0.8
+
+[node name="Stirrer14" type="PhysXFlowEmitter3D" parent="Vortex" unique_id=309805260]
+transform = Transform3D(-0.92388, 0, -0.382683, 0, 1, 0, 0.382683, 0, -0.92388, 4.15746, 0.2, -1.72208)
+flow = NodePath("../../PhysXFlow3D")
+radius = 0.7
+velocity = Vector3(0, 0, -1.5)
+temperature = -1.0
+smoke = 0.0
+couple_rate = 0.8
+
+[node name="GreenLight" type="OmniLight3D" parent="." unique_id=994176578]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+light_color = Color(0.25, 1, 0.45, 1)
+light_energy = 6.0
+shadow_enabled = true
+omni_range = 12.0
+
+[node name="Pillar1" type="StaticBody3D" parent="." unique_id=1499813965]
+transform = Transform3D(0.930589, -0.0258678, 0.36515, 0.0277865, 0.999614, 0, -0.365009, 0.0101462, 0.930949, 1.2216, 0.55, 0.444626)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Pillar1" unique_id=746102482]
+shape = SubResource("Shape_Pillar1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Pillar1" unique_id=192817147]
+mesh = SubResource("Mesh_Pillar1")
+
+[node name="Pillar2" type="StaticBody3D" parent="." unique_id=1447292606]
+transform = Transform3D(0.834065, -0.0545377, 0.548964, 0.0652485, 0.997869, 0, -0.547794, 0.0358191, 0.835846, 0.41411, 0.4, 1.54548)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Pillar2" unique_id=1778807601]
+shape = SubResource("Shape_Pillar2")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Pillar2" unique_id=1280911972]
+mesh = SubResource("Mesh_Pillar2")
+
+[node name="Pillar3" type="StaticBody3D" parent="." unique_id=1984901758]
+transform = Transform3D(0.534091, 0.149533, 0.832098, -0.269608, 0.96297, 0, -0.801285, -0.22434, 0.554629, -0.771345, 0.7, 0.919253)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Pillar3" unique_id=903463107]
+shape = SubResource("Shape_Pillar3")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Pillar3" unique_id=684123423]
+mesh = SubResource("Mesh_Pillar3")
+
+[node name="Pillar4" type="StaticBody3D" parent="." unique_id=1091411969]
+transform = Transform3D(0.977395, -0.210408, 0.0206828, 0.210453, 0.977604, 0, -0.0202195, 0.00435274, 0.999786, -1.40954, 0.45, -0.51303)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Pillar4" unique_id=449291705]
+shape = SubResource("Shape_Pillar4")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Pillar4" unique_id=1515900439]
+mesh = SubResource("Mesh_Pillar4")
+
+[node name="Pillar5" type="StaticBody3D" parent="." unique_id=345900567]
+transform = Transform3D(0.905395, 0.152552, 0.396216, -0.166151, 0.9861, 0, -0.390709, -0.0658316, 0.918157, -0.243107, 0.6, -1.37873)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Pillar5" unique_id=1576033207]
+shape = SubResource("Shape_Pillar5")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Pillar5" unique_id=560464901]
+mesh = SubResource("Mesh_Pillar5")
+
+[node name="Pillar6" type="StaticBody3D" parent="." unique_id=1611933485]
+transform = Transform3D(0.00683983, 0.00012781, 0.999977, -0.0186829, 0.999825, 0, -0.999802, -0.0186825, 0.00684102, 1.30228, 0.35, -1.09274)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Pillar6" unique_id=1751603250]
+shape = SubResource("Shape_Pillar6")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Pillar6" unique_id=690884602]
+mesh = SubResource("Mesh_Pillar6")
+
+[node name="Slab" type="StaticBody3D" parent="." unique_id=216530961]
+transform = Transform3D(0.827953, 0.368629, 0.422618, -0.406737, 0.913545, 0, -0.386081, -0.171894, 0.906308, 2.6, 1.3, 1.2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Slab" unique_id=1142074441]
+shape = SubResource("Shape_Slab")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Slab" unique_id=1110399850]
+mesh = SubResource("Mesh_Slab")
+
+[node name="Hub" type="AnimatableBody3D" parent="." unique_id=972653247]
+script = ExtResource("2_mover")
+spin = Vector3(0, 22, 0)
+
+[node name="WalkerShape" type="CollisionShape3D" parent="Hub" unique_id=1647996345]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.4, 0.85, 0)
+shape = SubResource("Shape_walker")
+
+[node name="WalkerMesh" type="MeshInstance3D" parent="Hub" unique_id=59713085]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.4, 0.85, 0)
+mesh = SubResource("Mesh_walker")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=286315719]
+transform = Transform3D(0.871894, 0.285245, -0.398039, 0, 0.812833, 0.582497, 0.489694, -0.507876, 0.708704, -3.5, 6, 7)
+fov = 55.0
+script = ExtResource("1_cam")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1279971327]
+
+[node name="Label" type="Label" parent="HUD" unique_id=1491819555]
+offset_left = 12.0
+offset_top = 10.0
+offset_right = 900.0
+offset_bottom = 120.0

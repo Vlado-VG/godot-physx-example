@@ -80,7 +80,8 @@ spin = Vector3(0, 40, 0)
 [node name="Cart" type="Node3D" parent="Hub"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.6, 0)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hub/Cart"]
+[node name="CartShape" type="CollisionShape3D" parent="Hub"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.6, 0)
 shape = SubResource("Shape_cart")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Hub/Cart"]
