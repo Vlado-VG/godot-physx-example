@@ -164,7 +164,9 @@ func _fire_mg_round() -> void:
 	var query := PhysicsRayQueryParameters3D.create(from, to)
 	# Rays hit the tank's own hull too; the muzzle is outside it, but
 	# exclude it anyway.
-	query.exclude = [get_rid()]
+	# No self-exclusion needed: this backend's vehicle chassis is a raw
+	# vehicle2 actor that scene queries cannot hit (query preFilter returns
+	# eNONE for actors without a server object), so the ray sees only the ground.
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 
 	var end := to

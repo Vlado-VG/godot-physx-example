@@ -1,6 +1,7 @@
 extends SceneTree
 
-# PhysX.is_gpu_available() / PhysX.get_gpu_device_name() (R2). Checked against
+# PhysXServer3D.get_singleton().is_gpu_dynamics_enabled() /
+# .get_gpu_device_name(). Checked against
 # something observable instead of the hardware: a PBD fluid only gets live
 # particles when GPU dynamics really runs, so the query must agree with it, and
 # the device name is non-empty exactly when the query is true. Runs headless.
@@ -10,12 +11,13 @@ var _tick := 0
 
 
 func _initialize() -> void:
-	if not ClassDB.class_exists("PhysX"):
+	if not ClassDB.class_exists("PhysXServer3D"):
 		print("[gpu_query] no PhysX class -> FAIL")
 		quit(1)
 		return
-	print("[gpu_query] engine = %s  is_gpu_available = %s  device = '%s'" % [
-		ProjectSettings.get_setting("physics/3d/physics_engine", "?"), PhysX.is_gpu_available(), PhysX.get_gpu_device_name()])
+	var server := PhysXServer3D.get_singleton()
+	print("[gpu_query] engine = %s  is_gpu_dynamics_enabled = %s  device = '%s'" % [
+		ProjectSettings.get_setting("physics/3d/physics_engine", "?"), server.is_gpu_dynamics_enabled(), server.get_gpu_device_name()])
 	var root := Node3D.new()
 	get_root().add_child(root)
 	_fluid = ClassDB.instantiate("PhysXParticleFluid3D")
@@ -28,8 +30,9 @@ func _physics_process(_d: float) -> bool:
 	_tick += 1
 	if _tick < 10:
 		return false
-	var gpu := PhysX.is_gpu_available()
-	var name := PhysX.get_gpu_device_name()
+	var server := PhysXServer3D.get_singleton()
+	var gpu: bool = server.is_gpu_dynamics_enabled()
+	var name: String = server.get_gpu_device_name()
 	var live: int = _fluid.get_live_particle_count()
 	var ok := (gpu == (live > 0)) and (gpu == (name != ""))
 	print("[gpu_query] PBD live particles %d, is_gpu_available %s, device '%s' -> %s" % [live, gpu, name, "PASS" if ok else "FAIL"])
