@@ -1,7 +1,7 @@
-[gd_scene format=3 uid="uid://cfv4rupaemdpr"]
+[gd_scene format=3]
 
-[ext_resource type="Script" uid="uid://dy3ph81t2g6fg" path="res://demo/common/fly_camera_node.gd" id="1_cam"]
-[ext_resource type="Script" uid="uid://b46x7v7uoqnv1" path="res://demo/editor/render/light_shafts.gd" id="2_demo"]
+[ext_resource type="Script" path="res://demo/common/fly_camera_node.gd" id="1_cam"]
+[ext_resource type="Script" path="res://demo/editor/render/light_shafts.gd" id="2_demo"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat_1"]
 sun_angle_max = 20.0
@@ -19,6 +19,39 @@ volumetric_fog_anisotropy = 0.6
 
 [sub_resource type="PlaneMesh" id="Plane_1"]
 size = Vector2(200, 200)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4dvlh"]
+size = Vector3(0.8, 9, 0.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_02yo4"]
+size = Vector3(30, 1, 1.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_85sht"]
+size = Vector3(0.18, 9, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_gsdi2"]
+size = Vector3(8.4, 0.18, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7y7bh"]
+size = Vector3(0.25, 6, 0.25)
+
+[sub_resource type="BoxMesh" id="BoxMesh_xweag"]
+size = Vector3(0.4, 7, 0.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ibkgu"]
+size = Vector3(3.5, 0.15, 0.15)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7cgfp"]
+size = Vector3(1.5, 0.15, 0.15)
+
+[sub_resource type="BoxMesh" id="BoxMesh_re4qk"]
+size = Vector3(2.5, 0.15, 0.15)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sgnbh"]
+size = Vector3(3, 0.15, 0.15)
+
+[sub_resource type="BoxMesh" id="BoxMesh_richu"]
+size = Vector3(2, 0.15, 0.15)
 
 [node name="LightShafts" type="Node3D" unique_id=223495032]
 script = ExtResource("2_demo")
@@ -51,3 +84,346 @@ offset_left = 12.0
 offset_top = 10.0
 offset_right = 900.0
 offset_bottom = 120.0
+
+[node name="Colonnade" type="Node3D" parent="." unique_id=1327455054]
+
+[node name="Pillar1" type="MeshInstance3D" parent="Colonnade" unique_id=1761044471]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 4.5, -20)
+mesh = SubResource("BoxMesh_4dvlh")
+
+[node name="Pillar2" type="MeshInstance3D" parent="Colonnade" unique_id=196509080]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 4.5, -20)
+mesh = SubResource("BoxMesh_4dvlh")
+
+[node name="Pillar3" type="MeshInstance3D" parent="Colonnade" unique_id=508697291]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 4.5, -20)
+mesh = SubResource("BoxMesh_4dvlh")
+
+[node name="Pillar4" type="MeshInstance3D" parent="Colonnade" unique_id=1885996767]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 4.5, -20)
+mesh = SubResource("BoxMesh_4dvlh")
+
+[node name="Pillar5" type="MeshInstance3D" parent="Colonnade" unique_id=1890411800]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -20)
+mesh = SubResource("BoxMesh_4dvlh")
+
+[node name="Pillar6" type="MeshInstance3D" parent="Colonnade" unique_id=351370074]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 4.5, -20)
+mesh = SubResource("BoxMesh_4dvlh")
+
+[node name="Pillar7" type="MeshInstance3D" parent="Colonnade" unique_id=185494776]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 4.5, -20)
+mesh = SubResource("BoxMesh_4dvlh")
+
+[node name="Pillar8" type="MeshInstance3D" parent="Colonnade" unique_id=1374146008]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 4.5, -20)
+mesh = SubResource("BoxMesh_4dvlh")
+
+[node name="Pillar9" type="MeshInstance3D" parent="Colonnade" unique_id=428652970]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 4.5, -20)
+mesh = SubResource("BoxMesh_4dvlh")
+
+[node name="Lintel" type="MeshInstance3D" parent="Colonnade" unique_id=2105689976]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, -20)
+mesh = SubResource("BoxMesh_02yo4")
+
+[node name="LatticeWindow" type="Node3D" parent="." unique_id=1306412162]
+
+[node name="Upright1" type="MeshInstance3D" parent="LatticeWindow" unique_id=1105905815]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 6.5, -32)
+mesh = SubResource("BoxMesh_85sht")
+
+[node name="Crossbar1" type="MeshInstance3D" parent="LatticeWindow" unique_id=108988229]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -32)
+mesh = SubResource("BoxMesh_gsdi2")
+
+[node name="Upright2" type="MeshInstance3D" parent="LatticeWindow" unique_id=1130283897]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 6.5, -32)
+mesh = SubResource("BoxMesh_85sht")
+
+[node name="Crossbar2" type="MeshInstance3D" parent="LatticeWindow" unique_id=1263889087]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, -32)
+mesh = SubResource("BoxMesh_gsdi2")
+
+[node name="Upright3" type="MeshInstance3D" parent="LatticeWindow" unique_id=1979380866]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 6.5, -32)
+mesh = SubResource("BoxMesh_85sht")
+
+[node name="Crossbar3" type="MeshInstance3D" parent="LatticeWindow" unique_id=1352164305]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -32)
+mesh = SubResource("BoxMesh_gsdi2")
+
+[node name="Upright4" type="MeshInstance3D" parent="LatticeWindow" unique_id=1013010610]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 6.5, -32)
+mesh = SubResource("BoxMesh_85sht")
+
+[node name="Crossbar4" type="MeshInstance3D" parent="LatticeWindow" unique_id=1094683560]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, -32)
+mesh = SubResource("BoxMesh_gsdi2")
+
+[node name="Upright5" type="MeshInstance3D" parent="LatticeWindow" unique_id=2012309820]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.5, -32)
+mesh = SubResource("BoxMesh_85sht")
+
+[node name="Crossbar5" type="MeshInstance3D" parent="LatticeWindow" unique_id=918971629]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.5, -32)
+mesh = SubResource("BoxMesh_gsdi2")
+
+[node name="Upright6" type="MeshInstance3D" parent="LatticeWindow" unique_id=589535742]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 6.5, -32)
+mesh = SubResource("BoxMesh_85sht")
+
+[node name="Crossbar6" type="MeshInstance3D" parent="LatticeWindow" unique_id=1442692219]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.5, -32)
+mesh = SubResource("BoxMesh_gsdi2")
+
+[node name="Upright7" type="MeshInstance3D" parent="LatticeWindow" unique_id=778478224]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 6.5, -32)
+mesh = SubResource("BoxMesh_85sht")
+
+[node name="Crossbar7" type="MeshInstance3D" parent="LatticeWindow" unique_id=924870010]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.5, -32)
+mesh = SubResource("BoxMesh_gsdi2")
+
+[node name="Upright8" type="MeshInstance3D" parent="LatticeWindow" unique_id=1635307646]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 6.5, -32)
+mesh = SubResource("BoxMesh_85sht")
+
+[node name="Crossbar8" type="MeshInstance3D" parent="LatticeWindow" unique_id=2084736164]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9.5, -32)
+mesh = SubResource("BoxMesh_gsdi2")
+
+[node name="Upright9" type="MeshInstance3D" parent="LatticeWindow" unique_id=1464619853]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 6.5, -32)
+mesh = SubResource("BoxMesh_85sht")
+
+[node name="Crossbar9" type="MeshInstance3D" parent="LatticeWindow" unique_id=479915595]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10.5, -32)
+mesh = SubResource("BoxMesh_gsdi2")
+
+[node name="SlatWall" type="Node3D" parent="." unique_id=1457281105]
+
+[node name="Slat1" type="MeshInstance3D" parent="SlatWall" unique_id=79777346]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3, -10)
+mesh = SubResource("BoxMesh_7y7bh")
+
+[node name="Slat2" type="MeshInstance3D" parent="SlatWall" unique_id=784116206]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.6, 3, -10)
+mesh = SubResource("BoxMesh_7y7bh")
+
+[node name="Slat3" type="MeshInstance3D" parent="SlatWall" unique_id=1352023851]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.2, 3, -10)
+mesh = SubResource("BoxMesh_7y7bh")
+
+[node name="Slat4" type="MeshInstance3D" parent="SlatWall" unique_id=594930013]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.8, 3, -10)
+mesh = SubResource("BoxMesh_7y7bh")
+
+[node name="Slat5" type="MeshInstance3D" parent="SlatWall" unique_id=1374866673]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.4, 3, -10)
+mesh = SubResource("BoxMesh_7y7bh")
+
+[node name="Slat6" type="MeshInstance3D" parent="SlatWall" unique_id=507241540]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 3, -10)
+mesh = SubResource("BoxMesh_7y7bh")
+
+[node name="Slat7" type="MeshInstance3D" parent="SlatWall" unique_id=15257826]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.6, 3, -10)
+mesh = SubResource("BoxMesh_7y7bh")
+
+[node name="Slat8" type="MeshInstance3D" parent="SlatWall" unique_id=1126277036]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.2, 3, -10)
+mesh = SubResource("BoxMesh_7y7bh")
+
+[node name="Slat9" type="MeshInstance3D" parent="SlatWall" unique_id=21124911]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.8, 3, -10)
+mesh = SubResource("BoxMesh_7y7bh")
+
+[node name="Slat10" type="MeshInstance3D" parent="SlatWall" unique_id=45932671]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.4, 3, -10)
+mesh = SubResource("BoxMesh_7y7bh")
+
+[node name="Slat11" type="MeshInstance3D" parent="SlatWall" unique_id=1859905892]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3, -10)
+mesh = SubResource("BoxMesh_7y7bh")
+
+[node name="Slat12" type="MeshInstance3D" parent="SlatWall" unique_id=186606126]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.6, 3, -10)
+mesh = SubResource("BoxMesh_7y7bh")
+
+[node name="Grove" type="Node3D" parent="." unique_id=1336327369]
+
+[node name="Tree1" type="Node3D" parent="Grove" unique_id=1931091638]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0, -26.273972)
+
+[node name="Trunk" type="MeshInstance3D" parent="Grove/Tree1" unique_id=1245390112]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
+mesh = SubResource("BoxMesh_xweag")
+
+[node name="Branch1" type="MeshInstance3D" parent="Grove/Tree1" unique_id=1228737026]
+transform = Transform3D(-0.47660872, 0.18316646, 0.8598222, 0.3587324, 0.93344045, 0, -0.8025928, 0.30844608, -0.5105936, 0, 6.32828, 0)
+mesh = SubResource("BoxMesh_ibkgu")
+
+[node name="Branch2" type="MeshInstance3D" parent="Grove/Tree1" unique_id=1977860047]
+transform = Transform3D(0.7366375, -0.3498346, 0.5787754, 0.42898858, 0.90330994, 0, -0.52281356, 0.24828804, 0.81548697, 0, 6.5227337, 0)
+mesh = SubResource("BoxMesh_7cgfp")
+
+[node name="Branch3" type="MeshInstance3D" parent="Grove/Tree1" unique_id=1596002471]
+transform = Transform3D(0.4008029, 0.030462282, 0.91565776, -0.07578458, 0.9971242, 0, -0.9130245, -0.06939274, 0.40195885, 0, 5.028116, 0)
+mesh = SubResource("BoxMesh_7cgfp")
+
+[node name="Branch4" type="MeshInstance3D" parent="Grove/Tree1" unique_id=781188646]
+transform = Transform3D(-0.86316323, 0.004408107, 0.5049057, 0.005106855, 0.99998695, 0, -0.5048991, 0.0025784804, -0.8631745, 0, 5.8168445, 0)
+mesh = SubResource("BoxMesh_re4qk")
+
+[node name="Branch5" type="MeshInstance3D" parent="Grove/Tree1" unique_id=526391843]
+transform = Transform3D(-0.13133712, -0.016109595, 0.9912069, -0.12174594, 0.9925613, 0, -0.98383355, -0.12067541, -0.13232142, 0, 7.33154, 0)
+mesh = SubResource("BoxMesh_re4qk")
+
+[node name="Branch6" type="MeshInstance3D" parent="Grove/Tree1" unique_id=638906259]
+transform = Transform3D(0.44792023, -0.27204946, 0.85167867, 0.5191146, 0.8547046, 0, -0.7279337, 0.44211885, 0.52406436, 0, 5.030729, 0)
+mesh = SubResource("BoxMesh_sgnbh")
+
+[node name="Branch7" type="MeshInstance3D" parent="Grove/Tree1" unique_id=681397920]
+transform = Transform3D(-0.30834883, 0.17490934, 0.93505496, 0.4933933, 0.86980635, 0, -0.81331676, 0.46134984, -0.35450286, 0, 6.749154, 0)
+mesh = SubResource("BoxMesh_7cgfp")
+
+[node name="Tree2" type="Node3D" parent="Grove" unique_id=1615777835]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.8, 0, -27.59198)
+
+[node name="Trunk" type="MeshInstance3D" parent="Grove/Tree2" unique_id=207882880]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
+mesh = SubResource("BoxMesh_xweag")
+
+[node name="Branch1" type="MeshInstance3D" parent="Grove/Tree2" unique_id=741929657]
+transform = Transform3D(0.7997064, 0.5370135, 0.26848868, -0.55748266, 0.8301886, 0, -0.22289623, -0.14967778, 0.9632828, 0, 4.794575, 0)
+mesh = SubResource("BoxMesh_re4qk")
+
+[node name="Branch2" type="MeshInstance3D" parent="Grove/Tree2" unique_id=87026889]
+transform = Transform3D(-0.7011041, -0.4358835, 0.56432134, -0.5279883, 0.8492516, 0, -0.47925082, -0.29795507, -0.8255552, 0, 5.4088354, 0)
+mesh = SubResource("BoxMesh_richu")
+
+[node name="Branch3" type="MeshInstance3D" parent="Grove/Tree2" unique_id=666471692]
+transform = Transform3D(0.7802958, 0.02901842, 0.624737, -0.03716331, 0.9993092, 0, -0.6243054, -0.023217296, 0.7808352, 0, 4.7290635, 0)
+mesh = SubResource("BoxMesh_richu")
+
+[node name="Branch4" type="MeshInstance3D" parent="Grove/Tree2" unique_id=771235524]
+transform = Transform3D(0.7001495, 0.31000894, 0.64318365, -0.40486366, 0.9143771, 0, -0.5881124, -0.2604017, 0.76571196, 0, 7.361585, 0)
+mesh = SubResource("BoxMesh_richu")
+
+[node name="Branch5" type="MeshInstance3D" parent="Grove/Tree2" unique_id=834655464]
+transform = Transform3D(0.9296818, 0.21295382, 0.30057022, -0.22327828, 0.97475475, 0, -0.29298225, -0.0671108, 0.9537597, 0, 7.33057, 0)
+mesh = SubResource("BoxMesh_richu")
+
+[node name="Branch6" type="MeshInstance3D" parent="Grove/Tree2" unique_id=749546071]
+transform = Transform3D(0.75722164, -0.5288297, 0.38334644, 0.5725715, 0.8198548, 0, -0.3142884, 0.21949326, 0.9236046, 0, 3.7118638, 0)
+mesh = SubResource("BoxMesh_ibkgu")
+
+[node name="Branch7" type="MeshInstance3D" parent="Grove/Tree2" unique_id=1074395675]
+transform = Transform3D(-0.91866463, 0.23116449, 0.32034087, 0.24402398, 0.9697692, 0, -0.3106567, 0.07817085, -0.94730234, 0, 3.984261, 0)
+mesh = SubResource("BoxMesh_sgnbh")
+
+[node name="Tree3" type="Node3D" parent="Grove" unique_id=140697775]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.6, 0, -27.71427)
+
+[node name="Trunk" type="MeshInstance3D" parent="Grove/Tree3" unique_id=1529575734]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
+mesh = SubResource("BoxMesh_xweag")
+
+[node name="Branch1" type="MeshInstance3D" parent="Grove/Tree3" unique_id=388869001]
+transform = Transform3D(0.37102464, 0.060992826, 0.92661786, -0.16221301, 0.9867558, 0, -0.91434556, -0.15030947, 0.37600452, 0, 6.3636637, 0)
+mesh = SubResource("BoxMesh_re4qk")
+
+[node name="Branch2" type="MeshInstance3D" parent="Grove/Tree3" unique_id=2034849579]
+transform = Transform3D(0.7552196, 0.31285253, 0.57599187, -0.3827151, 0.9238664, 0, -0.53213954, -0.22044079, 0.8174554, 0, 6.6703844, 0)
+mesh = SubResource("BoxMesh_sgnbh")
+
+[node name="Branch3" type="MeshInstance3D" parent="Grove/Tree3" unique_id=764145199]
+transform = Transform3D(-0.6472333, 0.20370534, 0.7345701, 0.3002144, 0.9538717, 0, -0.7006856, 0.22052853, -0.67853284, 0, 5.4837294, 0)
+mesh = SubResource("BoxMesh_richu")
+
+[node name="Branch4" type="MeshInstance3D" parent="Grove/Tree3" unique_id=1460830087]
+transform = Transform3D(0.007355157, -0.0027195252, 0.99996924, 0.34679767, 0.93793994, 0, -0.9379111, 0.346787, 0.007841821, 0, 7.19368, 0)
+mesh = SubResource("BoxMesh_re4qk")
+
+[node name="Branch5" type="MeshInstance3D" parent="Grove/Tree3" unique_id=1448229445]
+transform = Transform3D(0.69797933, 0.37041664, 0.6128755, -0.46877533, 0.8833174, 0, -0.5413636, -0.2873009, 0.7901795, 0, 3.7098591, 0)
+mesh = SubResource("BoxMesh_7cgfp")
+
+[node name="Branch6" type="MeshInstance3D" parent="Grove/Tree3" unique_id=700029292]
+transform = Transform3D(-0.2858695, 0.10856748, 0.9520986, 0.35503793, 0.9348519, 0, -0.89007115, 0.3380311, -0.30579123, 0, 4.9741116, 0)
+mesh = SubResource("BoxMesh_ibkgu")
+
+[node name="Branch7" type="MeshInstance3D" parent="Grove/Tree3" unique_id=1334205594]
+transform = Transform3D(-0.9624472, -0.08416042, 0.25809363, -0.08711177, 0.99619853, 0, -0.2571125, -0.022482993, -0.9661199, 0, 7.3028054, 0)
+mesh = SubResource("BoxMesh_ibkgu")
+
+[node name="Tree4" type="Node3D" parent="Grove" unique_id=701533174]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.4, 0, -26.786339)
+
+[node name="Trunk" type="MeshInstance3D" parent="Grove/Tree4" unique_id=1365886563]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
+mesh = SubResource("BoxMesh_xweag")
+
+[node name="Branch1" type="MeshInstance3D" parent="Grove/Tree4" unique_id=363809285]
+transform = Transform3D(-0.8353281, 0.48358724, 0.26147714, 0.5010178, 0.865437, 0, -0.22629198, 0.1310047, -0.96520966, 0, 5.2843347, 0)
+mesh = SubResource("BoxMesh_sgnbh")
+
+[node name="Branch2" type="MeshInstance3D" parent="Grove/Tree4" unique_id=719510237]
+transform = Transform3D(0.4410335, 0.19640674, 0.8757362, -0.40681612, 0.9135101, 0, -0.7999938, -0.3562636, 0.48278996, 0, 4.8928123, 0)
+mesh = SubResource("BoxMesh_re4qk")
+
+[node name="Branch3" type="MeshInstance3D" parent="Grove/Tree4" unique_id=248113889]
+transform = Transform3D(-0.23400447, -0.0028475653, 0.9722313, -0.012167949, 0.999926, 0, -0.9721593, -0.011830062, -0.2340218, 0, 3.646802, 0)
+mesh = SubResource("BoxMesh_sgnbh")
+
+[node name="Branch4" type="MeshInstance3D" parent="Grove/Tree4" unique_id=1471259413]
+transform = Transform3D(-0.6729813, -0.41702378, 0.61089057, -0.5267347, 0.85002977, 0, -0.5192752, -0.32177725, -0.791715, 0, 5.9163733, 0)
+mesh = SubResource("BoxMesh_re4qk")
+
+[node name="Branch5" type="MeshInstance3D" parent="Grove/Tree4" unique_id=452547757]
+transform = Transform3D(-0.23569249, -0.1295147, 0.96315885, -0.48158708, 0.87639827, 0, -0.8441107, -0.46384487, -0.2689331, 0, 3.7841504, 0)
+mesh = SubResource("BoxMesh_sgnbh")
+
+[node name="Branch6" type="MeshInstance3D" parent="Grove/Tree4" unique_id=407418243]
+transform = Transform3D(0.7427697, 0.32927418, 0.5829851, -0.4052691, 0.91419744, 0, -0.5329635, -0.23626584, 0.81248283, 0, 5.045373, 0)
+mesh = SubResource("BoxMesh_re4qk")
+
+[node name="Branch7" type="MeshInstance3D" parent="Grove/Tree4" unique_id=2130716470]
+transform = Transform3D(0.32822844, -0.04421248, 0.9435631, 0.1334947, 0.9910495, 0, -0.9351178, 0.12596068, 0.33119276, 0, 4.3985386, 0)
+mesh = SubResource("BoxMesh_sgnbh")
+
+[node name="Tree5" type="Node3D" parent="Grove" unique_id=1988163733]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.2, 0, -27.311836)
+
+[node name="Trunk" type="MeshInstance3D" parent="Grove/Tree5" unique_id=1295693451]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
+mesh = SubResource("BoxMesh_xweag")
+
+[node name="Branch1" type="MeshInstance3D" parent="Grove/Tree5" unique_id=1547071933]
+transform = Transform3D(-0.43761507, 0.01292717, 0.8990695, 0.029527169, 0.999564, 0, -0.89867747, 0.026546976, -0.43780595, 0, 6.5549664, 0)
+mesh = SubResource("BoxMesh_re4qk")
+
+[node name="Branch2" type="MeshInstance3D" parent="Grove/Tree5" unique_id=434026277]
+transform = Transform3D(-0.38489375, -0.050103355, 0.9215999, -0.1290854, 0.9916335, 0, -0.91388935, -0.118965104, -0.38814113, 0, 6.5829506, 0)
+mesh = SubResource("BoxMesh_richu")
+
+[node name="Branch3" type="MeshInstance3D" parent="Grove/Tree5" unique_id=545737295]
+transform = Transform3D(-0.0010932864, -0.00040847596, 0.99999934, -0.34999153, 0.93675286, 0, -0.93675226, -0.3499913, -0.0011671024, 0, 5.7398853, 0)
+mesh = SubResource("BoxMesh_sgnbh")
+
+[node name="Branch4" type="MeshInstance3D" parent="Grove/Tree5" unique_id=312588410]
+transform = Transform3D(0.8048059, 0.5306307, 0.26592976, -0.5504511, 0.8348674, 0, -0.2220161, -0.14638133, 0.9639924, 0, 3.6368334, 0)
+mesh = SubResource("BoxMesh_7cgfp")
+
+[node name="Branch5" type="MeshInstance3D" parent="Grove/Tree5" unique_id=1196670019]
+transform = Transform3D(0.7443079, -0.47650018, 0.46792448, 0.5391686, 0.84219784, 0, -0.394085, 0.2522902, 0.88376844, 0, 7.4473195, 0)
+mesh = SubResource("BoxMesh_richu")
+
+[node name="Branch6" type="MeshInstance3D" parent="Grove/Tree5" unique_id=1477054909]
+transform = Transform3D(-0.88544804, 0.21070416, 0.4142288, 0.23149909, 0.9728351, 0, -0.40297633, 0.09589359, -0.91017276, 0, 6.80953, 0)
+mesh = SubResource("BoxMesh_sgnbh")
+
+[node name="Branch7" type="MeshInstance3D" parent="Grove/Tree5" unique_id=1945956391]
+transform = Transform3D(-0.41623798, -0.06463088, 0.9069558, -0.15343523, 0.9881587, 0, -0.8962163, -0.13915896, -0.42122585, 0, 7.1620717, 0)
+mesh = SubResource("BoxMesh_re4qk")

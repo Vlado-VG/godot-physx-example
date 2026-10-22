@@ -1,10 +1,11 @@
 extends Node3D
 
 # PhysXLightShafts3D: screen-space light shafts from the sun, next to Godot's own
-# volumetric fog for comparison. A low sun behind a colonnade, a lattice window
-# and a small grove: the shafts stream from the sun through the gaps and darken
-# along everything that blocks it, with no fog in the scene; the fog lights up
-# its whole volume instead.
+# volumetric fog for comparison. A low sun behind a colonnade, a lattice window,
+# a slatted wall and a small grove (plain MeshInstance3D nodes in the scene):
+# the shafts stream from the sun through the gaps and darken along everything
+# that blocks it, with no fog in the scene; the fog lights up its whole volume
+# instead.
 #
 #   1        light shafts on / off
 #   2        Godot's volumetric fog on / off
@@ -19,38 +20,8 @@ extends Node3D
 @onready var _label: Label = $HUD/Label
 
 
-func _box(size: Vector3, pos: Vector3, rot := Vector3.ZERO) -> void:
-	var m := MeshInstance3D.new()
-	var bm := BoxMesh.new()
-	bm.size = size
-	m.mesh = bm
-	m.position = pos
-	m.rotation_degrees = rot
-	add_child(m)
-
-
 func _ready() -> void:
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
-	# A colonnade under a lintel.
-	for i in 9:
-		_box(Vector3(0.8, 9, 0.8), Vector3(-12 + i * 3, 4.5, -20))
-	_box(Vector3(30, 1, 1.5), Vector3(0, 9.5, -20))
-	# A lattice window further back, in front of the sun.
-	for i in 9:
-		_box(Vector3(0.18, 9, 0.3), Vector3(-4 + i, 6.5, -32))
-		_box(Vector3(8.4, 0.18, 0.3), Vector3(0, 2.5 + i, -32))
-	# A slatted wall to the right.
-	for i in 12:
-		_box(Vector3(0.25, 6, 0.25), Vector3(8 + i * 0.6, 3, -10))
-	# A small grove to the left: trunks and leaning branches.
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 7
-	for t in 5:
-		var base := Vector3(-22 + t * 3.2, 0, -26 + rng.randf_range(-2, 2))
-		_box(Vector3(0.4, 7, 0.4), base + Vector3(0, 3.5, 0))
-		for b in 7:
-			var h := rng.randf_range(3.5, 7.5)
-			_box(Vector3(rng.randf_range(1.5, 3.5), 0.15, 0.15), base + Vector3(0, h, 0), Vector3(0, rng.randf_range(0, 180), rng.randf_range(-35, 35)))
 
 
 func _unhandled_input(event: InputEvent) -> void:
