@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://demo/editor/cpu/ocean_storm.gd" id="1_storm"]
+[ext_resource type="Script" path="res://demo/editor/water/ocean_storm.gd" id="1_storm"]
 [ext_resource type="Shader" uid="uid://v3k718kk64l6" path="res://demo/common/materials/water_surface.gdshader" id="water_shader"]
 [ext_resource type="PackedScene" uid="uid://be1f4f7bvq105" path="res://demo/common/boat/boat.tscn" id="boat"]
 

@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://demo/editor/cpu/body_features.gd" id="1_script"]
+[ext_resource type="Script" path="res://demo/editor/bodies/body_features.gd" id="1_script"]
 [ext_resource type="Script" path="res://demo/common/moving_platform.gd" id="2_platform"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_mat"]

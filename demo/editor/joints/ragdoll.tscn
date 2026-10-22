@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://demo/editor/cpu/ragdoll.gd" id="1_script"]
+[ext_resource type="Script" path="res://demo/editor/joints/ragdoll.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://demo/common/mannequin/mannequin_ragdoll.tscn" id="2_ragdoll"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_mat"]

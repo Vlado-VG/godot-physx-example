@@ -18,7 +18,7 @@ var _hit_floor: Dictionary = {} # RigidBody3D -> true
 var _balls: Array[RigidBody3D] = []
 
 func _initialize() -> void:
-	_scene = load("res://demo/editor/cpu/heightmap.tscn").instantiate()
+	_scene = load("res://demo/editor/bodies/heightmap.tscn").instantiate()
 	get_root().add_child(_scene)
 	await process_frame
 	var grid: int = _scene.grid

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dumdpp2htjjxp"]
 
-[ext_resource type="Script" uid="uid://dorsapwey2vsb" path="res://demo/editor/cpu/character_cloth.gd" id="1"]
+[ext_resource type="Script" uid="uid://dorsapwey2vsb" path="res://demo/editor/cloth/character_cloth.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://ink60p83osuw" path="res://demo/common/mannequin/ual_animations.glb" id="2"]
 [ext_resource type="ArrayMesh" uid="uid://lneq2o1io7gn" path="res://demo/common/mannequin/skirt.tres" id="3"]
 [ext_resource type="ArrayMesh" uid="uid://5srra7is5djw" path="res://demo/common/mannequin/cape.tres" id="4"]

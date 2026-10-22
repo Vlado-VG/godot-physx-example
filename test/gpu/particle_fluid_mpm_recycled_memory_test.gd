@@ -44,7 +44,7 @@ func _initialize() -> void:
 		quit(0 if ok else 1)
 		return
 	# Stock content, instantiated and freed outside the tree.
-	var debris := (load("res://demo/editor/cpu/debris.tscn") as PackedScene).instantiate()
+	var debris := (load("res://demo/editor/fluid/debris.tscn") as PackedScene).instantiate()
 	for c in debris.get_children():
 		if not (String(c.name) in ["WorldEnvironment", "Sun", "Camera3D", "Ground", "BackWall", "LeftWall", "RightWall"]):
 			debris.remove_child(c)

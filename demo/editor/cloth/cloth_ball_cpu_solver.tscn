@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://k8itsp302sb8"]
 
-[ext_resource type="Script" uid="uid://m5crlusbpvmb" path="res://demo/editor/gpu/cloth.gd" id="1_1504v"]
+[ext_resource type="Script" uid="uid://m5crlusbpvmb" path="res://demo/editor/cloth/cloth_ball.gd" id="1_1504v"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_1"]
 

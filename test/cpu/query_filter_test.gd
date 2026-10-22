@@ -10,7 +10,7 @@ extends SceneTree
 #
 # Mouse picking (input_ray_pickable) isn't covered: a --script run never gets
 # a synthesized mouse event to an Area3D's input_event, on any engine.
-# demo/editor/cpu/picking.tscn checks it by hand.
+# demo/editor/bodies/picking.tscn checks it by hand.
 
 var _tick := 0
 var _pass := true

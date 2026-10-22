@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://1hq7ueocbd6f"]
 
-[ext_resource type="Script" uid="uid://dbl4y8ljfwlf0" path="res://demo/editor/gpu/sand.gd" id="1"]
+[ext_resource type="Script" uid="uid://dbl4y8ljfwlf0" path="res://demo/editor/fluid/sand.gd" id="1"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_1"]
 

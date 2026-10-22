@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://demo/editor/cpu/light_shafts.gd" id="1_rgreh"]
+[ext_resource type="Script" path="res://demo/editor/rendering/light_shafts.gd" id="1_rgreh"]
 [ext_resource type="Script" path="res://demo/common/fly_camera_node.gd" id="2_g7wuj"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat_1"]

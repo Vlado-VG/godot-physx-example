@@ -1,6 +1,6 @@
 [gd_scene load_steps=14 format=3]
 
-[ext_resource type="Script" path="res://demo/editor/cpu/shape_scale.gd" id="1"]
+[ext_resource type="Script" path="res://demo/editor/bodies/shape_scale.gd" id="1"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_1"]
 

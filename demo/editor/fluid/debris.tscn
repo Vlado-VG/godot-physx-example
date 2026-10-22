@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c05p5go6q04f5"]
 
-[ext_resource type="Script" uid="uid://bt3icywyc1aoj" path="res://demo/editor/cpu/debris.gd" id="1"]
+[ext_resource type="Script" uid="uid://bt3icywyc1aoj" path="res://demo/editor/fluid/debris.gd" id="1"]
 [ext_resource type="Script" uid="uid://giri0h0owpcn" path="res://demo/common/physx_vortex_3d.gd" id="2"]
 [ext_resource type="Material" uid="uid://b8go3rem4w0yb" path="res://demo/common/materials/fluid_water_red.tres" id="3_jb1rs"]
 

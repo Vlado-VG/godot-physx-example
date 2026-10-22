@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://ce3ubf0v0u4ri"]
 
-[ext_resource type="Script" uid="uid://kwe3ops28gun" path="res://demo/editor/cpu/soft_body.gd" id="1"]
+[ext_resource type="Script" uid="uid://kwe3ops28gun" path="res://demo/editor/cloth/soft_body.gd" id="1"]
 
 [sub_resource type="ProceduralSkyMaterial" id="Sky_1"]
 
