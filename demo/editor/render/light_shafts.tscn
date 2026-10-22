@@ -1,7 +1,7 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cfv4rupaemdpr"]
 
 [ext_resource type="Script" uid="uid://dy3ph81t2g6fg" path="res://demo/common/fly_camera_node.gd" id="1_cam"]
-[ext_resource type="Script" path="res://demo/editor/render/light_shafts.gd" id="2_demo"]
+[ext_resource type="Script" uid="uid://b46x7v7uoqnv1" path="res://demo/editor/render/light_shafts.gd" id="2_demo"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat_1"]
 sun_angle_max = 20.0
@@ -20,30 +20,33 @@ volumetric_fog_anisotropy = 0.6
 [sub_resource type="PlaneMesh" id="Plane_1"]
 size = Vector2(200, 200)
 
-[node name="LightShafts" type="Node3D"]
+[node name="LightShafts" type="Node3D" unique_id=223495032]
 script = ExtResource("2_demo")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=157791544]
 environment = SubResource("Env_1")
 
-[node name="Sun" type="DirectionalLight3D" parent="."]
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=528642747]
 transform = Transform3D(-1, 0, 0, 0, 0.990268, 0.139173, 0, 0.139173, -0.990268, 0, 0, 0)
 light_energy = 1.5
 light_volumetric_fog_energy = 2.0
 shadow_enabled = true
 
-[node name="PhysXLightShafts3D" type="PhysXLightShafts3D" parent="Sun"]
+[node name="PhysXLightShafts3D" type="PhysXLightShafts3D" parent="Sun" unique_id=308814531]
+ray_length = 1.5
+edge_fade = 0.2
+shaft_bloom_scale = 0.96
 
-[node name="Ground" type="MeshInstance3D" parent="."]
+[node name="Ground" type="MeshInstance3D" parent="." unique_id=1773660377]
 mesh = SubResource("Plane_1")
 
-[node name="Camera3D" type="Camera3D" parent="."]
+[node name="Camera3D" type="Camera3D" parent="." unique_id=484474692]
 transform = Transform3D(1, 0, 0, 0, 0.990268, -0.139173, 0, 0.139173, 0.990268, 0, 2, 6)
 script = ExtResource("1_cam")
 
-[node name="HUD" type="CanvasLayer" parent="."]
+[node name="HUD" type="CanvasLayer" parent="." unique_id=606906189]
 
-[node name="Label" type="Label" parent="HUD"]
+[node name="Label" type="Label" parent="HUD" unique_id=1658962033]
 offset_left = 12.0
 offset_top = 10.0
 offset_right = 900.0

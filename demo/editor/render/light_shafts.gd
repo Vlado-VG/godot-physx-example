@@ -8,7 +8,7 @@ extends Node3D
 #
 #   1        light shafts on / off
 #   2        Godot's volumetric fog on / off
-#   M        shaft mode: bloom and occlusion / bloom / occlusion
+#   M        mode: shaft bloom and occlusion / shaft bloom / shaft occlusion
 #   arrows   move the sun
 #   WASD + right mouse   fly the camera
 
@@ -74,7 +74,7 @@ func _process(delta: float) -> void:
 		_sun.rotation_degrees.y -= turn.x * 20.0 * delta
 		_sun.rotation_degrees.x = clampf(_sun.rotation_degrees.x - turn.y * 10.0 * delta, -60.0, -1.0)
 	var on := ["off", "on"]
-	var modes := ["bloom and occlusion", "bloom", "occlusion"]
+	var modes := ["shaft bloom and occlusion", "shaft bloom", "shaft occlusion"]
 	var vp_rid := get_viewport().get_viewport_rid()
 	_label.text = "Light shafts: %s [1]   mode: %s [M]   Godot volumetric fog: %s [2]\narrows: move the sun (pitch %.1f, yaw %.1f)   WASD + right mouse: fly\nFPS %d   render gpu %.2f ms\ncamera pos (%.2f, %.2f, %.2f) rot (%.1f, %.1f, %.1f)" % [
 		on[int(_shafts.visible)], modes[int(_shafts.get("mode"))], on[int(_env.volumetric_fog_enabled)],
