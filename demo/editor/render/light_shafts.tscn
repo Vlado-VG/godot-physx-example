@@ -1,7 +1,7 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dv0vj2riy3hwo"]
 
-[ext_resource type="Script" path="res://demo/common/fly_camera_node.gd" id="1_cam"]
-[ext_resource type="Script" path="res://demo/editor/render/light_shafts.gd" id="2_demo"]
+[ext_resource type="Script" uid="uid://dy3ph81t2g6fg" path="res://demo/common/fly_camera_node.gd" id="1_cam"]
+[ext_resource type="Script" uid="uid://b46x7v7uoqnv1" path="res://demo/editor/render/light_shafts.gd" id="2_demo"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat_1"]
 sun_angle_max = 20.0
@@ -14,8 +14,11 @@ background_mode = 2
 sky = SubResource("Sky_1")
 tonemap_mode = 2
 glow_enabled = true
-volumetric_fog_density = 0.004
-volumetric_fog_anisotropy = 0.6
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.001
+volumetric_fog_albedo = Color(0.98039216, 0.96862745, 0.9372549, 1)
+volumetric_fog_anisotropy = 0.48
+volumetric_fog_length = 27.61
 
 [sub_resource type="PlaneMesh" id="Plane_1"]
 size = Vector2(200, 200)
@@ -53,6 +56,16 @@ size = Vector3(3, 0.15, 0.15)
 [sub_resource type="BoxMesh" id="BoxMesh_richu"]
 size = Vector3(2, 0.15, 0.15)
 
+[sub_resource type="Gradient" id="Gradient_4dvlh"]
+offsets = PackedFloat32Array(0, 0.35, 1)
+colors = PackedColorArray(0, 0, 0, 0, 0.9, 0.25, 0.03, 0.6, 1, 0.85, 0.5, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_gtigx"]
+size = Vector3(2.746338, 1, 4.1046143)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ijcbl"]
+size = Vector3(3.5708008, 1, 4.1046143)
+
 [node name="LightShafts" type="Node3D" unique_id=223495032]
 script = ExtResource("2_demo")
 
@@ -61,6 +74,7 @@ environment = SubResource("Env_1")
 
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=528642747]
 transform = Transform3D(-1, 0, 0, 0, 0.990268, 0.139173, 0, 0.139173, -0.990268, 0, 0, 0)
+light_color = Color(1, 0.97669154, 0.9237044, 1)
 light_energy = 1.5
 light_volumetric_fog_energy = 2.0
 shadow_enabled = true
@@ -68,7 +82,8 @@ shadow_enabled = true
 [node name="PhysXLightShafts3D" type="PhysXLightShafts3D" parent="Sun" unique_id=308814531]
 ray_length = 1.5
 edge_fade = 0.2
-shaft_bloom_scale = 0.96
+shaft_bloom_scale = 1.37
+shaft_bloom_tint = Color(1, 0.8156863, 0.35686275, 1)
 
 [node name="Ground" type="MeshInstance3D" parent="." unique_id=1773660377]
 mesh = SubResource("Plane_1")
@@ -427,3 +442,28 @@ mesh = SubResource("BoxMesh_sgnbh")
 [node name="Branch7" type="MeshInstance3D" parent="Grove/Tree5" unique_id=1945956391]
 transform = Transform3D(-0.41623798, -0.06463088, 0.9069558, -0.15343523, 0.9881587, 0, -0.8962163, -0.13915896, -0.42122585, 0, 7.1620717, 0)
 mesh = SubResource("BoxMesh_re4qk")
+
+[node name="PhysXFlow3D" type="PhysXFlow3D" parent="." unique_id=2043697444]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.483563, 4, -9.8289585)
+smoke_fade = 0.25
+smoke_density = 10.0
+heat_ramp = SubResource("Gradient_4dvlh")
+temperature_range = 1.04
+emission_strength = 20.98
+shadow_steps = 24
+
+[node name="Emitter" type="PhysXFlowEmitter3D" parent="." unique_id=766218664]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.767327, 0.5, -9.317354)
+flow = NodePath("../PhysXFlow3D")
+velocity = Vector3(0, 8, 0)
+temperature = 7.97
+smoke = 9.41
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1423303016]
+transform = Transform3D(0.95919406, -0.217911, 0.18017049, 0.24421182, 0.9596379, -0.13948466, -0.14250319, 0.17779264, 0.97369546, -14.639279, 3.6252036, -8.089414)
+mesh = SubResource("BoxMesh_gtigx")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="MeshInstance3D" unique_id=2001505556]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D" unique_id=1588136081]
+shape = SubResource("BoxShape3D_ijcbl")
