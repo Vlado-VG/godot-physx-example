@@ -18,12 +18,14 @@ The engine module itself lives in
 [uno1982/godot](https://github.com/uno1982/godot), `modules/godot_physx`, on
 the `feature/physx5-module` branch.
 
-Scenes and tests are grouped by what they need:
+The tests and the runtime demos (`demo/cpu/`, `demo/gpu/`) are grouped by what
+they need:
 
 - **`cpu/`** — rigid bodies, joints, characters, areas, queries. Works with any
   `godot_physx` build.
-- **`gpu/`** — GPU particle fluids (`PhysXParticleFluid3D`). Needs an engine
-  built with `physx_gpu=yes` and a CUDA device; inert otherwise.
+- **`gpu/`** — GPU particle fluids (`PhysXParticleFluid3D`). The PBD solver
+  needs an engine built with `physx_gpu=yes` and a CUDA device; the MPM
+  compute solver runs on any GPU (`solver = Auto` picks it without CUDA).
 - **`flow/`** — NVIDIA Flow smoke, fire and dust (`PhysXFlow3D`). Needs an
   engine built with `flow_sdk=<path to the Flow SDK>` (the `flow` folder of the
   PhysX repo, built with its `build.bat`), `nvflow.dll` and `nvflowext.dll`
@@ -32,9 +34,13 @@ Scenes and tests are grouped by what they need:
   Direct3D 12 device, not CUDA. Without Flow in the build its scenes still
   open, with the Flow nodes as placeholders.
 
-`PhysXCloth3D` runs on the GPU (a PhysX deformable surface) when CUDA is present
-and falls back to a built-in CPU solver otherwise, like GPU rigid dynamics — so
-its scenes appear under both.
+The editor demos (`demo/editor/`) are grouped by feature instead: nearly all of
+them run on either path. `PhysXCloth3D` runs on the GPU (a PhysX deformable
+surface) when CUDA is present and falls back to a built-in CPU solver
+otherwise, like GPU rigid dynamics; `cloth/cloth_ball_cpu_solver.tscn` and
+`cloth_ball_gpu_solver.tscn` force one solver each, to compare them. The
+`destruction/` scene (and the destructible in the vehicle track) needs an
+engine built with `blast_sdk=`, and `flow/` needs Flow as above.
 
 ## Demos
 
@@ -45,22 +51,69 @@ viewport gizmo and inspector, then press Play.
 
 ### `demo/editor/` — author with the node, then play
 
+**`bodies/`**
+
 | Scene | What it shows |
 | --- | --- |
-| `cpu/cloth.tscn` | `PhysXCloth3D` flags and a banner as scene nodes: select a cloth to drag its grid handles, move its pins and tune its inspector. A `WindArea` gusts them on Play. Runs anywhere. |
-| `gpu/cloth.tscn` | A 48×48 `PhysXCloth3D` sheet draping over a sphere plus a wind-blown flag — the resolution and drape the GPU deformable surface allows. SPACE drops a ball. Falls back to the CPU solver without CUDA. |
-| `gpu/fluid.tscn` | `PhysXParticleFluid3D` as a scene node: gizmo and inspector for the emitter, plus the GPU isosurface + foam surface. Needs a `physx_gpu=yes` build. |
-| `cpu/bridge.tscn` | A rope bridge built entirely from stock nodes — `RigidBody3D` planks joined by `Generic6DOFJoint3D` (linear axes locked, angular Z a spring). Select a `Deck/J*` joint to see the spring config and its limit gizmo. Play and it settles under the crates; `C` drops more. |
-| `cpu/ragdoll.tscn` | Ragdolls with Godot's own workflow: the mannequin's physical skeleton from **Create Physical Skeleton** (`PhysicalBoneSimulator3D` + `PhysicalBone3D`), with cone joints at the spine, shoulders, hips and ankles and one-way hinges at the knees and elbows (`demo/common/mannequin/mannequin_ragdoll.tscn` — select a bone to see its joint and limits). The mannequins animate until left-click shoots one over; `SPACE` drops one down the steps. Runs on PhysX and Jolt alike. |
-| `cpu/debris.tscn` | `PhysXChunkEmitter3D` as a scene node: select it to tune chunk size, impulse, spread and budget in the inspector. A small shooting range — walk in, left-click a wall or the floor and real rigid-body chunks fly out, bounce and settle. |
-| `cpu/soft_body.tscn` | Stock `SoftBody3D` blobs (sphere, subdivided box) on the PhysX backend — select one to paint pinned vertices with its gizmo and tune `pressure_coefficient` / `linear_stiffness` / `total_mass` in the inspector. Press Play, `SPACE` drops a heavy ball on them. |
-| `cpu/heightmap.tscn` | Stock `HeightMapShape3D` terrain — a `@tool` script generates the collision and the matching visible mesh from noise, so selecting `Terrain/CollisionShape3D` shows the real height-field gizmo in the editor; the exported noise params rebuild it live. Play to walk the terrain (`WASD`, `SPACE` jump) and `B` rolls a row of balls down a slope. |
-| `cpu/shape_scale.tscn` | Walk a capsule character over collision shapes with non-uniform node scale baked into the geometry — stretched box platforms, a chamfered-box convex ramp, a trimesh hump, a scaled sphere dome and a scaled height-field mound. Select a piece and stretch its transform in the inspector, then press Play. |
-| `cpu/body_features.tscn` | Rigid-body settings you set in the Inspector, one station each: a carousel and an elevator built from `MovingPlatform` (an `AnimatableBody3D` with spin / travel / period, `demo/common/moving_platform.gd`) that the character and loose crates ride; crates that float on a **constant force** equal to their weight and a pinwheel turned by **constant torque**; two flywheels, one with 5x **inertia** (`F` kicks both); and two roly-poly toys, the green one with a low **custom center of mass** that rights itself (`G` knocks them over). Walk with `WASD`. Runs on PhysX and Jolt alike. |
-| `cpu/back_faces.tscn` | `ConcavePolygonShape3D.backface_collision`: two identical floating trimesh platforms, one one-sided (off) and one solid (on). Step on a glowing pad to be launched up -- you pass through the one-way platform and land on top, and bump your head on the solid one; `F` fires balls up from underneath both. Select a platform's `CollisionShape3D` to see the setting. |
-| `cpu/picking.tscn` | Mouse picking and area queries, set in the Inspector: hover lights objects up and clicks react (`input_event`), Area3D zones included. A glass pane with `input_ray_pickable` off lets you click the zone behind it; one with it on blocks. Click the crate to kick it. A `RayCast3D` laser sweeps the zones -- `T` toggles its `collide_with_areas`. |
-| `cpu/stairs.tscn` | `SeparationRayShape3D`: two bots walk up identical 0.3 m stairs -- the one standing on a ray climbs, the capsule-only one stops at the first step. Walk them yourself on the same setup. A hover sled (a `RigidBody3D` on four corner rays) floats over bumps when you walk into it. Select a ray's `CollisionShape3D` to see it. |
-| `cpu/vehicle_demo.tscn` | Seven vehicles on one track, `Tab` to switch: a stock `VehicleBody3D` car and motorcycle and their `PhysXVehicle3D` / `PhysXMotorcycle3D` counterparts, a `PhysXTank3D` (left click fires), and a stock `VehicleBody3D` arcade stunt plane on its own runway with eight rings to fly through (`demo/common/plane.tscn`: tricycle gear for the runway; in the air it flies where its nose points and turns toward the mouse aim, banking into turns -- `C` switches to manual stick controls; moving control surfaces and prop), and a stock `RigidBody3D` helicopter on a pad (`demo/common/heli.tscn`: hovers when you let go; it turns toward the mouse aim, W/S forward/back, Space/Ctrl climb/descend, A/D yaw, Q/E strafe; spinning main and tail rotors) that can fly the same rings. Red vehicles are stock nodes and run on any engine; blue ones are PhysX nodes. |
+| `body_features.tscn` | Rigid-body settings you set in the Inspector, one station each: a carousel and an elevator built from `MovingPlatform` (an `AnimatableBody3D` with spin / travel / period, `demo/common/moving_platform.gd`) that the character and loose crates ride; crates that float on a **constant force** equal to their weight and a pinwheel turned by **constant torque**; two flywheels, one with 5x **inertia** (`F` kicks both); and two roly-poly toys, the green one with a low **custom center of mass** that rights itself (`G` knocks them over). Walk with `WASD`. Runs on PhysX and Jolt alike. |
+| `heightmap.tscn` | Stock `HeightMapShape3D` terrain — a `@tool` script generates the collision and the matching visible mesh from noise, so selecting `Terrain/CollisionShape3D` shows the real height-field gizmo in the editor; the exported noise params rebuild it live. Play to walk the terrain (`WASD`, `SPACE` jump) and `B` rolls a row of balls down a slope. |
+| `shape_scale.tscn` | Walk a capsule character over collision shapes with non-uniform node scale baked into the geometry — stretched box platforms, a chamfered-box convex ramp, a trimesh hump, a scaled sphere dome and a scaled height-field mound. Select a piece and stretch its transform in the inspector, then press Play. |
+| `back_faces.tscn` | `ConcavePolygonShape3D.backface_collision`: two identical floating trimesh platforms, one one-sided (off) and one solid (on). Step on a glowing pad to be launched up -- you pass through the one-way platform and land on top, and bump your head on the solid one; `F` fires balls up from underneath both. Select a platform's `CollisionShape3D` to see the setting. |
+| `picking.tscn` | Mouse picking and area queries, set in the Inspector: hover lights objects up and clicks react (`input_event`), Area3D zones included. A glass pane with `input_ray_pickable` off lets you click the zone behind it; one with it on blocks. Click the crate to kick it. A `RayCast3D` laser sweeps the zones -- `T` toggles its `collide_with_areas`. |
+| `area_zone_demo.tscn` | Area-to-area detection: fly a camera with an `Area3D` probe into the scene's zones and each one reacts through `area_entered` / `area_exited`. |
+| `stairs.tscn` | `SeparationRayShape3D`: two bots walk up identical 0.3 m stairs -- the one standing on a ray climbs, the capsule-only one stops at the first step. Walk them yourself on the same setup. A hover sled (a `RigidBody3D` on four corner rays) floats over bumps when you walk into it. Select a ray's `CollisionShape3D` to see it. |
+| `snow.tscn` | A capsule wading through fresh snow on a `HeightMapShape3D`: real `PhysXChunkEmitter3D` clumps it kicks up and plows aside. |
+
+**`joints/`**
+
+| Scene | What it shows |
+| --- | --- |
+| `bridge.tscn` | A rope bridge built entirely from stock nodes — `RigidBody3D` planks joined by `Generic6DOFJoint3D` (linear axes locked, angular Z a spring). Select a `Deck/J*` joint to see the spring config and its limit gizmo. Play and it settles under the crates; `C` drops more. |
+| `ragdoll.tscn` | Ragdolls with Godot's own workflow: the mannequin's physical skeleton from **Create Physical Skeleton** (`PhysicalBoneSimulator3D` + `PhysicalBone3D`), with cone joints at the spine, shoulders, hips and ankles and one-way hinges at the knees and elbows (`demo/common/mannequin/mannequin_ragdoll.tscn` — select a bone to see its joint and limits). The mannequins animate until left-click shoots one over; `SPACE` drops one down the steps. Runs on PhysX and Jolt alike. |
+
+**`cloth/`**
+
+| Scene | What it shows |
+| --- | --- |
+| `cloth.tscn` | `PhysXCloth3D` flags and a banner as scene nodes: select a cloth to drag its grid handles, move its pins and tune its inspector. A `WindArea` gusts them on Play. Runs anywhere. |
+| `cloth_ball_gpu_solver.tscn` | A 48×48 `PhysXCloth3D` sheet draping over a sphere plus a wind-blown flag — the resolution and drape the GPU deformable surface allows. SPACE drops a ball. Falls back to the CPU solver without CUDA. |
+| `cloth_ball_cpu_solver.tscn` | The same scene with both cloths forced onto the CPU solver (`simulation_mode`), to compare the two. |
+| `character_cloth.tscn` | The mannequin in a long skirt and a cape, each a `PhysXSkinnedCloth3D` (compute shaders, any GPU), animating around a circle so the cloth reacts to real movement; `1`-`7` switch animations. |
+| `soft_body.tscn` | Stock `SoftBody3D` blobs (sphere, subdivided box) on the PhysX backend — select one to paint pinned vertices with its gizmo and tune `pressure_coefficient` / `linear_stiffness` / `total_mass` in the inspector. Press Play, `SPACE` drops a heavy ball on them. |
+
+**`fluid/`**
+
+| Scene | What it shows |
+| --- | --- |
+| `fluid.tscn` | `PhysXParticleFluid3D` as a scene node: gizmo and inspector for the emitter, filling a tank. `SPACE` drops a ball, `M` cycles the render mode. Set to the MPM compute solver (any GPU). |
+| `flamethrower_liquid.tscn` | A liquid flamethrower: hold left click to spray a `PhysXParticleFluid3D` from a camera-mounted muzzle. |
+| `sand.tscn` | `PhysXGranular3D` sand in a pit: wade a character through it, drop a boulder (`F`). Flip `solver` between MPM and PBD (CUDA) to compare. |
+| `debris.tscn` | `PhysXChunkEmitter3D` as a scene node: select it to tune chunk size, impulse, spread and budget in the inspector. A small shooting range — walk in, left-click a wall or the floor and real rigid-body chunks fly out, bounce and settle; with fluid emitters and a vortex to fire. |
+
+**`water/`**
+
+| Scene | What it shows |
+| --- | --- |
+| `lake.tscn`, `beach.tscn`, `round_pool.tscn` | `PhysXWaterSurface3D` with sample-point buoyant floaters (`demo/common/buoyant_body.gd`): `SPACE` drops more, left-click-drag shoves one to ripple the surface. |
+| `ocean_storm.tscn` | A boat on open ocean whose sea state changes during play: `1`-`3` calm / breezy / storm, `4` an automatic storm cycle; `W`/`S` throttle, `A`/`D` steer. |
+
+**`vehicles/`**
+
+| Scene | What it shows |
+| --- | --- |
+| `vehicle_demo.tscn` | Seven vehicles on one track, `Tab` to switch: a stock `VehicleBody3D` car and motorcycle and their `PhysXVehicle3D` / `PhysXMotorcycle3D` counterparts, a `PhysXTank3D` (left click fires), and a stock `VehicleBody3D` arcade stunt plane on its own runway with eight rings to fly through (`demo/common/plane.tscn`: tricycle gear for the runway; in the air it flies where its nose points and turns toward the mouse aim, banking into turns -- `C` switches to manual stick controls; moving control surfaces and prop), and a stock `RigidBody3D` helicopter on a pad (`demo/common/heli.tscn`: hovers when you let go; it turns toward the mouse aim, W/S forward/back, Space/Ctrl climb/descend, A/D yaw, Q/E strafe; spinning main and tail rotors) that can fly the same rings. Red vehicles are stock nodes and run on any engine; blue ones are PhysX nodes. |
+
+**`destruction/`**
+
+| Scene | What it shows |
+| --- | --- |
+| `destructible_demo.tscn` | `PhysXDestructible3D` (Blast) walls and props: walk in first person, fire a ragdoll or the bomb and they break into real rigid-body pieces. Needs a `blast_sdk=` build. |
+
+**`rendering/`**
+
+| Scene | What it shows |
+| --- | --- |
+| `light_shafts.tscn` | `PhysXLightShafts3D`: screen-space sun shafts through a colonnade, a lattice window and a grove, next to Godot's own volumetric fog. `1` shafts on / off, `2` fog (Forward+ only), `M` mode, arrows move the sun. Works on Forward+ and Mobile. |
 
 ### `demo/editor/flow/` — NVIDIA Flow
 
@@ -80,6 +133,8 @@ steam, dust, signal smoke) to instance or copy.
 | `flame_thrower.tscn` | A burning fuel jet fired at a wall, rolling into fire across it. Nozzle-like emitters need a high `couple_rate` (Flow's default 2 only nudges the gas) and low `buoyancy` so the burning jet holds its line. |
 | `jet_flame.tscn` | A jet engine's exhaust at night: a sharp white-hot core cone (`demo/flow/jet_core_solid.gdshader`) with the Flow plume carrying on past it. The core is an opaque glowing mesh, so Flow -- drawn after transparent geometry as usual -- composites around it; `divergence` below zero on the nozzle keeps the plume a tight stream. |
 | `torch.tscn` | A blowtorch drawn entirely by `demo/flow/jet_cone.gdshader`: a crisp, additive blue cone with a white-hot inner cone. A fluid grid can't resolve a flame front that thin, so the sharp part is a mesh. |
+| `light_scattering.tscn` | `PhysXFlow3D.light_scattering`: a green light glowing through swirling ground fog, with pillars and a slab casting dark shafts through the glow (`L` scattering, `K` its shadows, `G` the light). |
+| `light_shafts.tscn` | The `rendering/light_shafts.tscn` scene with a Flow fire burning in front of the sun: glowing gas doesn't stream like the sun, and its smoke blocks the shafts. |
 
 ### `demo/cpu/`
 
@@ -130,9 +185,7 @@ godot --headless --path . --script res://test/cpu/physics_smoke.gd
   `separation_ray_test` (a character standing on a ray: rest height, up and
   down a step; a ray-only character; a rigid body on a ray).
   `physics_bench.gd` is a step-time benchmark across body counts (run once per
-  engine, flipping `physics/3d/physics_engine`). `heightmap_runtime_probe.tscn`
-  is a **windowed** run (not `--script`) — the GPU boundary crash only faults
-  reliably with a renderer sharing the GPU.
+  engine, flipping `physics/3d/physics_engine`).
 - **`test/gpu/`** — `particle_fluid_test`, `particle_emit_test`,
   `particle_foam_test`, `soft_body_gpu_test` (`PxDeformableVolume` — fall,
   collide, deform, impulse, pin). These `SKIP` (exit 0) without a CUDA device.
