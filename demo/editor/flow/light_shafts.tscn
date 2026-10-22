@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dv0vj2riy3hwo"]
 
 [ext_resource type="Script" uid="uid://dy3ph81t2g6fg" path="res://demo/common/fly_camera_node.gd" id="1_cam"]
-[ext_resource type="Script" uid="uid://b46x7v7uoqnv1" path="res://demo/editor/render/light_shafts.gd" id="2_demo"]
+[ext_resource type="Script" uid="uid://b46x7v7uoqnv1" path="res://demo/editor/cpu/light_shafts.gd" id="2_demo"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat_1"]
 sun_angle_max = 20.0

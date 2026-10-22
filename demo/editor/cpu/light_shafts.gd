@@ -5,7 +5,9 @@ extends Node3D
 # a slatted wall and a small grove (plain MeshInstance3D nodes in the scene):
 # the shafts stream from the sun through the gaps and darken along everything
 # that blocks it, with no fog in the scene; the fog lights up its whole volume
-# instead.
+# instead. demo/editor/flow/light_shafts.tscn is the same scene with a
+# PhysXFlow3D fire burning in front of the sun (glowing gas doesn't stream like
+# the sun; its smoke blocks the light).
 #
 #   1        light shafts on / off
 #   2        Godot's volumetric fog on / off (Forward+ only: Mobile has none)
