@@ -1,6 +1,6 @@
 extends SceneTree
 
-# PhysXLightShafts3D: UE-style light shafts from a DirectionalLight3D, in
+# PhysXLightShafts3D: light shafts (god rays) from a DirectionalLight3D, in
 # screen space. A low sun just right of a box's edge (the box covers the sky
 # left of the sun); sampled on the sky the same distance left / right of it:
 #   1. occlusion only: the left sample (its way to the sun runs through the

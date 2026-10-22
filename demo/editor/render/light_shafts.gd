@@ -1,6 +1,6 @@
 extends Node3D
 
-# PhysXLightShafts3D: UE-style light shafts from the sun, next to Godot's own
+# PhysXLightShafts3D: screen-space light shafts from the sun, next to Godot's own
 # volumetric fog for comparison. A low sun behind a colonnade, a lattice window
 # and a small grove: the shafts stream from the sun through the gaps and darken
 # along everything that blocks it, with no fog in the scene; the fog lights up
