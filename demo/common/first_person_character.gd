@@ -17,6 +17,12 @@ class_name FirstPersonCharacter
 #   fp.fire_ragdoll()   # e.g. on left click
 
 const SPEED := 5.0
+# Collision layer 2 is "debris" (piles, rubble, broken pieces): the character
+# collides with it, stands on it and kicks it around, but doesn't ride its
+# motion (CharacterBody3D.platform_floor_layers leaves it out), so a pile
+# shifting or a box tipping underfoot doesn't carry the character off.
+# Kickable props on layer 1 still carry it, spin included.
+const DEBRIS_LAYER := 2
 const JUMP_VELOCITY := 6.0
 const GRAVITY := 18.0
 const MOUSE_SENS := 0.0025
@@ -35,6 +41,8 @@ func _init(p_body: CharacterBody3D, p_cam: Camera3D, p_spawn_parent: Node3D,
 		p_speed: float = SPEED, p_jump_velocity: float = JUMP_VELOCITY,
 		p_gravity: float = GRAVITY, p_mouse_sensitivity: float = MOUSE_SENS) -> void:
 	body = p_body
+	body.collision_mask |= DEBRIS_LAYER
+	body.platform_floor_layers &= ~DEBRIS_LAYER
 	cam = p_cam
 	spawn_parent = p_spawn_parent
 	yaw = body.rotation.y
