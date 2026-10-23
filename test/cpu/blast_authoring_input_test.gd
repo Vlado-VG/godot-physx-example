@@ -10,7 +10,10 @@ extends SceneTree
 #   3. a closed cube plus a stray triangle far off: the cleaner drops the stray
 #      and its result is kept -- the chunks span the cube, not out to the stray;
 #   4. get_last_error() says why each bad mesh was refused (the fracture dialog
-#      shows it), and get_last_warnings() reports the dropped stray.
+#      shows it), and get_last_warnings() reports the dropped stray;
+#   5. an inside-out cube (triangles facing in) is flipped, with a warning, and
+#      every piece of every result faces outward (inside out, the pieces' outer
+#      faces faced in: culled, the pieces looked hollow).
 # SKIPs on a build without blast_sdk=.
 #   godot --headless --path . --script res://test/cpu/blast_authoring_input_test.gd
 
@@ -32,7 +35,8 @@ func _mesh(verts: PackedVector3Array, idx: PackedInt32Array) -> ArrayMesh:
 	return m
 
 
-# A welded, outward-wound 2 m cube: 8 vertices, 12 triangles.
+# A welded 2 m cube: 8 vertices, 12 triangles, front faces (clockwise, as
+# Godot draws them) outward -- or inward, inside out.
 func _cube_verts() -> PackedVector3Array:
 	var v := PackedVector3Array()
 	for i in 8:
@@ -40,11 +44,36 @@ func _cube_verts() -> PackedVector3Array:
 	return v
 
 
-func _cube_idx() -> PackedInt32Array:
+func _cube_idx(p_inside_out := false) -> PackedInt32Array:
 	var idx := PackedInt32Array()
 	for q in [[0, 2, 3, 1], [4, 5, 7, 6], [0, 1, 5, 4], [2, 6, 7, 3], [0, 4, 6, 2], [1, 3, 7, 5]]:
-		idx.append_array([q[0], q[1], q[2], q[0], q[2], q[3]])
+		if p_inside_out:
+			idx.append_array([q[0], q[1], q[2], q[0], q[2], q[3]])
+		else:
+			idx.append_array([q[0], q[2], q[1], q[0], q[3], q[2]])
 	return idx
+
+
+# The worst piece's share of triangles facing away from its own centre (the
+# preview's winding: normal (c - a) x (b - a)).
+func _outward_share(asset) -> float:
+	var worst := 1.0
+	var pts: Array = asset.chunk_points
+	for i in range(1, pts.size()):
+		var tri: PackedVector3Array = pts[i]
+		if tri.size() < 3:
+			continue
+		var centre := Vector3.ZERO
+		for p in tri:
+			centre += p
+		centre /= tri.size()
+		var out := 0
+		for t in range(0, tri.size() - 2, 3):
+			var n := (tri[t + 2] - tri[t]).cross(tri[t + 1] - tri[t])
+			if n.dot((tri[t] + tri[t + 1] + tri[t + 2]) / 3.0 - centre) > 0.0:
+				out += 1
+		worst = minf(worst, float(out) / (tri.size() / 3))
+	return worst
 
 
 func _span(asset) -> AABB:
@@ -99,16 +128,22 @@ func _initialize() -> void:
 	idx = _cube_idx()
 	idx.append_array([8, 9, 10])
 	good["a cube plus a stray triangle (stray dropped)"] = _mesh(v, idx)
+	good["an inside-out cube (flipped)"] = _mesh(_cube_verts(), _cube_idx(true))
 	for what in good:
 		var asset = authoring.fracture_mesh(good[what], 8, 42)
 		var span: AABB = _span(asset) if asset else AABB()
 		_check(asset != null and asset.get_chunk_count() == 9 and span.grow(0.01).encloses(cube) and cube.grow(0.01).encloses(span) and authoring.get_last_error().is_empty(),
 				"%s: %d chunks spanning %s (want 9 over %s)" % [what, asset.get_chunk_count() if asset else 0, span, cube])
+		if asset:
+			var share := _outward_share(asset)
+			_check(share > 0.95, "%s: every piece faces outward (worst piece %.0f%% of its triangles)" % [what, share * 100.0])
+		var warnings: PackedStringArray = authoring.get_last_warnings()
 		if what.begins_with("a cube plus"):
-			var warnings: PackedStringArray = authoring.get_last_warnings()
 			_check(warnings.size() == 1 and warnings[0].contains("dropped"), "the stray's warning is reported: %s" % [warnings])
+		elif what.begins_with("an inside-out"):
+			_check(warnings.size() == 1 and warnings[0].contains("inside out"), "the flip's warning is reported: %s" % [warnings])
 		else:
-			_check(authoring.get_last_warnings().is_empty(), "%s: no warnings" % what)
+			_check(warnings.is_empty(), "%s: no warnings" % what)
 
 	print("[blast_input] ", "PASS" if _ok else "FAIL")
 	quit(0 if _ok else 1)
