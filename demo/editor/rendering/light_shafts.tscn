@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dtm22q7mutuyk"]
 
-[ext_resource type="Script" path="res://demo/editor/rendering/light_shafts.gd" id="1_rgreh"]
-[ext_resource type="Script" path="res://demo/common/fly_camera_node.gd" id="2_g7wuj"]
-[ext_resource type="Texture2D" path="res://demo/common/textures/lens_dirt.png" id="3_grsch"]
+[ext_resource type="Script" uid="uid://b46x7v7uoqnv1" path="res://demo/editor/rendering/light_shafts.gd" id="1_rgreh"]
+[ext_resource type="Script" uid="uid://dy3ph81t2g6fg" path="res://demo/common/fly_camera_node.gd" id="2_g7wuj"]
+[ext_resource type="Texture2D" uid="uid://d24864ovq4uhe" path="res://demo/common/textures/lens_dirt.png" id="3_grsch"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat_1"]
 sun_angle_max = 20.0
@@ -20,6 +20,15 @@ volumetric_fog_density = 0.001
 volumetric_fog_albedo = Color(0.98039216, 0.96862745, 0.9372549, 1)
 volumetric_fog_anisotropy = 0.48
 volumetric_fog_length = 27.61
+
+[sub_resource type="PhysXLensFlareSettings" id="PhysXLensFlareSettings_wooy8"]
+threshold_range = 1.15
+ghost_intensity = 0.13
+ghost_chroma_shift = 0.2
+ghost_scales = PackedFloat32Array(-2.51, 5.295, -5, 10, 0.7, -0.4, -0.625, -1.35)
+halo_intensity = 1.59
+halo_compression = 0.19
+halo_chroma_shift = -0.083
 
 [sub_resource type="PlaneMesh" id="Plane_1"]
 size = Vector2(200, 200)
@@ -69,6 +78,16 @@ light_color = Color(1, 0.97669154, 0.9237044, 1)
 light_energy = 1.5
 light_volumetric_fog_energy = 2.0
 shadow_enabled = true
+
+[node name="LensDirt" type="PhysXLensDirt3D" parent="Sun" unique_id=1776654809]
+transform = Transform3D(-1, 0, 0, 0, 0.990268, 0.139173, 0, 0.139173, -0.990268, 0, 0, 0)
+dirt_texture = ExtResource("3_grsch")
+intensity = 8.79
+threshold = 0.26
+
+[node name="LensFlare" type="PhysXLensFlare3D" parent="Sun" unique_id=1310482907]
+transform = Transform3D(-1, 0, 0, 0, 0.990268, 0.139173, 0, 0.139173, -0.990268, 0, 0, 0)
+settings = SubResource("PhysXLensFlareSettings_wooy8")
 
 [node name="PhysXLightShafts3D" type="PhysXLightShafts3D" parent="Sun" unique_id=308814531]
 ray_length = 1.5
@@ -433,8 +452,3 @@ mesh = SubResource("BoxMesh_sgnbh")
 [node name="Branch7" type="MeshInstance3D" parent="Grove/Tree5" unique_id=1945956391]
 transform = Transform3D(-0.41623798, -0.06463088, 0.9069558, -0.15343523, 0.9881587, 0, -0.8962163, -0.13915896, -0.42122585, 0, 7.1620717, 0)
 mesh = SubResource("BoxMesh_re4qk")
-
-[node name="LensDirt" type="PhysXLensDirt3D" parent="." unique_id=1776654809]
-dirt_texture = ExtResource("3_grsch")
-
-[node name="LensFlare" type="PhysXLensFlare3D" parent="." unique_id=1310482907]

@@ -22,8 +22,8 @@ extends Node3D
 @onready var _shafts: Node3D = $Sun/PhysXLightShafts3D
 @onready var _cam: Camera3D = $Camera3D
 @onready var _label: Label = $HUD/Label
-@onready var _dirt: Node3D = get_node_or_null("LensDirt")
-@onready var _flare: Node3D = get_node_or_null("LensFlare")
+@onready var _dirt: Node3D = find_child("LensDirt", true, false)
+@onready var _flare: Node3D = find_child("LensFlare", true, false)
 
 
 func _ready() -> void:

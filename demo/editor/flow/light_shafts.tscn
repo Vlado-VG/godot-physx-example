@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dy3ph81t2g6fg" path="res://demo/common/fly_camera_node.gd" id="1_cam"]
 [ext_resource type="Script" uid="uid://b46x7v7uoqnv1" path="res://demo/editor/rendering/light_shafts.gd" id="2_demo"]
-[ext_resource type="Texture2D" path="res://demo/common/textures/lens_dirt.png" id="3_dirt"]
+[ext_resource type="Texture2D" uid="uid://d24864ovq4uhe" path="res://demo/common/textures/lens_dirt.png" id="3_dirt"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat_1"]
 sun_angle_max = 20.0
@@ -20,6 +20,15 @@ volumetric_fog_density = 0.001
 volumetric_fog_albedo = Color(0.98039216, 0.96862745, 0.9372549, 1)
 volumetric_fog_anisotropy = 0.48
 volumetric_fog_length = 27.61
+
+[sub_resource type="PhysXLensFlareSettings" id="PhysXLensFlareSettings_6mumd"]
+threshold_range = 1.15
+ghost_intensity = 0.13
+ghost_chroma_shift = 0.2
+ghost_scales = PackedFloat32Array(-2.51, 5.295, -5, 10, 0.7, -0.4, -0.625, -1.35)
+halo_intensity = 1.59
+halo_compression = 0.19
+halo_chroma_shift = -0.083
 
 [sub_resource type="PlaneMesh" id="Plane_1"]
 size = Vector2(200, 200)
@@ -85,6 +94,16 @@ ray_length = 1.5
 edge_fade = 0.2
 shaft_bloom_scale = 1.37
 shaft_bloom_tint = Color(1, 0.8156863, 0.35686275, 1)
+
+[node name="LensDirt" type="PhysXLensDirt3D" parent="Sun" unique_id=573271766]
+transform = Transform3D(-1, 0, 0, 0, 0.990268, 0.139173, 0, 0.139173, -0.990268, 0, 0, 0)
+dirt_texture = ExtResource("3_dirt")
+intensity = 8.79
+threshold = 0.26
+
+[node name="LensFlare" type="PhysXLensFlare3D" parent="Sun" unique_id=314249988]
+transform = Transform3D(-1, 0, 0, 0, 0.990268, 0.139173, 0, 0.139173, -0.990268, 0, 0, 0)
+settings = SubResource("PhysXLensFlareSettings_6mumd")
 
 [node name="Ground" type="MeshInstance3D" parent="." unique_id=1773660377]
 mesh = SubResource("Plane_1")
@@ -468,8 +487,3 @@ mesh = SubResource("BoxMesh_gtigx")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D" unique_id=1588136081]
 shape = SubResource("BoxShape3D_ijcbl")
-
-[node name="LensDirt" type="PhysXLensDirt3D" parent="."]
-dirt_texture = ExtResource("3_dirt")
-
-[node name="LensFlare" type="PhysXLensFlare3D" parent="."]
