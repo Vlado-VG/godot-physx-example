@@ -471,3 +471,5 @@ shape = SubResource("BoxShape3D_ijcbl")
 
 [node name="LensDirt" type="PhysXLensDirt3D" parent="."]
 dirt_texture = ExtResource("3_dirt")
+
+[node name="LensFlare" type="PhysXLensFlare3D" parent="."]

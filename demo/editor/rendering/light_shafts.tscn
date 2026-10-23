@@ -436,3 +436,5 @@ mesh = SubResource("BoxMesh_re4qk")
 
 [node name="LensDirt" type="PhysXLensDirt3D" parent="." unique_id=1776654809]
 dirt_texture = ExtResource("3_grsch")
+
+[node name="LensFlare" type="PhysXLensFlare3D" parent="." unique_id=1310482907]
