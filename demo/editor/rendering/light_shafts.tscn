@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://demo/editor/rendering/light_shafts.gd" id="1_rgreh"]
 [ext_resource type="Script" path="res://demo/common/fly_camera_node.gd" id="2_g7wuj"]
+[ext_resource type="Texture2D" path="res://demo/common/textures/lens_dirt.png" id="3_grsch"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat_1"]
 sun_angle_max = 20.0
@@ -432,3 +433,6 @@ mesh = SubResource("BoxMesh_sgnbh")
 [node name="Branch7" type="MeshInstance3D" parent="Grove/Tree5" unique_id=1945956391]
 transform = Transform3D(-0.41623798, -0.06463088, 0.9069558, -0.15343523, 0.9881587, 0, -0.8962163, -0.13915896, -0.42122585, 0, 7.1620717, 0)
 mesh = SubResource("BoxMesh_re4qk")
+
+[node name="LensDirt" type="PhysXLensDirt3D" parent="." unique_id=1776654809]
+dirt_texture = ExtResource("3_grsch")

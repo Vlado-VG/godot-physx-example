@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dy3ph81t2g6fg" path="res://demo/common/fly_camera_node.gd" id="1_cam"]
 [ext_resource type="Script" uid="uid://b46x7v7uoqnv1" path="res://demo/editor/rendering/light_shafts.gd" id="2_demo"]
+[ext_resource type="Texture2D" path="res://demo/common/textures/lens_dirt.png" id="3_dirt"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat_1"]
 sun_angle_max = 20.0
@@ -467,3 +468,6 @@ mesh = SubResource("BoxMesh_gtigx")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D" unique_id=1588136081]
 shape = SubResource("BoxShape3D_ijcbl")
+
+[node name="LensDirt" type="PhysXLensDirt3D" parent="."]
+dirt_texture = ExtResource("3_dirt")

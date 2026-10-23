@@ -11,6 +11,7 @@ extends Node3D
 #
 #   1        light shafts on / off
 #   2        Godot's volumetric fog on / off (Forward+ only: Mobile has none)
+#   3        lens dirt on / off (PhysXLensDirt3D: bright light lights the dirt)
 #   M        mode: shaft bloom and occlusion / shaft bloom / shaft occlusion
 #   arrows   move the sun
 #   WASD + right mouse   fly the camera
@@ -20,6 +21,7 @@ extends Node3D
 @onready var _shafts: Node3D = $Sun/PhysXLightShafts3D
 @onready var _cam: Camera3D = $Camera3D
 @onready var _label: Label = $HUD/Label
+@onready var _dirt: Node3D = get_node_or_null("LensDirt")
 
 
 func _ready() -> void:
@@ -34,6 +36,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_shafts.visible = not _shafts.visible
 		KEY_2:
 			_env.volumetric_fog_enabled = not _env.volumetric_fog_enabled
+		KEY_3:
+			if _dirt:
+				_dirt.visible = not _dirt.visible
 		KEY_M:
 			_shafts.set("mode", (int(_shafts.get("mode")) + 1) % 3)
 		_:
@@ -49,8 +54,8 @@ func _process(delta: float) -> void:
 	var on := ["off", "on"]
 	var modes := ["shaft bloom and occlusion", "shaft bloom", "shaft occlusion"]
 	var vp_rid := get_viewport().get_viewport_rid()
-	_label.text = "Light shafts: %s [1]   mode: %s [M]   Godot volumetric fog (Forward+ only): %s [2]\narrows: move the sun (pitch %.1f, yaw %.1f)   WASD + right mouse: fly\nFPS %d   render gpu %.2f ms\ncamera pos (%.2f, %.2f, %.2f) rot (%.1f, %.1f, %.1f)" % [
-		on[int(_shafts.visible)], modes[int(_shafts.get("mode"))], on[int(_env.volumetric_fog_enabled)],
+	_label.text = "Light shafts: %s [1]   mode: %s [M]   Godot volumetric fog (Forward+ only): %s [2]   lens dirt: %s [3]\narrows: move the sun (pitch %.1f, yaw %.1f)   WASD + right mouse: fly\nFPS %d   render gpu %.2f ms\ncamera pos (%.2f, %.2f, %.2f) rot (%.1f, %.1f, %.1f)" % [
+		on[int(_shafts.visible)], modes[int(_shafts.get("mode"))], on[int(_env.volumetric_fog_enabled)], on[int(_dirt != null and _dirt.visible)],
 		_sun.rotation_degrees.x, _sun.rotation_degrees.y,
 		Engine.get_frames_per_second(), RenderingServer.viewport_get_measured_render_time_gpu(vp_rid),
 		_cam.position.x, _cam.position.y, _cam.position.z,
