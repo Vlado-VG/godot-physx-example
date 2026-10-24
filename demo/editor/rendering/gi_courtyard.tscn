@@ -1,0 +1,222 @@
+[gd_scene format=3 uid="uid://dqpb1u3o70o6g"]
+
+[ext_resource type="Script" uid="uid://c1j4u453v7igo" path="res://demo/editor/rendering/gi_courtyard.gd" id="1_36bwp"]
+[ext_resource type="Texture2D" uid="uid://d24864ovq4uhe" path="res://demo/common/textures/lens_dirt.png" id="2_eoccx"]
+[ext_resource type="Script" uid="uid://dy3ph81t2g6fg" path="res://demo/common/fly_camera_node.gd" id="3_0cogn"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_cy30d"]
+sun_angle_max = 20.0
+
+[sub_resource type="Sky" id="Sky_xic53"]
+sky_material = SubResource("ProceduralSkyMaterial_cy30d")
+
+[sub_resource type="Environment" id="Environment_nejj3"]
+background_mode = 2
+sky = SubResource("Sky_xic53")
+tonemap_mode = 2
+glow_enabled = true
+volumetric_fog_density = 0.001
+volumetric_fog_albedo = Color(0.98039216, 0.96862745, 0.9372549, 1)
+volumetric_fog_anisotropy = 0.48
+volumetric_fog_length = 27.61
+
+[sub_resource type="PhysXLensFlareSettings" id="PhysXLensFlareSettings_wooy8"]
+threshold_range = 1.15
+ghost_intensity = 0.13
+ghost_chroma_shift = 0.2
+ghost_scales = PackedFloat32Array(-2.51, 5.295, -5, 10, 0.7, -0.4, -0.625, -1.35)
+halo_intensity = 1.59
+halo_compression = 0.19
+halo_chroma_shift = -0.083
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7smbe"]
+size = Vector3(8.4, 0.2, 16.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bscbi"]
+albedo_color = Color(0.85, 0.85, 0.85, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_emaab"]
+size = Vector3(8.4, 0.2, 16.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7qgmg"]
+size = Vector3(0.2, 2.5, 16)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f5ebh"]
+albedo_color = Color(0.9, 0.1, 0.1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hejjj"]
+size = Vector3(0.2, 2.5, 16)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sqcvv"]
+size = Vector3(0.2, 2.5, 16)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rw7ay"]
+albedo_color = Color(0.1, 0.8, 0.1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5qkm8"]
+size = Vector3(0.2, 2.5, 16)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_cggm8"]
+size = Vector3(8, 2.5, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_i1h52"]
+albedo_color = Color(0.7, 0.7, 0.7, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_mvmpx"]
+size = Vector3(8, 2.5, 0.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hgb5l"]
+size = Vector3(8, 2.5, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2xxic"]
+albedo_color = Color(1, 0.85, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_tl88h"]
+size = Vector3(8, 2.5, 0.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_j77eh"]
+size = Vector3(1.5, 1.5, 1.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_84cbi"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_upog7"]
+size = Vector3(1.5, 1.5, 1.5)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_deuic"]
+radius = 1.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kdmbr"]
+albedo_color = Color(0.95, 0.95, 0.95, 1)
+metallic = 1.0
+roughness = 0.04
+
+[sub_resource type="SphereMesh" id="SphereMesh_tx43j"]
+radius = 1.0
+height = 2.0
+radial_segments = 96
+rings = 48
+
+[node name="GICourtyard" type="Node3D" unique_id=487030218]
+script = ExtResource("1_36bwp")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=142716195]
+environment = SubResource("Environment_nejj3")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1799117130]
+transform = Transform3D(-0.8, 0.30103087, -0.5190187, 0, 0.86503124, 0.5017181, 0.6, 0.4013745, -0.69202495, -30, 29, -40)
+light_color = Color(1, 0.97669154, 0.9237044, 1)
+light_energy = 1.5
+light_volumetric_fog_energy = 2.0
+shadow_enabled = true
+
+[node name="LensDirt" type="PhysXLensDirt3D" parent="Sun" unique_id=538382995]
+transform = Transform3D(-1, 0, 0, 0, 0.990268, 0.139173, 0, 0.139173, -0.990268, 0, 0, 0)
+dirt_texture = ExtResource("2_eoccx")
+intensity = 8.79
+threshold = 0.26
+
+[node name="LensFlare" type="PhysXLensFlare3D" parent="Sun" unique_id=864157244]
+transform = Transform3D(-1, 0, 0, 0, 0.990268, 0.139173, 0, 0.139173, -0.990268, 0, 0, 0)
+settings = SubResource("PhysXLensFlareSettings_wooy8")
+
+[node name="PhysXLightShafts3D" type="PhysXLightShafts3D" parent="Sun" unique_id=2121626763]
+ray_length = 1.5
+edge_fade = 0.2
+shaft_bloom_scale = 1.37
+shaft_bloom_tint = Color(1, 0.8156863, 0.35686275, 1)
+
+[node name="Courtyard" type="Node3D" parent="." unique_id=398419579]
+
+[node name="Floor" type="StaticBody3D" parent="Courtyard" unique_id=19113594]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 4)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Courtyard/Floor" unique_id=100989913]
+shape = SubResource("BoxShape3D_7smbe")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Courtyard/Floor" unique_id=2064518815]
+material_override = SubResource("StandardMaterial3D_bscbi")
+mesh = SubResource("BoxMesh_emaab")
+
+[node name="RedWall" type="StaticBody3D" parent="Courtyard" unique_id=884490667]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.25, 4)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Courtyard/RedWall" unique_id=1056948972]
+shape = SubResource("BoxShape3D_7qgmg")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Courtyard/RedWall" unique_id=755324177]
+material_override = SubResource("StandardMaterial3D_f5ebh")
+mesh = SubResource("BoxMesh_hejjj")
+
+[node name="GreenWall" type="StaticBody3D" parent="Courtyard" unique_id=1860290512]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1.25, 4)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Courtyard/GreenWall" unique_id=889633530]
+shape = SubResource("BoxShape3D_sqcvv")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Courtyard/GreenWall" unique_id=538430258]
+material_override = SubResource("StandardMaterial3D_rw7ay")
+mesh = SubResource("BoxMesh_5qkm8")
+
+[node name="BackWall" type="StaticBody3D" parent="Courtyard" unique_id=1290494241]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -4)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Courtyard/BackWall" unique_id=463426590]
+shape = SubResource("BoxShape3D_cggm8")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Courtyard/BackWall" unique_id=856948327]
+material_override = SubResource("StandardMaterial3D_i1h52")
+mesh = SubResource("BoxMesh_mvmpx")
+
+[node name="FrontWall" type="StaticBody3D" parent="Courtyard" unique_id=1987854159]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 12)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Courtyard/FrontWall" unique_id=453418985]
+shape = SubResource("BoxShape3D_hgb5l")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Courtyard/FrontWall" unique_id=283278550]
+material_override = SubResource("StandardMaterial3D_2xxic")
+mesh = SubResource("BoxMesh_tl88h")
+
+[node name="Block" type="StaticBody3D" parent="Courtyard" unique_id=1220093651]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.75, -0.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Courtyard/Block" unique_id=1378925635]
+shape = SubResource("BoxShape3D_j77eh")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Courtyard/Block" unique_id=23236005]
+material_override = SubResource("StandardMaterial3D_84cbi")
+mesh = SubResource("BoxMesh_upog7")
+
+[node name="MirrorSphere" type="StaticBody3D" parent="Courtyard" unique_id=827793746]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 1, 2.2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Courtyard/MirrorSphere" unique_id=1041555948]
+shape = SubResource("SphereShape3D_deuic")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Courtyard/MirrorSphere" unique_id=2071927659]
+material_override = SubResource("StandardMaterial3D_kdmbr")
+mesh = SubResource("SphereMesh_tx43j")
+
+[node name="ReflectionProbe" type="ReflectionProbe" parent="." unique_id=1723068932]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 4)
+update_mode = 1
+size = Vector3(8.2, 3, 16.2)
+box_projection = true
+ambient_mode = 0
+
+[node name="GI" type="PXTGI3D" parent="." unique_id=1960224406]
+rays_per_texel = 2
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=761996771]
+transform = Transform3D(0.8265993, 0.007197225, 0.5627449, 0, 0.9999183, -0.012788452, -0.56279093, 0.010570926, 0.8265317, 2, 1.8, 7)
+script = ExtResource("3_0cogn")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=2126848110]
+
+[node name="Label" type="Label" parent="HUD" unique_id=1431492172]
+offset_left = 12.0
+offset_top = 8.0
+offset_right = 12.0
+offset_bottom = 8.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6

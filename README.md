@@ -114,6 +114,9 @@ viewport gizmo and inspector, then press Play.
 | Scene | What it shows |
 | --- | --- |
 | `light_shafts.tscn` | `PhysXLightShafts3D`: screen-space sun shafts through a colonnade, a lattice window and a grove, next to Godot's own volumetric fog. `1` shafts on / off, `2` fog (Forward+ only), `M` mode, arrows move the sun. Works on Forward+ and Mobile. |
+| `gi_courtyard.tscn` | Experimental: PXTGI, the module's global illumination (`PXTGI3D`), in a sunlit courtyard with a mirror sphere and a reflection probe. Bounce light and reflections are traced on screen, then against the scene's collision shapes. `G` PXTGI / Godot's SDFGI / none, `R` reflections traced / screen space / Godot's own, `F` Godot's SSR, `P` reflection probe, `B` debug views, `L` lens effects, arrows move the sun. Forward+ only; runs in the played scene, not the editor viewport. |
+| `gi_courtyard_night.tscn` | Experimental: the courtyard by moonlight, lit mostly by a green emissive box that sweeps from wall to wall: bounce light from moving emissives. Same keys as `gi_courtyard.tscn`. |
+| `gi_cornell_box.tscn` | Experimental: PXTGI in the Cornell box (one light under the ceiling, no ambient light, so everything but the direct light is bounce light). `G` PXTGI / Godot's SDFGI / none, `B` debug views, `M` multi-bounce. Forward+ only. |
 
 ### `demo/editor/flow/` — NVIDIA Flow
 
@@ -141,6 +144,7 @@ steam, dust, signal smoke) to instance or copy.
 | Scene | What it shows |
 | --- | --- |
 | `physx_playground.tscn` | First-person character, a jointed ragdoll, a hinged door, a pendulum row, a 2000-box `MultiMesh` pile, and dangling chains. Left click launches a ragdoll, right click fires a ball with a radial blast. |
+| `physx_playground_gi.tscn` | Experimental: the playground with PXTGI (`PXTGI3D`), the module's global illumination, lighting it from the 2000 boxes' collision shapes as they fall and settle. `G` GI on / off. Forward+ only. |
 | `physx_showcase.tscn` | Box stress test with a switchable body count (1k–50k) and an orbiting camera. Each box is a `RigidBody3D` node. |
 | `physx_rid_showcase.tscn` | The same stress test, but every box is a bare `PhysicsServer3D` RID body (one shared shape, no nodes) — much lighter at high counts. Use it against `physx_showcase` to see the per-node cost. |
 | `physx_wind.tscn` | A gusting `WindArea` driving jointed rigid-body pennants and streamers, tumbling debris and a pendulum wind gauge; walk into the volume and it pushes the character too. |

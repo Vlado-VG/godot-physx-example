@@ -1,0 +1,176 @@
+[gd_scene format=3 uid="uid://ctbvssuhrjhkt"]
+
+[ext_resource type="Script" uid="uid://c6g45w56q4tse" path="res://demo/editor/rendering/gi_cornell_box.gd" id="1_pbxrb"]
+[ext_resource type="Script" uid="uid://dy3ph81t2g6fg" path="res://demo/common/fly_camera_node.gd" id="2_tpaxq"]
+
+[sub_resource type="Environment" id="Environment_sgmia"]
+background_mode = 1
+ambient_light_source = 2
+ambient_light_energy = 0.0
+tonemap_mode = 3
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_61dhm"]
+size = Vector3(5.4, 0.2, 5.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_noik8"]
+albedo_color = Color(0.8, 0.8, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_a4yff"]
+size = Vector3(5.4, 0.2, 5.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dbe87"]
+size = Vector3(5.4, 0.2, 5.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ptkdt"]
+albedo_color = Color(0.8, 0.8, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sexmb"]
+size = Vector3(5.4, 0.2, 5.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0n5ed"]
+size = Vector3(5.4, 5.4, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_81x57"]
+albedo_color = Color(0.8, 0.8, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_jtngs"]
+size = Vector3(5.4, 5.4, 0.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gh0n1"]
+size = Vector3(0.2, 5.4, 5.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rvscd"]
+albedo_color = Color(0.85, 0.05, 0.05, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sfptp"]
+size = Vector3(0.2, 5.4, 5.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_mv0p7"]
+size = Vector3(0.2, 5.4, 5.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_onnvf"]
+albedo_color = Color(0.05, 0.1, 0.85, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_oy4wl"]
+size = Vector3(0.2, 5.4, 5.4)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_6ispp"]
+radius = 0.9
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_stiwr"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_1b5p3"]
+radius = 0.9
+height = 1.8
+radial_segments = 96
+rings = 48
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_l0hyy"]
+radius = 0.9
+
+[sub_resource type="SphereMesh" id="SphereMesh_cqyop"]
+radius = 0.9
+height = 1.8
+radial_segments = 96
+rings = 48
+
+[node name="GICornellBox" type="Node3D" unique_id=1716670094]
+script = ExtResource("1_pbxrb")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=931966685]
+environment = SubResource("Environment_sgmia")
+
+[node name="CornellBox" type="Node3D" parent="." unique_id=1537462642]
+
+[node name="Floor" type="StaticBody3D" parent="CornellBox" unique_id=1039358187]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CornellBox/Floor" unique_id=1871099801]
+shape = SubResource("BoxShape3D_61dhm")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CornellBox/Floor" unique_id=2143151354]
+material_override = SubResource("StandardMaterial3D_noik8")
+mesh = SubResource("BoxMesh_a4yff")
+
+[node name="Ceiling" type="StaticBody3D" parent="CornellBox" unique_id=1919404579]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CornellBox/Ceiling" unique_id=1493691570]
+shape = SubResource("BoxShape3D_dbe87")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CornellBox/Ceiling" unique_id=7069124]
+material_override = SubResource("StandardMaterial3D_ptkdt")
+mesh = SubResource("BoxMesh_sexmb")
+
+[node name="BackWall" type="StaticBody3D" parent="CornellBox" unique_id=2109610106]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -2.6)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CornellBox/BackWall" unique_id=1121677629]
+shape = SubResource("BoxShape3D_0n5ed")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CornellBox/BackWall" unique_id=1767513798]
+material_override = SubResource("StandardMaterial3D_81x57")
+mesh = SubResource("BoxMesh_jtngs")
+
+[node name="RedWall" type="StaticBody3D" parent="CornellBox" unique_id=1388996327]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 2.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CornellBox/RedWall" unique_id=1435735484]
+shape = SubResource("BoxShape3D_gh0n1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CornellBox/RedWall" unique_id=1680385983]
+material_override = SubResource("StandardMaterial3D_rvscd")
+mesh = SubResource("BoxMesh_sfptp")
+
+[node name="BlueWall" type="StaticBody3D" parent="CornellBox" unique_id=1332082853]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 2.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CornellBox/BlueWall" unique_id=983924297]
+shape = SubResource("BoxShape3D_mv0p7")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CornellBox/BlueWall" unique_id=945051832]
+material_override = SubResource("StandardMaterial3D_onnvf")
+mesh = SubResource("BoxMesh_oy4wl")
+
+[node name="SphereLeft" type="StaticBody3D" parent="CornellBox" unique_id=793357816]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.9, -0.6)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CornellBox/SphereLeft" unique_id=1824637802]
+shape = SubResource("SphereShape3D_6ispp")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CornellBox/SphereLeft" unique_id=1622501436]
+material_override = SubResource("StandardMaterial3D_stiwr")
+mesh = SubResource("SphereMesh_1b5p3")
+
+[node name="SphereRight" type="StaticBody3D" parent="CornellBox" unique_id=4187648]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1, 0.9, 0.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CornellBox/SphereRight" unique_id=1274998730]
+shape = SubResource("SphereShape3D_l0hyy")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CornellBox/SphereRight" unique_id=891522046]
+material_override = SubResource("StandardMaterial3D_stiwr")
+mesh = SubResource("SphereMesh_cqyop")
+
+[node name="CeilingLight" type="OmniLight3D" parent="." unique_id=1886822668]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.6, 0)
+light_energy = 4.0
+shadow_enabled = true
+omni_range = 12.0
+
+[node name="GI" type="PXTGI3D" parent="." unique_id=698182818]
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1430003979]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 9.5)
+fov = 38.0
+script = ExtResource("2_tpaxq")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=705467454]
+
+[node name="Label" type="Label" parent="HUD" unique_id=44315278]
+offset_left = 12.0
+offset_top = 8.0
+offset_right = 12.0
+offset_bottom = 8.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
