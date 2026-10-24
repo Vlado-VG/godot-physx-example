@@ -367,6 +367,9 @@ func _physics_process(delta: float) -> void:
 	_phys_ms = lerp(_phys_ms, Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0, 0.1)
 
 func _process(_dt: float) -> void:
-	_hud.text = "%s   |   WASD move  SPACE jump  L-click ragdoll  R reset  ESC\n%d dynamic boxes    physics: %.1f ms    FPS: %d    on_floor: %s" % [
+	# Where the player stands and looks, so a screenshot says where a shot was fired from.
+	var look := _cam.global_rotation_degrees
+	_hud.text = "%s   |   WASD move  SPACE jump  L-click ragdoll  R reset  ESC\n%d dynamic boxes    physics: %.1f ms    FPS: %d    on_floor: %s\nplayer (%.2f, %.2f, %.2f)  look yaw %.1f pitch %.1f" % [
 		ProjectSettings.get_setting("physics/3d/physics_engine", "?"),
-		_pile_bodies.size(), _phys_ms, Engine.get_frames_per_second(), _char.is_on_floor()]
+		_pile_bodies.size(), _phys_ms, Engine.get_frames_per_second(), _char.is_on_floor(),
+		_char.global_position.x, _char.global_position.y, _char.global_position.z, look.y, look.x]
