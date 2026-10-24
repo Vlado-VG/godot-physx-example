@@ -39,6 +39,7 @@ var _fp: FirstPersonCharacter
 
 func _ready() -> void:
 	_fp = FirstPersonCharacter.new(self, _cam, get_parent(), fly_speed)
+	BombLook.prewarm(self)
 
 func _process(_delta: float) -> void:
 	_fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
@@ -64,15 +65,7 @@ func _fire_bomb() -> void:
 	var ball := RigidBody3D.new()
 	ball.mass = 6.0
 	var mi := MeshInstance3D.new()
-	var sm := SphereMesh.new()
-	sm.radius = 0.35
-	sm.height = 0.7
-	var m := StandardMaterial3D.new()
-	m.albedo_color = Color(0.95, 0.3, 0.1)
-	m.emission_enabled = true
-	m.emission = Color(0.6, 0.15, 0.0)
-	sm.material = m
-	mi.mesh = sm
+	mi.mesh = BombLook.mesh(0.35)
 	ball.add_child(mi)
 	var cs := CollisionShape3D.new()
 	var sh := SphereShape3D.new()

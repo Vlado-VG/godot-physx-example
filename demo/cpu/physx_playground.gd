@@ -57,6 +57,7 @@ func _ready() -> void:
 	add_child(mmi)
 
 	_reset_scene()
+	BombLook.prewarm(self)
 
 	var layer := CanvasLayer.new()
 	add_child(layer)
@@ -304,15 +305,7 @@ func _fire_ball() -> void:
 	var ball := RigidBody3D.new()
 	ball.mass = 6.0
 	var mi := MeshInstance3D.new()
-	var sm := SphereMesh.new()
-	sm.radius = 0.35
-	sm.height = 0.7
-	var m := StandardMaterial3D.new()
-	m.albedo_color = Color(0.95, 0.3, 0.1)
-	m.emission_enabled = true
-	m.emission = Color(0.6, 0.15, 0.0)
-	sm.material = m
-	mi.mesh = sm
+	mi.mesh = BombLook.mesh(0.35)
 	ball.add_child(mi)
 	var cs := CollisionShape3D.new()
 	var sh := SphereShape3D.new()

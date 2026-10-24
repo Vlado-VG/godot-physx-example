@@ -41,6 +41,9 @@ const MG_IMPULSE := 0.4 # nudge on whatever the round hits so the gun feels phys
 var _mg_firing := false
 var _mg_cooldown := 0.0
 
+func _ready() -> void:
+	BombLook.prewarm(self)
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not active:
 		return
@@ -56,15 +59,7 @@ func _fire() -> void:
 	var bomb := RigidBody3D.new()
 	bomb.mass = 1.0
 	var mi := MeshInstance3D.new()
-	var sm := SphereMesh.new()
-	sm.radius = BOMB_RADIUS
-	sm.height = BOMB_RADIUS * 2.0
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.95, 0.3, 0.1)
-	mat.emission_enabled = true
-	mat.emission = Color(0.6, 0.15, 0.0)
-	sm.material = mat
-	mi.mesh = sm
+	mi.mesh = BombLook.mesh(BOMB_RADIUS)
 	bomb.add_child(mi)
 	var cs := CollisionShape3D.new()
 	var sh := SphereShape3D.new()
