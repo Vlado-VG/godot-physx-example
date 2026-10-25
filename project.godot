@@ -12,7 +12,7 @@ config_version=5
 
 config/name="godotphysx"
 run/main_scene="res://demo/cpu/physx_playground.tscn"
-config/features=PackedStringArray("26.3", "Forward Plus", "Redot")
+config/features=PackedStringArray("26.4", "Forward Plus", "Redot")
 config/icon="res://icon.svg"
 
 [blazium]
