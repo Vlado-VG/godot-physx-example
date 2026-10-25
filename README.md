@@ -62,6 +62,7 @@ viewport gizmo and inspector, then press Play.
 | `picking.tscn` | Mouse picking and area queries, set in the Inspector: hover lights objects up and clicks react (`input_event`), Area3D zones included. A glass pane with `input_ray_pickable` off lets you click the zone behind it; one with it on blocks. Click the crate to kick it. A `RayCast3D` laser sweeps the zones -- `T` toggles its `collide_with_areas`. |
 | `area_zone_demo.tscn` | Area-to-area detection: fly a camera with an `Area3D` probe into the scene's zones and each one reacts through `area_entered` / `area_exited`. |
 | `stairs.tscn` | `SeparationRayShape3D`: two bots walk up identical 0.3 m stairs -- the one standing on a ray climbs, the capsule-only one stops at the first step. Walk them yourself on the same setup. A hover sled (a `RigidBody3D` on four corner rays) floats over bumps when you walk into it. Select a ray's `CollisionShape3D` to see it. |
+| `lips.tscn` | Plain capsules walking up a lip in a triangle mesh -- no `SeparationRayShape3D` (that's `stairs.tscn`). Six lanes, each one `ConcavePolygonShape3D` with a 2 to 30 cm lip, a bot walking into each: a default capsule (radius 0.5) gets up a lip its rounded bottom meets at a slope gentler than `floor_max_angle` -- 15 cm yes, 20 cm no, on PhysX and Jolt alike. Walk them yourself. |
 | `snow.tscn` | A capsule wading through fresh snow on a `HeightMapShape3D`: real `PhysXChunkEmitter3D` clumps it kicks up and plows aside. |
 
 **`joints/`**
