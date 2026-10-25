@@ -1,12 +1,12 @@
 extends SceneTree
 
-# PhysXFlow3D.floor_enabled: Flow's colliders don't include heightmaps or trimeshes,
-# so gas blown at terrain goes straight through it. Two flows 30 m apart, each
-# with an emitter 1 m up blowing cold smoke down at a HeightMapShape3D ground:
-# without the floor the smoke sinks below the ground; with floor_enabled
-# (floor_height = 0) none gets under it and it gathers over the floor. Measured
-# with sample_smoke (get_stats().bounds is block-coarse, ~0.8 m steps). Needs a
-# window (headless has no RenderingDevice):
+# PhysXFlowSimulation3D.floor_enabled: Flow's colliders don't include heightmaps
+# or trimeshes, so gas blown at terrain goes straight through it. Two flows
+# 30 m apart, each with an emitter 1 m up blowing cold smoke down at a
+# HeightMapShape3D ground: without the floor the smoke sinks below the ground;
+# with floor_enabled (floor_height = 0) none gets under it and it gathers over
+# the floor. Measured with sample_smoke (the active bounds are block-coarse,
+# ~0.8 m steps). Needs a window (headless has no RenderingDevice):
 #   godot --path . --script res://test/flow/flow_floor_test.gd
 
 const SEPARATION := 30.0
@@ -21,13 +21,17 @@ func _initialize() -> void:
 	create_timer(30.0).timeout.connect(func() -> void:
 		print("[flow_floor] FAIL: timed out")
 		quit(1))
-	if not ClassDB.class_exists("PhysXFlow3D"):
+	if not ClassDB.class_exists("PhysXFlowSimulation3D"):
 		print("[flow_floor] SKIP: this build has no Flow support (flow_sdk=)")
 		quit(0)
 		return
-	var has_floor := ClassDB.class_has_method("PhysXFlow3D", "set_floor_enabled")
+	var has_floor := ClassDB.class_has_method("PhysXFlowSimulation3D", "set_floor_enabled")
 	if not has_floor:
-		print("[flow_floor] PhysXFlow3D has no floor_enabled (reporting the no-floor case only)")
+		print("[flow_floor] PhysXFlowSimulation3D has no floor_enabled (reporting the no-floor case only)")
+	if not ClassDB.class_has_method("PhysXFlowSimulation3D", "sample_smoke"):
+		print("[flow_floor] SKIP: this engine build has no sample_smoke to measure the gas with")
+		quit(0)
+		return
 	var root := Node3D.new()
 	get_root().add_child(root)
 
@@ -50,7 +54,7 @@ func _initialize() -> void:
 
 
 func _make_flow(root: Node3D, name: String, at: Vector3) -> Node3D:
-	var flow: Node3D = ClassDB.instantiate("PhysXFlow3D")
+	var flow: Node3D = ClassDB.instantiate("PhysXFlowSimulation3D")
 	flow.name = name
 	flow.cpu_readback = true
 	flow.position = at
@@ -62,7 +66,7 @@ func _make_flow(root: Node3D, name: String, at: Vector3) -> Node3D:
 	e.smoke = 1.0
 	e.position = at + Vector3(0, 1, 0)
 	root.add_child(e)
-	e.set("flow", e.get_path_to(flow))
+	flow.emitters = [e.get_path()]
 	return flow
 
 
@@ -91,7 +95,7 @@ func _physics_process(_delta: float) -> bool:
 	if _tick == 180:
 		var so: Dictionary = _open.get_stats()
 		var sf: Dictionary = _floored.get_stats()
-		_check("both flows running", so.running and sf.running, "%s / %s" % [so.error, sf.error])
+		_check("both flows running", so.available and sf.available, "%s / %s" % [so.unavailable_reason, sf.unavailable_reason])
 		var under_open := _smoke(_open, -0.5)
 		var under_floored := _smoke(_floored, -0.5)
 		var over_floored := _smoke(_floored, 0.3)

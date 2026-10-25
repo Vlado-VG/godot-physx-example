@@ -4,9 +4,10 @@ extends SceneTree
 # already had them):
 #  1. PBD: gravity_scale = 0 floats where it spawned; gravity_scale = 1 falls.
 #  2. MPM: the same (the solver takes it at configure, i.e. at spawn).
-#  3. adhesion is bound and round-trips. Its effect isn't asserted: PhysX's particle
-#     adhesion doesn't act yet (known issue -- see the adhesion doc); add a cling
-#     check here when it does.
+#  3. adhesion is bound and round-trips.
+#  4. adhesion holds: a one-particle film just under a ceiling hangs there at
+#     adhesion 1 and drips off at 0 (PhysX's adhesion radius scale defaults to 0,
+#     which made adhesion do nothing until the module set it).
 # The fluids sit 10 m apart so they never meet. Needs a windowed run (MPM has no
 # compute RenderingDevice headless) and a CUDA device for PBD -- skips otherwise.
 
@@ -16,6 +17,8 @@ var _pbd_float: PhysXParticleFluid3D
 var _pbd_fall: PhysXParticleFluid3D
 var _mpm_float: PhysXParticleFluid3D
 var _mpm_fall: PhysXParticleFluid3D
+var _film_dry: PhysXParticleFluid3D
+var _film_sticky: PhysXParticleFluid3D
 var _tick := 0
 
 
@@ -36,6 +39,30 @@ func _initialize() -> void:
 	_mpm_float = _mpm(root, Vector3(5, SPAWN_Y, 0), 0.0)
 	_mpm_fall = _mpm(root, Vector3(15, SPAWN_Y, 0), 1.0)
 	_pbd_fall.adhesion = 2.5
+	_film_dry = _film(root, Vector3(-5, SPAWN_Y, 10), 0.0)
+	_film_sticky = _film(root, Vector3(5, SPAWN_Y, 10), 1.0)
+
+
+# A static ceiling with its face at y = p_ceiling.y, and one layer of PBD fluid
+# spawned just under it, within contact range.
+func _film(root: Node3D, p_ceiling: Vector3, p_adhesion: float) -> PhysXParticleFluid3D:
+	var ceiling := StaticBody3D.new()
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(3, 0.5, 3)
+	cs.shape = box
+	ceiling.add_child(cs)
+	ceiling.position = p_ceiling + Vector3(0, 0.25, 0)
+	root.add_child(ceiling)
+	var f := PhysXParticleFluid3D.new()
+	f.solver = PhysXParticleFluid3D.SOLVER_PBD
+	f.particle_count = 400
+	f.particle_size = 0.08
+	f.spawn_region_size = Vector3(1.5, 0.08, 1.5)
+	f.adhesion = p_adhesion
+	f.position = p_ceiling - Vector3(0, 0.078, 0) # rest distance 0.067, plus the spawn jitter
+	root.add_child(f)
+	return f
 
 
 func _pbd(root: Node3D, pos: Vector3, gscale: float) -> PhysXParticleFluid3D:
@@ -90,6 +117,8 @@ func _physics_process(_d: float) -> bool:
 		ok = _check("MPM gravity_scale 0 floats", absf(_mean_y(_mpm_float) - SPAWN_Y) < 0.5) and ok
 		ok = _check("MPM gravity_scale 1 falls", _mean_y(_mpm_fall) < SPAWN_Y - 1.0) and ok
 		ok = _check("adhesion round-trips", is_equal_approx(_pbd_fall.adhesion, 2.5)) and ok
+		ok = _check("adhesion 0: the film drips off the ceiling (mean y %.2f)" % _mean_y(_film_dry), _mean_y(_film_dry) < SPAWN_Y - 1.0) and ok
+		ok = _check("adhesion 1: the film hangs on the ceiling (mean y %.2f)" % _mean_y(_film_sticky), _mean_y(_film_sticky) > SPAWN_Y - 0.15) and ok
 		print("[fluid_params] -> %s" % ("PASS" if ok else "FAIL"))
 		quit(0 if ok else 1)
 	return false

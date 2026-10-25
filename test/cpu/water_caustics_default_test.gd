@@ -6,9 +6,9 @@ extends SceneTree
 # runs headless.
 
 const CAUSTIC_SCENES := [
-	"res://demo/editor/cpu/beach.tscn",
-	"res://demo/editor/cpu/lake.tscn",
-	"res://demo/editor/cpu/round_pool.tscn",
+	"res://demo/editor/water/beach.tscn",
+	"res://demo/editor/water/lake.tscn",
+	"res://demo/editor/water/round_pool.tscn",
 ]
 
 

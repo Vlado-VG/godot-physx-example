@@ -1,6 +1,6 @@
 extends SceneTree
 
-# PhysXFlow3D's GPU render: a hot emitter for 3 s in front of a camera. Every
+# PhysXFlowSimulation3D's GPU render: a hot emitter for 3 s in front of a camera. Every
 # Flow pipeline it runs must compile through RenderingDevice.
 # Flow's own ray marcher draws it into Godot's frame every frame, straight
 # from the GPU (nothing read back). Needs a window (headless has no
@@ -18,13 +18,13 @@ func _initialize() -> void:
 	create_timer(30.0).timeout.connect(func() -> void:
 		print("[flow] FAIL: timed out")
 		quit(1))
-	if not ClassDB.class_exists("PhysXFlow3D"):
+	if not ClassDB.class_exists("PhysXFlowSimulation3D"):
 		print("[flow] SKIP: this build has no Flow support (flow_sdk=)")
 		quit(0)
 		return
 	var root := Node3D.new()
 	get_root().add_child(root)
-	_flow = ClassDB.instantiate("PhysXFlow3D")
+	_flow = ClassDB.instantiate("PhysXFlowSimulation3D")
 	root.add_child(_flow)
 	var e: Node3D = ClassDB.instantiate("PhysXFlowEmitter3D")
 	e.radius = 0.4
@@ -32,6 +32,7 @@ func _initialize() -> void:
 	e.temperature = 1.0
 	e.smoke = 1.0
 	root.add_child(e)
+	_flow.emitters = [e.get_path()]
 	var cam := Camera3D.new() # the effect only runs when a 3D view renders
 	cam.position = Vector3(0, 2, 8)
 	root.add_child(cam)

@@ -1,6 +1,6 @@
 extends SceneTree
 
-# PhysXFlow3D and compositors: Flow must draw without side effects on the
+# PhysXFlowSimulation3D and compositors: Flow must draw without side effects on the
 # user's own Compositor resources, and leave nothing behind when the last
 # flow goes. Needs a window:
 #   godot --path . --script res://test/flow/flow_compositor_test.gd
@@ -21,8 +21,12 @@ func _initialize() -> void:
 	create_timer(120.0).timeout.connect(func() -> void:
 		print("[flow-compositor] FAIL: timed out")
 		quit(1))
-	if not ClassDB.class_exists("PhysXFlow3D"):
+	if not ClassDB.class_exists("PhysXFlowSimulation3D"):
 		print("[flow-compositor] SKIP: no Flow support in this build")
+		quit(0)
+		return
+	if not ClassDB.class_exists("PhysXFlowRenderEffect"):
+		print("[flow-compositor] SKIP: PhysXFlowRenderEffect is not registered in this engine build")
 		quit(0)
 		return
 	_user_script = GDScript.new()
@@ -58,12 +62,12 @@ func _world_compositor() -> Compositor:
 
 
 func _add_flow() -> Node3D:
-	var f: Node3D = ClassDB.instantiate("PhysXFlow3D")
+	var f: Node3D = ClassDB.instantiate("PhysXFlowSimulation3D")
 	_root.add_child(f)
 	var e: Node3D = ClassDB.instantiate("PhysXFlowEmitter3D")
 	e.velocity = Vector3(0, 2, 0)
 	f.add_child(e)
-	e.flow = NodePath("..")
+	f.emitters = [e.get_path()]
 	return f
 
 

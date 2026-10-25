@@ -1,0 +1,73 @@
+extends Node3D
+
+# PhysXLightShafts3D: screen-space light shafts from the sun, next to Godot's own
+# volumetric fog for comparison. A low sun behind a colonnade, a lattice window,
+# a slatted wall and a small grove (plain MeshInstance3D nodes in the scene):
+# the shafts stream from the sun through the gaps and darken along everything
+# that blocks it, with no fog in the scene; the fog lights up its whole volume
+# instead. demo/editor/flow/light_shafts.tscn is the same scene with a
+# PhysXFlow3D fire burning in front of the sun (glowing gas doesn't stream like
+# the sun; its smoke blocks the light).
+#
+#   1        light shafts on / off
+#   2        Godot's volumetric fog on / off (Forward+ only: Mobile has none)
+#   3        lens dirt on / off (PhysXLensDirt3D: bright light lights the dirt)
+#   4        lens flare on / off (PhysXLensFlare3D: ghosts and a halo from bright light)
+#   M        mode: shaft bloom and occlusion / shaft bloom / shaft occlusion
+#   arrows   move the sun
+#   WASD + right mouse   fly the camera
+
+@onready var _env: Environment = $WorldEnvironment.environment
+@onready var _sun: DirectionalLight3D = $Sun
+# The PhysXLightShafts3D / PhysXLensDirt3D / PhysXLensFlare3D classes are newer
+# than this engine build; resolve to null instead of erroring until it catches up.
+@onready var _shafts: Node3D = get_node_or_null("Sun/PhysXLightShafts3D") as Node3D
+@onready var _cam: Camera3D = $Camera3D
+@onready var _label: Label = $HUD/Label
+@onready var _dirt: Node3D = find_child("LensDirt", true, false) as Node3D
+@onready var _flare: Node3D = find_child("LensFlare", true, false) as Node3D
+
+
+func _ready() -> void:
+	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	match event.keycode:
+		KEY_1:
+			if _shafts:
+				_shafts.visible = not _shafts.visible
+		KEY_2:
+			_env.volumetric_fog_enabled = not _env.volumetric_fog_enabled
+		KEY_3:
+			if _dirt:
+				_dirt.visible = not _dirt.visible
+		KEY_4:
+			if _flare:
+				_flare.visible = not _flare.visible
+		KEY_M:
+			if _shafts:
+				_shafts.set("mode", (int(_shafts.get("mode")) + 1) % 3)
+		_:
+			return
+	get_viewport().set_input_as_handled()
+
+
+func _process(delta: float) -> void:
+	var turn := Vector2(Input.get_axis("ui_left", "ui_right"), Input.get_axis("ui_down", "ui_up"))
+	if turn != Vector2.ZERO:
+		_sun.rotation_degrees.y -= turn.x * 20.0 * delta
+		_sun.rotation_degrees.x = clampf(_sun.rotation_degrees.x - turn.y * 10.0 * delta, -60.0, -1.0)
+	if _shafts == null: # the engine build has no PhysXLightShafts3D yet; the sun, fog and camera still work
+		return
+	var on := ["off", "on"]
+	var modes := ["shaft bloom and occlusion", "shaft bloom", "shaft occlusion"]
+	var vp_rid := get_viewport().get_viewport_rid()
+	_label.text = "Light shafts: %s [1]   mode: %s [M]   Godot volumetric fog (Forward+ only): %s [2]   lens dirt: %s [3]   lens flare: %s [4]\narrows: move the sun (pitch %.1f, yaw %.1f)   WASD + right mouse: fly\nFPS %d   render gpu %.2f ms\ncamera pos (%.2f, %.2f, %.2f) rot (%.1f, %.1f, %.1f)" % [
+		on[int(_shafts.visible)], modes[int(_shafts.get("mode"))], on[int(_env.volumetric_fog_enabled)], on[int(_dirt != null and _dirt.visible)], on[int(_flare != null and _flare.visible)],
+		_sun.rotation_degrees.x, _sun.rotation_degrees.y,
+		Engine.get_frames_per_second(), RenderingServer.viewport_get_measured_render_time_gpu(vp_rid),
+		_cam.position.x, _cam.position.y, _cam.position.z,
+		_cam.rotation_degrees.x, _cam.rotation_degrees.y, _cam.rotation_degrees.z]

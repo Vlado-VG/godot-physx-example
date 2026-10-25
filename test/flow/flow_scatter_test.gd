@@ -1,6 +1,6 @@
 extends SceneTree
 
-# PhysXFlow3D.light_scattering: an OmniLight3D sitting in low smoke must make the
+# PhysXFlowSimulation3D.light_scattering: an OmniLight3D sitting in low smoke must make the
 # smoke glow in its color. Same scene, same frame setup, captured with the option
 # off and then on: around the light the image gets clearly greener, while a patch
 # of empty sky stays the same (the light lights the floor in both shots, so the
@@ -21,12 +21,12 @@ func _initialize() -> void:
 	create_timer(40.0).timeout.connect(func() -> void:
 		print("[flow_scatter] FAIL: timed out")
 		quit(1))
-	if not ClassDB.class_exists("PhysXFlow3D"):
+	if not ClassDB.class_exists("PhysXFlowSimulation3D"):
 		print("[flow_scatter] SKIP: this build has no Flow support (flow_sdk=)")
 		quit(0)
 		return
-	if not ClassDB.class_has_method("PhysXFlow3D", "set_light_scattering"):
-		print("[flow_scatter] PhysXFlow3D has no light_scattering -> FAIL")
+	if not ClassDB.class_has_method("PhysXFlowSimulation3D", "set_light_scattering"):
+		print("[flow_scatter] PhysXFlowSimulation3D has no light_scattering -> FAIL")
 		quit(1)
 		return
 	var root := Node3D.new()
@@ -50,11 +50,12 @@ func _initialize() -> void:
 	floor.mesh = pm
 	root.add_child(floor)
 
-	_flow = ClassDB.instantiate("PhysXFlow3D")
+	_flow = ClassDB.instantiate("PhysXFlowSimulation3D")
 	_flow.set("floor_enabled", true)
-	_flow.set("buoyancy", 0.0)
+	_flow.set("buoyancy_per_temp", 0.0)
+	_flow.set("buoyancy_per_smoke", 0.0)
 	_flow.set("smoke_fade", 0.05)
-	_flow.set("smoke_color", Color(0.7, 0.7, 0.75))
+	_flow.set("smoke_albedo", Color(0.7, 0.7, 0.75))
 	root.add_child(_flow)
 	var e: Node3D = ClassDB.instantiate("PhysXFlowEmitter3D")
 	e.set("shape", 1) # box
@@ -64,7 +65,7 @@ func _initialize() -> void:
 	e.set("smoke", 1.0)
 	e.position = Vector3(0, 0.4, 0)
 	root.add_child(e)
-	e.set("flow", e.get_path_to(_flow))
+	_flow.emitters = [e.get_path()]
 
 	var light := OmniLight3D.new()
 	light.light_color = Color(0.2, 1.0, 0.4)
@@ -118,7 +119,7 @@ func _process(_d: float) -> bool:
 		print("[flow_scatter] stats %s" % _flow.get_stats())
 		print("[flow_scatter] light at screen %s (image %dx%d)" % [at, on.get_width(), on.get_height()])
 		print("[flow_scatter] around the light: off %s  on %s | sky: off %s  on %s" % [off_glow, on_glow, off_sky, on_sky])
-		_check("Flow running", _flow.get_stats().running, str(_flow.get_stats().error))
+		_check("Flow running", _flow.get_stats().available, str(_flow.get_stats().unavailable_reason))
 		_check("the smoke around the light glows green", on_glow.g > off_glow.g + 0.05 and on_glow.g - off_glow.g > (on_glow.r - off_glow.r) * 2.0, "green +%.3f, red +%.3f" % [on_glow.g - off_glow.g, on_glow.r - off_glow.r])
 		_check("empty sky is untouched", absf(on_sky.g - off_sky.g) < 0.01, "green %+.4f" % (on_sky.g - off_sky.g))
 		print("[flow_scatter] ", "PASS" if _pass else "FAIL")

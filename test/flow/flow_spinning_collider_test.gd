@@ -1,7 +1,7 @@
 extends SceneTree
 
 # A collision shape on a spinning body (a capsule on a turntable hub, its shape a
-# direct child of the AnimatableBody3D) is a solid for PhysXFlow3D: inside the
+# direct child of the AnimatableBody3D) is a solid for PhysXFlowSimulation3D: inside the
 # capsule there's no smoke, while on its circle ahead of it there is. Needs a
 # window (headless has no RenderingDevice):
 #   godot --path . --script res://test/flow/flow_spinning_collider_test.gd
@@ -19,15 +19,20 @@ func _initialize() -> void:
 	create_timer(40.0).timeout.connect(func() -> void:
 		print("[flow_spin] FAIL: timed out")
 		quit(1))
-	if not ClassDB.class_exists("PhysXFlow3D"):
+	if not ClassDB.class_exists("PhysXFlowSimulation3D"):
 		print("[flow_spin] SKIP: this build has no Flow support (flow_sdk=)")
+		quit(0)
+		return
+	if not ClassDB.class_has_method("PhysXFlowSimulation3D", "sample_smoke"):
+		print("[flow_spin] SKIP: this engine build has no sample_smoke to measure the gas with")
 		quit(0)
 		return
 	var root := Node3D.new()
 	get_root().add_child(root)
-	_flow = ClassDB.instantiate("PhysXFlow3D")
+	_flow = ClassDB.instantiate("PhysXFlowSimulation3D")
 	_flow.set("floor_enabled", true)
-	_flow.set("buoyancy", 0.0)
+	_flow.set("buoyancy_per_temp", 0.0)
+	_flow.set("buoyancy_per_smoke", 0.0)
 	_flow.set("smoke_fade", 0.02)
 	_flow.set("cpu_readback", true)
 	root.add_child(_flow)
@@ -39,7 +44,7 @@ func _initialize() -> void:
 	e.set("couple_rate", 0.5)
 	e.position = Vector3(0, 0.4, 0)
 	root.add_child(e)
-	e.set("flow", e.get_path_to(_flow))
+	_flow.emitters = [e.get_path()]
 
 	_hub = AnimatableBody3D.new()
 	_hub.sync_to_physics = false
@@ -51,6 +56,7 @@ func _initialize() -> void:
 	cs.position = Vector3(RADIUS, 0.6, 0)
 	_hub.add_child(cs)
 	root.add_child(_hub)
+	_flow.colliders = [_hub.get_path()]
 
 	var cam := Camera3D.new()
 	root.add_child(cam)

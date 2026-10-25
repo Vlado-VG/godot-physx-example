@@ -2,7 +2,7 @@ extends SceneTree
 
 # Generic verification capture: loads a scene, lets it settle, saves a
 # screenshot. Usage:
-#   redot --path . -s res://test/cpu/_capture.gd -- scene=res://demo/editor/cpu/lake.tscn out=shot.png frames=400
+#   redot --path . -s res://test/cpu/_capture.gd -- scene=res://demo/editor/water/lake.tscn out=shot.png frames=400
 
 var _scene: Node
 var _out := "shot.png"

@@ -190,6 +190,10 @@ func _reset_scene() -> void:
 		@warning_ignore("integer_division")
 		var y := i / (w * d)
 		var b := RigidBody3D.new()
+		# Debris: the character walks the pile without riding its motion
+		# (see FirstPersonCharacter.DEBRIS_LAYER); it still hits the world.
+		b.collision_layer = FirstPersonCharacter.DEBRIS_LAYER
+		b.collision_mask = 1 | FirstPersonCharacter.DEBRIS_LAYER
 		_col_box(b, Vector3.ONE)
 		b.position = Vector3(
 			8.0 + (x - w * 0.5) * spacing,
@@ -233,6 +237,8 @@ func _build_destructible_towers() -> void:
 			# anyone touched it.
 			d.auto_mass = false
 			d.mass = 1.0
+			d.collision_layer = FirstPersonCharacter.DEBRIS_LAYER
+			d.collision_mask = 1 | FirstPersonCharacter.DEBRIS_LAYER
 			d.position = Vector3(tower_x, 0.8 + level * DESTRUCTIBLE_LEVEL_HEIGHT, -6.0)
 			_spawn_root.add_child(d)
 

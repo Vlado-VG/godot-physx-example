@@ -1,6 +1,6 @@
 extends SceneTree
 
-# PhysXFlow3D.scattering_receive_shadows: a shadow-casting OmniLight3D in a fog layer, with
+# PhysXFlowSimulation3D.scattering_receive_shadows: a shadow-casting OmniLight3D in a fog layer, with
 # a wall on one side of it. Seen from above, the light's glow in the fog (each
 # capture minus one with scattering off, so Flow's own lighting drops out) is
 # about the same on both sides with shadows off; with them on, the fog behind the
@@ -22,12 +22,12 @@ func _initialize() -> void:
 	create_timer(40.0).timeout.connect(func() -> void:
 		print("[flow_shadow] FAIL: timed out")
 		quit(1))
-	if not ClassDB.class_exists("PhysXFlow3D"):
+	if not ClassDB.class_exists("PhysXFlowSimulation3D"):
 		print("[flow_shadow] SKIP: this build has no Flow support (flow_sdk=)")
 		quit(0)
 		return
-	if not ClassDB.class_has_method("PhysXFlow3D", "set_scattering_receive_shadows"):
-		print("[flow_shadow] PhysXFlow3D has no scattering_receive_shadows -> FAIL")
+	if not ClassDB.class_has_method("PhysXFlowSimulation3D", "set_scattering_receive_shadows"):
+		print("[flow_shadow] PhysXFlowSimulation3D has no scattering_receive_shadows -> FAIL")
 		quit(1)
 		return
 	var root := Node3D.new()
@@ -55,15 +55,16 @@ func _initialize() -> void:
 	floor.material_override = fmat
 	root.add_child(floor)
 
-	_flow = ClassDB.instantiate("PhysXFlow3D")
+	_flow = ClassDB.instantiate("PhysXFlowSimulation3D")
 	_flow.set("floor_enabled", true)
-	_flow.set("buoyancy", 0.0)
+	_flow.set("buoyancy_per_temp", 0.0)
+	_flow.set("buoyancy_per_smoke", 0.0)
 	_flow.set("smoke_fade", 0.02)
-	_flow.set("smoke_density", 1.5)
-	_flow.set("smoke_color", Color(0.8, 0.8, 0.8))
-	_flow.set("emission_strength", 0.0)
+	_flow.set("fog_density", 1.5)
+	_flow.set("smoke_albedo", Color(0.8, 0.8, 0.8))
+	_flow.set("fire_emission", false)
 	_flow.set("light_scattering", true)
-	_flow.set("scattering_shadow_steps", 0) # only scene shadows here, not the gas's own
+	_flow.set("shadow_steps", 0) # only scene shadows here, not the gas's own
 	root.add_child(_flow)
 	var e: Node3D = ClassDB.instantiate("PhysXFlowEmitter3D")
 	e.set("shape", 1)
@@ -73,7 +74,7 @@ func _initialize() -> void:
 	e.set("couple_rate", 2.0)
 	e.position = Vector3(0, 0.25, 0)
 	root.add_child(e)
-	e.set("flow", e.get_path_to(_flow))
+	_flow.emitters = [e.get_path()]
 
 	var light := OmniLight3D.new()
 	light.light_color = Color(1, 1, 1)

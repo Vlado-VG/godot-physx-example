@@ -1,6 +1,6 @@
 extends SceneTree
 
-# Smoke test for demo/editor/cpu/shape_scale.tscn: build every scaled piece and
+# Smoke test for demo/editor/bodies/shape_scale.tscn: build every scaled piece and
 # drop a rigid ball straight onto it, confirming the baked-in node scale gives
 # it a real collision surface (nothing tunnels to the ground).
 
@@ -11,7 +11,7 @@ var _balls: Array = []
 
 func _initialize() -> void:
 	print("[scalewalk] engine = ", ProjectSettings.get_setting("physics/3d/physics_engine"))
-	_scene = load("res://demo/editor/cpu/shape_scale.tscn").instantiate()
+	_scene = load("res://demo/editor/bodies/shape_scale.tscn").instantiate()
 	get_root().add_child(_scene)
 	await physics_frame
 	await physics_frame
