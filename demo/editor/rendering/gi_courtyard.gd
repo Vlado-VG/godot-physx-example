@@ -2,12 +2,13 @@ extends Node3D
 
 # PXTGI, the module's global illumination (PXTGI3D, experimental), in a sunlit courtyard with a mirror sphere, under the light shafts demo's sky
 # and sun (its light shafts, lens flare and lens dirt). Everything is a node in the scene: edit the walls, the sphere's
-# material, the probe or the GI node's settings directly. GI runs in the running scene only (not in the editor).
+# material, the probe or the GI node's settings directly. GI runs in the editor viewport too.
 #
 #   G        GI: PXTGI / Godot's SDFGI (decent settings) / none
 #   R        our reflections: traced / screen space / Godot's own
 #   F        Godot's screen-space reflections (SSR) on / off
-#   P        reflection probe on / off (what fills reflections our rays miss, and rough surfaces)
+#   P        reflection probe on / off (inside its box the probe's cubemap replaces the traced reflections, as it
+#            does SDFGI's: compare the mirror sphere)
 #   B        debug view: off / world only / world hits / world position
 #   M        multi-bounce (the radiance cache: off-screen hits carry bounce light) on / off
 #   L        lens flare and lens dirt on / off
