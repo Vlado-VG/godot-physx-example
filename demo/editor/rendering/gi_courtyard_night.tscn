@@ -267,7 +267,5 @@ material_override = SubResource("StandardMaterial3D_s2fja")
 mesh = SubResource("BoxMesh_wh2v7")
 
 [node name="EmissiveSweep" type="AnimationPlayer" parent="." unique_id=1185730214]
-libraries = {
-&"": SubResource("AnimationLibrary_emissive")
-}
+libraries/ = SubResource("AnimationLibrary_emissive")
 autoplay = &"sweep"
