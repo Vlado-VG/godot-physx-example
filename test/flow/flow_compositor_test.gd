@@ -82,8 +82,11 @@ func _user_compositor(effect: CompositorEffect) -> Compositor:
 
 # Render calls per drawn frame over n frames (1.0 = drawn exactly once).
 func _draws_per_frame(flow: Node3D, n: int) -> float:
+	# With rendering on its own thread the count runs up to a frame behind this one: wait for it at both ends.
+	RenderingServer.force_sync()
 	var before: int = flow.get_stats().render_calls
 	await _frames(n)
+	RenderingServer.force_sync()
 	return float(flow.get_stats().render_calls - before) / n
 
 

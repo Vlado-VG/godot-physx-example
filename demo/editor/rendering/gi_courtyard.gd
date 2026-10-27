@@ -94,6 +94,6 @@ func _process(delta: float) -> void:
 	var dbg: String = debug_names.get(int(_gi.get("debug")), "?") if _gi_mode == 0 else "-"
 	var lens_on := (_sun.get_node_or_null("LensDirt") as Node3D).visible
 	var vp := get_viewport().get_viewport_rid()
-	_label.text = "GI: %s [G]   reflections: %s [R]   Godot SSR: %s [F]   probe: %s [P]   debug: %s [B]   multi-bounce: %s [M]   lens: %s [L]\narrows: move the sun   WASD + right mouse: fly   Shift: fast\nFPS %d   render gpu %.2f ms" % [
+	_label.text = "GI: %s [G]   reflections: %s [R]   Godot SSR: %s [F]   probe: %s [P]   debug: %s [B]   multi-bounce: %s [M]   lens: %s [L]\narrows: move the sun   WASD + right mouse: fly   Shift: fast\nFPS %d   %s" % [
 		gi_names[_gi_mode], refl, "on" if _env.ssr_enabled else "off", "on" if _probe.visible else "off", dbg, "on" if _gi.get("multi_bounce") else "off", "on" if lens_on else "off",
-		Engine.get_frames_per_second(), RenderingServer.viewport_get_measured_render_time_gpu(vp)]
+		Engine.get_frames_per_second(), RenderTime.gpu(vp)]

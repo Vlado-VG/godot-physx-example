@@ -55,5 +55,5 @@ func _process(_delta: float) -> void:
 	var debug_names := {0: "off", 3: "world only", 4: "world hits", 5: "world position"}
 	var dbg: String = debug_names.get(int(_gi.get("debug")), "?") if _gi_mode == 0 else "-"
 	var vp := get_viewport().get_viewport_rid()
-	_label.text = "GI: %s [G]   debug: %s [B]   multi-bounce: %s [M]\nWASD + right mouse: fly   Shift: fast\nFPS %d   render gpu %.2f ms" % [
-		gi_names[_gi_mode], dbg, "on" if _gi.get("multi_bounce") else "off", Engine.get_frames_per_second(), RenderingServer.viewport_get_measured_render_time_gpu(vp)]
+	_label.text = "GI: %s [G]   debug: %s [B]   multi-bounce: %s [M]\nWASD + right mouse: fly   Shift: fast\nFPS %d   %s" % [
+		gi_names[_gi_mode], dbg, "on" if _gi.get("multi_bounce") else "off", Engine.get_frames_per_second(), RenderTime.gpu(vp)]

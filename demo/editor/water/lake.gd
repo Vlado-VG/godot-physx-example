@@ -204,11 +204,10 @@ func _process(delta: float) -> void:
 	# Where the frame goes: CPU process/physics (ms) and GPU render time.
 	var vp_rid := get_viewport().get_viewport_rid()
 	RenderingServer.viewport_set_measure_render_time(vp_rid, true)
-	var timing := "\nprocess %.2f ms   physics %.2f ms   render cpu %.2f ms   gpu %.2f ms" % [
+	var timing := "\nprocess %.2f ms   physics %.2f ms   %s" % [
 		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
 		Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
-		RenderingServer.viewport_get_measured_render_time_cpu(vp_rid) + RenderingServer.get_frame_setup_time_cpu(),
-		RenderingServer.viewport_get_measured_render_time_gpu(vp_rid)]
+		RenderTime.cpu_gpu(vp_rid)]
 	# Anything in the "hud_info" group adds its own lines (the boat).
 	var extra := ""
 	for n in get_tree().get_nodes_in_group("hud_info"):

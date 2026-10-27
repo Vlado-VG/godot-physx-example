@@ -145,11 +145,10 @@ func _process(delta: float) -> void:
 	var particles := 0
 	for c in _cloths:
 		particles += c.get_particle_count()
-	var timing := "\nprocess %.2f ms   physics %.2f ms   render cpu %.2f ms   gpu %.2f ms" % [
+	var timing := "\nprocess %.2f ms   physics %.2f ms   %s" % [
 		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
 		Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
-		RenderingServer.viewport_get_measured_render_time_cpu(_viewport_rid) + RenderingServer.get_frame_setup_time_cpu(),
-		RenderingServer.viewport_get_measured_render_time_gpu(_viewport_rid)]
+		RenderTime.cpu_gpu(_viewport_rid)]
 	_hud.text = "Character cloth -- PhysXSkinnedCloth3D (compute shaders, any GPU)\n1-7 animation   C cloth on/off   M move/stay   F follow/fly (WASD + RMB)   R reset   B leg boxes   V colliders\n%s   cloth %s   legs: %s   %d particles   FPS %d%s" % [
 		ANIMS[_anim][0], "ON" if _cloth_on() else "OFF", "boxes" if _boxes else "capsules", particles, Engine.get_frames_per_second(), timing]
 
